@@ -1478,126 +1478,275 @@ let netTransform={x:0,y:0,scale:1}, netHighlightId='';
 
 function renderNet(){
   const canvas=el('net-canvas');if(!canvas)return;
-  const W=canvas.offsetWidth,H=Math.max(480,window.innerHeight-220);
-  canvas.height=H;
+  // HiDPI / Retina fix
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth;
+  const H=Math.max(520,window.innerHeight-230);
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
   const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
 
-  // Build nodes
-  netNodes=[];netEdges=[];
-  const cx=W/2,cy=H/2;
+  // ── Build graph ──────────────────────────────────────────
+  netNodes=[]; netEdges=[];
+  const cx=W/2, cy=H/2;
+
+  // AGs in a circle
+  const agR = Math.min(W,H)*0.30;
   db.ags.forEach((ag,i)=>{
     const angle=(2*Math.PI*i/Math.max(db.ags.length,1))-Math.PI/2;
-    const r=Math.min(W,H)*0.28;
-    netNodes.push({id:ag.id,label:ag.name,x:cx+r*Math.cos(angle),y:cy+r*Math.sin(angle),type:'ag',color:ag.farbe||'#4f7cff',r:34,data:ag});
-  });
-  db.ugs.forEach((ug,i)=>{
-    const links=db.agUgLinks.filter(l=>l.ugId===ug.id);
-    const anchor=links.length?netNodes.find(n=>n.id===links[0].agId):null;
-    const ax=anchor?anchor.x:cx,ay=anchor?anchor.y:cy;
-    const siblings=db.ugs.filter(u=>links[0]?db.agUgLinks.some(l=>l.ugId===u.id&&l.agId===links[0].agId):true);
-    const idx=siblings.findIndex(u=>u.id===ug.id);
-    const baseAngle=Math.atan2(ay-cy,ax-cx);
-    const spread=Math.PI*0.65;
-    const angle=baseAngle+(idx/(Math.max(siblings.length-1,1)))*spread-spread/2;
-    const dist=140;
-    netNodes.push({id:ug.id,label:ug.name,x:ax+dist*Math.cos(angle),y:ay+dist*Math.sin(angle),type:'ug',color:'#a78bfa',r:22,data:ug});
-    links.forEach(l=>netEdges.push({from:l.agId,to:ug.id,color:'rgba(167,139,250,0.35)',w:1.5}));
-  });
-  db.mitglieder.filter(m=>m.aktiv).forEach(m=>{
-    const roles=db.rollen.filter(r=>r.personId===m.id&&r.aktiv);
-    const anchor=roles.length?netNodes.find(n=>n.id===roles[0].entityId):null;
-    const ax=anchor?anchor.x:cx+Math.random()*100-50;
-    const ay=anchor?anchor.y:cy+Math.random()*100-50;
-    const angle=Math.random()*2*Math.PI;
-    const dist=75+Math.random()*20;
-    netNodes.push({id:m.id,label:m.name,x:ax+dist*Math.cos(angle),y:ay+dist*Math.sin(angle),type:'m',color:'#22c55e',r:17,data:m});
-    roles.forEach(r=>netEdges.push({from:r.entityId,to:m.id,color:'rgba(34,197,94,0.2)',w:1}));
+    netNodes.push({
+      id:ag.id, label:ag.name, sublabel:'AG · '+ag.koo,
+      x:cx+agR*Math.cos(angle), y:cy+agR*Math.sin(angle),
+      type:'ag', color:ag.farbe||'#4f7cff', r:38, data:ag
+    });
   });
 
+  // UGs orbiting their AG
+  db.ugs.forEach((ug)=>{
+    const links=db.agUgLinks.filter(l=>l.ugId===ug.id);
+    const anchor=links.length ? netNodes.find(n=>n.id===links[0].agId) : null;
+    const ax=anchor?anchor.x:cx, ay=anchor?anchor.y:cy;
+    const siblings=db.ugs.filter(u=>
+      links[0] ? db.agUgLinks.some(l=>l.ugId===u.id&&l.agId===links[0].agId) : false
+    );
+    const idx=siblings.findIndex(u=>u.id===ug.id);
+    const cnt=Math.max(siblings.length,1);
+    const baseAngle=anchor ? Math.atan2(ay-cy,ax-cx) : 0;
+    const spread=Math.PI*0.7;
+    const angle=baseAngle + (cnt>1 ? (idx/(cnt-1))*spread-spread/2 : 0);
+    const dist=150;
+    netNodes.push({
+      id:ug.id, label:ug.name, sublabel:'UG · '+ug.typ,
+      x:ax+dist*Math.cos(angle), y:ay+dist*Math.sin(angle),
+      type:'ug', color:'#a78bfa', r:26, data:ug
+    });
+    links.forEach(l=>netEdges.push({from:l.agId,to:ug.id,color:'rgba(167,139,250,.4)',w:1.5,dashed:false}));
+  });
+
+  // Members orbiting their primary entity
+  db.mitglieder.filter(m=>m.aktiv).forEach(m=>{
+    const roles=db.rollen.filter(r=>r.personId===m.id&&r.aktiv);
+    const anchor=roles.length ? netNodes.find(n=>n.id===roles[0].entityId) : null;
+    const ax=anchor?anchor.x:cx+Math.random()*80-40;
+    const ay=anchor?anchor.y:cy+Math.random()*80-40;
+    // Spread members around their anchor
+    const siblings=db.mitglieder.filter(mx=>
+      db.rollen.some(r=>r.personId===mx.id&&r.entityId===(roles[0]?.entityId)&&r.aktiv)
+    );
+    const midx=siblings.findIndex(mx=>mx.id===m.id);
+    const mcnt=Math.max(siblings.length,1);
+    const mbase=anchor ? Math.atan2(ay-cy,ax-cx)+Math.PI : 0;
+    const mspread=Math.PI*1.2;
+    const mangle=mbase+(mcnt>1?(midx/(mcnt-1))*mspread-mspread/2:0);
+    const mdist=80;
+    netNodes.push({
+      id:m.id, label:m.name, sublabel:roles[0]?.rolle||'Mitglied',
+      x:ax+mdist*Math.cos(mangle), y:ay+mdist*Math.sin(mangle),
+      type:'m', color:'#22c55e', r:20, data:m
+    });
+    roles.forEach(r=>netEdges.push({from:r.entityId,to:m.id,color:'rgba(34,197,94,.25)',w:1,dashed:true}));
+  });
+
+  // ── Draw ─────────────────────────────────────────────────
   function draw(){
     ctx.save();
     ctx.clearRect(0,0,W,H);
-    ctx.translate(netTransform.x,netTransform.y);
-    ctx.scale(netTransform.scale,netTransform.scale);
-    // Grid
-    ctx.fillStyle='rgba(255,255,255,.02)';
-    for(let x=-500;x<W+500;x+=28)for(let y=-500;y<H+500;y+=28){ctx.beginPath();ctx.arc(x,y,.8,0,2*Math.PI);ctx.fill();}
+
+    // Background subtle grid
+    ctx.fillStyle='rgba(255,255,255,.015)';
+    for(let x=-W;x<W*2;x+=32) for(let y=-H;y<H*2;y+=32){
+      ctx.beginPath(); ctx.arc(x,y,.7,0,2*Math.PI); ctx.fill();
+    }
+
+    ctx.translate(netTransform.x, netTransform.y);
+    ctx.scale(netTransform.scale, netTransform.scale);
+
     // Edges
     netEdges.forEach(e=>{
-      const f=netNodes.find(n=>n.id===e.from),t=netNodes.find(n=>n.id===e.to);
-      if(!f||!t)return;
-      ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(t.x,t.y);
-      ctx.strokeStyle=e.color;ctx.lineWidth=e.w/netTransform.scale;ctx.stroke();
+      const f=netNodes.find(n=>n.id===e.from);
+      const t=netNodes.find(n=>n.id===e.to);
+      if(!f||!t) return;
+      ctx.save();
+      if(e.dashed){ ctx.setLineDash([4,4]); }
+      ctx.beginPath();
+      // Curved edges
+      const mx=(f.x+t.x)/2, my=(f.y+t.y)/2;
+      const dx=t.x-f.x, dy=t.y-f.y;
+      const len=Math.hypot(dx,dy);
+      const nx=-dy/len*20, ny=dx/len*20;
+      ctx.moveTo(f.x,f.y);
+      ctx.quadraticCurveTo(mx+nx,my+ny,t.x,t.y);
+      ctx.strokeStyle=e.color;
+      ctx.lineWidth=e.w/netTransform.scale;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
     });
+
     // Nodes
     netNodes.forEach(n=>{
-      const hl=netHighlightId&&!n.label.toLowerCase().includes(netHighlightId);
-      ctx.globalAlpha=hl?.2:1;
-      // glow
-      const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*2.2);
-      g.addColorStop(0,n.color+'44');g.addColorStop(1,'transparent');
-      ctx.fillStyle=g;ctx.beginPath();ctx.arc(n.x,n.y,n.r*2.2,0,2*Math.PI);ctx.fill();
-      // circle
-      ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,2*Math.PI);
-      ctx.fillStyle=n.color+'28';ctx.fill();
-      ctx.strokeStyle=n.color;ctx.lineWidth=n.type==='ag'?2.5:1.8;ctx.stroke();
-      // icon
-      ctx.font=`${n.r*.75}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillStyle=n.color;ctx.fillText(n.type==='ag'?'🏛':n.type==='ug'?'⬡':'◎',n.x,n.y);
-      // label
-      ctx.font=`${n.type==='ag'?600:400} ${n.type==='ag'?12.5:10}px Segoe UI,system-ui,sans-serif`;
-      ctx.fillStyle='rgba(221,225,240,.9)';ctx.textAlign='center';ctx.textBaseline='top';
-      const lab=n.label.length>15?n.label.slice(0,13)+'…':n.label;
-      ctx.fillText(lab,n.x,n.y+n.r+3);
+      const hl=netHighlightId&&!n.label.toLowerCase().includes(netHighlightId.toLowerCase());
+      ctx.globalAlpha=hl?.15:1;
+
+      // Outer glow
+      const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*2.5);
+      g.addColorStop(0,n.color+'33'); g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.arc(n.x,n.y,n.r*2.5,0,2*Math.PI); ctx.fill();
+
+      // Node background circle
+      ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,2*Math.PI);
+      ctx.fillStyle=n.color+'1a'; ctx.fill();
+      ctx.strokeStyle=n.color;
+      ctx.lineWidth=(n.type==='ag'?2.8:n.type==='ug'?2:1.5)/netTransform.scale;
+      ctx.stroke();
+
+      // Type icon (crisp text)
+      const iconSize=n.r*0.72;
+      ctx.font=`${iconSize}px sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle=n.color;
+      ctx.fillText(n.type==='ag'?'🏛':n.type==='ug'?'◈':'●',n.x,n.y);
+
+      // Main label — always readable
+      const fs=n.type==='ag'?13:n.type==='ug'?11:10;
+      ctx.font=`${n.type==='ag'?700:n.type==='ug'?600:400} ${fs}px Segoe UI,system-ui,sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='top';
+
+      // Label background for readability
+      const lw=ctx.measureText(n.label).width;
+      const lx=n.x-lw/2-4, ly=n.y+n.r+4;
+      ctx.fillStyle='rgba(13,15,24,.75)';
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(lx,ly,lw+8,fs+4,3) :
+        ctx.rect(lx,ly,lw+8,fs+4);
+      ctx.fill();
+
+      // Label text
+      ctx.fillStyle=n.type==='ag'?'#dde1f0':n.type==='ug'?'#c4b5fd':'#86efac';
+      ctx.fillText(n.label,n.x,ly+2);
+
+      // Sublabel (role / type)
+      if(n.sublabel && netTransform.scale>0.7){
+        ctx.font=`400 9px Segoe UI,system-ui,sans-serif`;
+        ctx.fillStyle='rgba(160,170,200,.7)';
+        ctx.fillText(n.sublabel,n.x,ly+fs+5);
+      }
+
       ctx.globalAlpha=1;
     });
+
+    // Legend
+    if(netTransform.scale>0.5){
+      ctx.save();
+      ctx.setTransform(1,0,0,1,0,0); // reset transform for legend
+      const items=[
+        {color:'#4f7cff',label:'Arbeitsgruppe (AG)',icon:'🏛'},
+        {color:'#a78bfa',label:'Untergruppe (UG)',icon:'◈'},
+        {color:'#22c55e',label:'Mitglied',icon:'●'},
+      ];
+      let ly2=16;
+      items.forEach(item=>{
+        ctx.fillStyle='rgba(13,15,24,.7)';
+        ctx.beginPath(); ctx.roundRect ? ctx.roundRect(12,ly2,170,20,4) : ctx.rect(12,ly2,170,20);
+        ctx.fill();
+        ctx.font='12px sans-serif'; ctx.fillStyle=item.color;
+        ctx.fillText(item.icon,22,ly2+14);
+        ctx.font='400 11px Segoe UI,system-ui,sans-serif'; ctx.fillStyle='rgba(200,210,230,.8)';
+        ctx.fillText(item.label,38,ly2+14);
+        ly2+=24;
+      });
+      ctx.restore();
+    }
+
     ctx.restore();
   }
 
-  // interaction
+  // ── Touch / Mouse interactions ────────────────────────────
   function getPos(e){
-    const r=canvas.getBoundingClientRect();
-    const mx=(e.clientX-r.left-netTransform.x)/netTransform.scale;
-    const my=(e.clientY-r.top-netTransform.y)/netTransform.scale;
-    return{x:mx,y:my,cx:e.clientX-r.left,cy:e.clientY-r.top};
+    const rect=canvas.getBoundingClientRect();
+    return {
+      x:(e.clientX-rect.left-netTransform.x)/netTransform.scale,
+      y:(e.clientY-rect.top-netTransform.y)/netTransform.scale,
+      cx:e.clientX-rect.left, cy:e.clientY-rect.top
+    };
   }
+
   canvas.onmousedown=e=>{
     const p=getPos(e);
-    netDrag=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+6);
-    if(netDrag){netDrag._ox=p.x-netDrag.x;netDrag._oy=p.y-netDrag.y;}
-    else{netPan.dragging=true;netPan.sx=e.clientX;netPan.sy=e.clientY;netPan.ox=netTransform.x;netPan.oy=netTransform.y;}
+    netDrag=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+8);
+    if(netDrag){ netDrag._ox=p.x-netDrag.x; netDrag._oy=p.y-netDrag.y; }
+    else{ netPan.dragging=true; netPan.sx=e.clientX; netPan.sy=e.clientY; netPan.ox=netTransform.x; netPan.oy=netTransform.y; }
   };
   canvas.onmousemove=e=>{
     const p=getPos(e);
-    if(netDrag){netDrag.x=p.x-netDrag._ox;netDrag.y=p.y-netDrag._oy;draw();}
-    else if(netPan.dragging){netTransform.x=netPan.ox+(e.clientX-netPan.sx);netTransform.y=netPan.oy+(e.clientY-netPan.sy);draw();}
-    // cursor
-    const hover=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+6);
+    if(netDrag){ netDrag.x=p.x-netDrag._ox; netDrag.y=p.y-netDrag._oy; draw(); }
+    else if(netPan.dragging){
+      netTransform.x=netPan.ox+(e.clientX-netPan.sx);
+      netTransform.y=netPan.oy+(e.clientY-netPan.sy);
+      draw();
+    }
+    const hover=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+8);
     canvas.style.cursor=hover?'pointer':netPan.dragging?'grabbing':'grab';
-    // tooltip
-    if(hover&&!netDrag)showNetTip(hover,e);else hideNetTip();
+    if(hover&&!netDrag) showNetTip(hover,e); else hideNetTip();
   };
   canvas.onmouseup=e=>{
     const p=getPos(e);
     if(!netPan.dragging&&!netDrag){
-      const hit=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+6);
-      if(hit)openDetail(hit.type==='ag'?'ag':hit.type==='ug'?'ug':'mitglied',hit.id);
+      const hit=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+8);
+      if(hit) openDetail(hit.type==='ag'?'ag':hit.type==='ug'?'ug':'mitglied',hit.id);
     }
-    netDrag=null;netPan.dragging=false;hideNetTip();
+    netDrag=null; netPan.dragging=false; hideNetTip();
   };
   canvas.onwheel=e=>{
     e.preventDefault();
-    const r=canvas.getBoundingClientRect();
-    const mx=e.clientX-r.left,my=e.clientY-r.top;
-    const delta=e.deltaY>0?.9:1.1;
-    netTransform.x=mx+(netTransform.x-mx)*delta;
-    netTransform.y=my+(netTransform.y-my)*delta;
-    netTransform.scale=Math.min(3,Math.max(.3,netTransform.scale*delta));
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    const f=e.deltaY>0?.88:1.12;
+    netTransform.x=mx+(netTransform.x-mx)*f;
+    netTransform.y=my+(netTransform.y-my)*f;
+    netTransform.scale=Math.min(4,Math.max(.25,netTransform.scale*f));
     draw();
   };
+  // Touch support
+  let lastTouchDist=0;
+  canvas.ontouchstart=e=>{
+    e.preventDefault();
+    if(e.touches.length===1){
+      const t=e.touches[0];
+      const p=getPos(t);
+      netDrag=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+12);
+      if(netDrag){ netDrag._ox=p.x-netDrag.x; netDrag._oy=p.y-netDrag.y; }
+      else{ netPan.dragging=true; netPan.sx=t.clientX; netPan.sy=t.clientY; netPan.ox=netTransform.x; netPan.oy=netTransform.y; }
+    } else if(e.touches.length===2){
+      lastTouchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    }
+  };
+  canvas.ontouchmove=e=>{
+    e.preventDefault();
+    if(e.touches.length===1){
+      const t=e.touches[0];
+      const p=getPos(t);
+      if(netDrag){ netDrag.x=p.x-netDrag._ox; netDrag.y=p.y-netDrag._oy; draw(); }
+      else if(netPan.dragging){
+        netTransform.x=netPan.ox+(t.clientX-netPan.sx);
+        netTransform.y=netPan.oy+(t.clientY-netPan.sy);
+        draw();
+      }
+    } else if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      const f=d/lastTouchDist;
+      netTransform.scale=Math.min(4,Math.max(.25,netTransform.scale*f));
+      lastTouchDist=d; draw();
+    }
+  };
+  canvas.ontouchend=e=>{ netDrag=null; netPan.dragging=false; };
+
   window._netDraw=draw;
   draw();
 }
+
 function showNetTip(n,e){
   const tip=el('net-tip');
   const a=ampel(n.data||{},{});
