@@ -2007,7 +2007,7 @@ async function sbLoadAll(){
       sb.from('nachrichten').select('*'),
       sb.from('notizen').select('*'),
       sb.from('nutzer').select('*').order('name'),
-      sb.from('einstellungen').select('*')
+      sb.from('einstellungen').select('*').then(function(r){ return r.error ? {data:[]} : r; })
     ]);
     var errs = results.filter(function(r){ return r.error; });
     if(errs.length){ throw new Error(errs[0].error.message); }
@@ -2382,7 +2382,17 @@ async function wsSendChat(entityId){
   try{
     await getSB().from('chats').insert({entity_id:entityId,autor:msg.autor,text:text,ts:ts});
     showSyncDot(true);
-  }catch(e){ console.warn('chat insert:',e); }
+  }catch(e){
+    console.warn('chat insert:',e);
+    // Show error in chat box
+    var ecb=elQ('chatbox-ws-'+entityId)||elQ('chatbox-'+entityId);
+    if(ecb){
+      var ed=document.createElement('div');
+      ed.style.cssText='margin-bottom:6px;text-align:center';
+      ed.innerHTML='<small style="color:#ef4444">&#9888; Nachricht nicht gesendet: '+e.message+'</small>';
+      ecb.appendChild(ed);
+    }
+  }
 }
 
 // ── Posteingang ───────────────────────────────────────────
@@ -2618,16 +2628,17 @@ function setAiProvider(btn){ aiProvider=btn.getAttribute('data-p'); renderEinst(
 async function saveApiKey(){
   var k=(elQ('set-key')||{value:''}).value.trim();
   if(!k){ toast('Bitte Key eingeben','error'); return; }
-  if(aiProvider==='gemini') geminiKey=k; else{ if(!k.startsWith('sk-')){ toast('Claude-Key muss mit sk- beginnen','error'); return; } apiKey=k; }
+  if(aiProvider==='gemini'){ geminiKey=k; } else { apiKey=k; }
   // Save to Supabase for all users
+  // Save to Supabase (best effort - don't block if table missing)
   try{
     var sb=getSB();
     await sb.from('einstellungen').upsert([
       {key:aiProvider==='gemini'?'gemini_key':'claude_key', value:k},
       {key:'ai_provider', value:aiProvider}
     ],{onConflict:'key'});
-    toast('Key gespeichert &amp; f&uuml;r alle verf&uuml;gbar &#10003;','ok');
-  }catch(e){ toast('Lokal gespeichert (DB-Sync fehlgeschlagen)','ok'); }
+  }catch(e){ console.warn('settings sync:', e.message); }
+  toast((aiProvider==='gemini'?'Gemini':'Claude')+'-Key gespeichert &#10003;','ok');
   renderEinst();
 }
 
@@ -2641,7 +2652,9 @@ async function testApiKey(){
     var r=await aiCall('Antworte nur mit: OK',50);
     if(st) st.innerHTML='<span style="color:#22c55e">&#10003; Verbindung OK! ('+r.trim().slice(0,20)+')</span>';
   }catch(e){
-    if(st) st.innerHTML='<span style="color:#ef4444">Fehler: '+e.message+'</span>';
+    var msg = e.message||'Unbekannter Fehler';
+    if(st) st.innerHTML='<span style="color:#ef4444">Fehler: '+msg+'</span>';
+    console.error('testApiKey:', e);
   }
 }
 
@@ -2721,9 +2734,13 @@ async function toggleNutzerAktiv(id){
 // ── KI ────────────────────────────────────────────────────
 async function aiCall(prompt, maxTokens){
   maxTokens=maxTokens||1500;
+  // Auto-detect: use whichever key is available
   if(aiProvider==='claude'&&apiKey) return aiCallClaude(prompt,maxTokens);
+  if(aiProvider==='gemini'&&geminiKey) return aiCallGemini(prompt,maxTokens);
+  // Fallback: try any available key
   if(geminiKey) return aiCallGemini(prompt,maxTokens);
-  throw new Error('Kein API-Key eingetragen. Bitte in Einstellungen eintragen.');
+  if(apiKey) return aiCallClaude(prompt,maxTokens);
+  throw new Error('Kein API-Key eingetragen. Bitte unter Einstellungen eintragen.');
 }
 async function aiCallClaude(prompt,maxTokens){
   var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true','x-api-key':apiKey},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})});
