@@ -710,7 +710,8 @@ function renderView(view){
 // ════════════════════════════════════════════════════════
 function renderDash(){
   const c=el('content');
-  const totalAG=db.ags.length,aktAG=db.ags.filter(a=>a.status==='Aktiv').length;
+  const visAGs = isSA()?db.ags:db.ags.filter(a=>canSee(a.id));
+  const totalAG=visAGs.length,aktAG=visAGs.filter(a=>a.status==='Aktiv').length;
   const totalUG=db.ugs.length;
   const totalM=db.mitglieder.filter(m=>m.aktiv).length;
   const offT=db.aufgaben.filter(t=>t.status!=='Erledigt'&&t.status!=='Archiviert').length;
@@ -731,7 +732,7 @@ function renderDash(){
 
   // AG cards
   const agDiv=el('dash-ags');
-  agDiv.innerHTML=db.ags.length?db.ags.map(ag=>{
+  agDiv.innerHTML=db.ags.length?(isSA()?db.ags:db.ags.filter(a=>canSee(a.id))).map(ag=>{
     const ugs=db.agUgLinks.filter(l=>l.agId===ag.id).length;
     const ts=db.aufgaben.filter(t=>t.entityId===ag.id&&t.status!=='Erledigt').length;
     const a=ampel(ag);
@@ -795,8 +796,9 @@ function renderAGs(filter=''){
   c.innerHTML=`<div class="card"><div class="table-wrap"><table>
     <thead><tr><th>ID</th><th>Name</th><th>Kategorie</th><th>Status</th><th>Priorität</th><th>Koordination</th><th>UGs</th><th>Konzept</th><th>Ampel</th><th></th></tr></thead>
     <tbody id="ag-tbody"></tbody></table></div></div>`;
-  let list=db.ags;
-  if(filter)list=list.filter(a=>JSON.stringify(a).toLowerCase().includes(filter));
+  // Permission filter: non-SuperAdmin only see their AGs
+  let list = isSA() ? db.ags : db.ags.filter(a=>canSee(a.id));
+  if(filter) list=list.filter(a=>JSON.stringify(a).toLowerCase().includes(filter));
   el('ag-tbody').innerHTML=list.length?list.map(ag=>{
     const ugs=db.agUgLinks.filter(l=>l.agId===ag.id).length;
     const hk=db.konzepte.some(k=>k.entityId===ag.id);
@@ -823,8 +825,8 @@ function renderUGs(filter=''){
   c.innerHTML=`<div class="card"><div class="table-wrap"><table>
     <thead><tr><th>ID</th><th>Name</th><th>Typ</th><th>Lead</th><th>Status</th><th>Zugeordnete AGs</th><th>Konzept</th><th>Kanal</th><th></th></tr></thead>
     <tbody id="ug-tbody"></tbody></table></div></div>`;
-  let list=db.ugs;
-  if(filter)list=list.filter(u=>JSON.stringify(u).toLowerCase().includes(filter));
+  let list = isSA() ? db.ugs : db.ugs.filter(u=>canSee(u.id));
+  if(filter) list=list.filter(u=>JSON.stringify(u).toLowerCase().includes(filter));
   el('ug-tbody').innerHTML=list.length?list.map(ug=>{
     const links=db.agUgLinks.filter(l=>l.ugId===ug.id);
     const hk=db.konzepte.some(k=>k.entityId===ug.id);
@@ -849,7 +851,18 @@ function renderMitglieder(filter=''){
   c.innerHTML=`<div class="card"><div class="table-wrap"><table>
     <thead><tr><th>ID</th><th>Name</th><th>Region</th><th>Kompetenzen</th><th>Verfügbarkeit</th><th>Aktiv</th><th>Rollen</th><th></th></tr></thead>
     <tbody id="m-tbody"></tbody></table></div></div>`;
-  let list=db.mitglieder;
+    // Show all members for SuperAdmin; others see members of their AGs/UGs
+  let list = db.mitglieder;
+  if(!isSA()){
+    const visibleEntities = [
+      ...(curUser.agIds||[]).filter(id=>id!=='*'),
+      ...(curUser.ugIds||[]).filter(id=>id!=='*')
+    ];
+    const visiblePersonIds = new Set(
+      db.rollen.filter(r=>visibleEntities.includes(r.entityId)&&r.aktiv).map(r=>r.personId)
+    );
+    list = list.filter(m=>visiblePersonIds.has(m.id));
+  }
   if(filter)list=list.filter(m=>JSON.stringify(m).toLowerCase().includes(filter));
   el('m-tbody').innerHTML=list.length?list.map(m=>{
     const roles=db.rollen.filter(r=>r.personId===m.id&&r.aktiv);
@@ -886,8 +899,10 @@ function setTaskFilter(f,btn){
   applyTaskFilter();
 }
 function applyTaskFilter(){
+  // Pre-filter by permission
+  const allTasks = isSA()?allTasks:allTasks.filter(function(t){return canSee(t.entityId);});
   const today=new Date();
-  let list=[...db.aufgaben];
+  let list=[...allTasks];
   if(taskFilter==='offen')list=list.filter(t=>t.status!=='Erledigt'&&t.status!=='Archiviert');
   if(taskFilter==='hoch')list=list.filter(t=>t.prio==='Hoch'||t.prio==='Kritisch');
   if(taskFilter==='ueberfaellig')list=list.filter(t=>t.status!=='Erledigt'&&new Date(t.faellig)<today);
@@ -1958,12 +1973,14 @@ function updateBadges(){
 function L_init(){
   var quick=elQ('Lquick'); if(!quick) return;
   quick.innerHTML='';
-  var colors=['#4f7cff','#22c55e','#a78bfa','#f59e0b','#14b8a6'];
-  db.nutzer.filter(function(u){ return u.aktiv!==false; }).forEach(function(u,i){
+  // Only SuperAdmins get a quick-login button (auto-fills PW and logs in)
+  // Regular users just type name + password manually
+  var admins=db.nutzer.filter(function(u){ return u.aktiv!==false && u.rolle==='SuperAdmin'; });
+  admins.forEach(function(u,i){
     var btn=document.createElement('button');
     btn.className='qbtn';
-    btn.style.borderColor=colors[i%colors.length];
-    btn.innerHTML='<b>'+u.name+'</b><s style="color:'+colors[i%colors.length]+'">'+u.rolle+'</s>';
+    btn.style.borderColor='#4f7cff';
+    btn.innerHTML='<b>'+u.name+'</b><s style="color:#4f7cff">Admin</s>';
     btn.setAttribute('data-n',u.name);
     btn.setAttribute('data-p',u.pw);
     btn.addEventListener('click',function(){
@@ -1973,6 +1990,9 @@ function L_init(){
     });
     quick.appendChild(btn);
   });
+  // If no quick buttons, hide the section
+  var qsec=elQ('Lquick');
+  if(qsec) qsec.style.display=admins.length?'flex':'none';
   elQ('L_name').focus();
 }
 function L_filter(val){
@@ -3177,25 +3197,28 @@ function handleRealtimeChange(table, event, record){
     if(event === 'INSERT' && record.entity_id){
       const msgs = chatOf(record.entity_id);
       const exists = msgs.find(m => m._sbid === record.id);
-      if(!exists && record.autor !== (curUser ? curUser.name : '')){
+      if(!exists){
         msgs.push({ autor: record.autor, text: record.text, ts: record.ts, _sbid: record.id });
-        // If workspace is open for this entity, refresh chat
+        // If workspace is open for this entity, append message
         if(curView === 'ws_' + record.entity_id){
-          const cb = document.getElementById('chatbox-ws-' + record.entity_id);
-          if(cb){
-            const d = document.createElement('div');
-            d.style.cssText = 'margin-bottom:8px;text-align:left';
-            d.innerHTML = `<div style="display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;max-width:75%"><div style="font-size:12px">${record.text}</div><div style="font-size:10px;color:var(--muted2);margin-top:2px">${record.autor} · ${record.ts}</div></div>`;
-            cb.appendChild(d); cb.scrollTop = cb.scrollHeight;
+          var cb2 = document.getElementById('chatbox-ws-' + record.entity_id);
+          if(cb2){
+            var mine2 = record.autor === (curUser ? curUser.name : '');
+            var d2 = document.createElement('div');
+            d2.style.cssText = 'margin-bottom:8px;text-align:'+(mine2?'right':'left');
+            d2.innerHTML = '<div style="display:inline-block;background:'+(mine2?'rgba(79,124,255,.25)':'var(--surface2)')+';border:1px solid var(--border);border-radius:8px;padding:6px 10px;max-width:75%"><div style="font-size:12px">'+record.text+'</div><div style="font-size:10px;color:var(--muted2);margin-top:2px">'+record.autor+' &middot; '+record.ts+'</div></div>';
+            cb2.appendChild(d2); cb2.scrollTop = cb2.scrollHeight;
           }
         }
-        // Show toast
-        toast(`💬 ${record.autor}: ${record.text.slice(0,30)}`, 'info');
+        // Toast only for messages from others
+        if(record.autor !== (curUser ? curUser.name : '')){
+          toast('&#128172; '+record.autor+': '+record.text.slice(0,30), 'info');
+        }
       }
     }
     return;
   }
-  const localKey = map[table];
+  var localKey = map[table];
   if(!localKey || !db[localKey]) return;
 
   if(event === 'INSERT'){
@@ -3394,9 +3417,16 @@ async function sbSendChat(entityId, text){
 
 async function sbLoadChats(entityId){
   try {
-    const rows = await sbGet('chats', `select=*&entity_id=eq.${encodeURIComponent(entityId)}&order=created_at`);
-    db.chats[entityId] = rows.map(r => ({ autor: r.autor, text: r.text, ts: r.ts, _sbid: r.id }));
-  } catch(e){ console.warn('sbLoadChats:', e); }
+    var sb = getSB();
+    var {data, error} = await sb.from('chats')
+      .select('*')
+      .eq('entity_id', entityId)
+      .order('created_at', {ascending: true});
+    if(error) throw new Error(error.message);
+    db.chats[entityId] = (data||[]).map(function(r){
+      return { autor: r.autor, text: r.text, ts: r.ts, _sbid: r.id };
+    });
+  } catch(e){ console.warn('sbLoadChats:', e.message); }
 }
 
 
