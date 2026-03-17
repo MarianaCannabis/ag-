@@ -1973,26 +1973,22 @@ function updateBadges(){
 function L_init(){
   var quick=elQ('Lquick'); if(!quick) return;
   quick.innerHTML='';
-  // Only SuperAdmins get a quick-login button (auto-fills PW and logs in)
-  // Regular users just type name + password manually
-  var admins=db.nutzer.filter(function(u){ return u.aktiv!==false && u.rolle==='SuperAdmin'; });
-  admins.forEach(function(u,i){
+  // Quick-buttons: only pre-fill the NAME — password always required
+  var users=db.nutzer.filter(function(u){ return u.aktiv!==false; }).slice(0,5);
+  users.forEach(function(u){
     var btn=document.createElement('button');
     btn.className='qbtn';
-    btn.style.borderColor='#4f7cff';
-    btn.innerHTML='<b>'+u.name+'</b><s style="color:#4f7cff">Admin</s>';
+    var col=u.rolle==='SuperAdmin'?'#4f7cff':u.rolle==='Admin'?'#22c55e':'#a78bfa';
+    btn.style.borderColor=col;
+    btn.innerHTML='<b>'+u.name+'</b><s style="color:'+col+'">'+u.rolle+'</s>';
     btn.setAttribute('data-n',u.name);
-    btn.setAttribute('data-p',u.pw);
     btn.addEventListener('click',function(){
       elQ('L_name').value=this.getAttribute('data-n');
-      elQ('L_pw').value=this.getAttribute('data-p');
-      L_submit();
+      elQ('L_pw').value='';
+      elQ('L_pw').focus();
     });
     quick.appendChild(btn);
   });
-  // If no quick buttons, hide the section
-  var qsec=elQ('Lquick');
-  if(qsec) qsec.style.display=admins.length?'flex':'none';
   elQ('L_name').focus();
 }
 function L_filter(val){
@@ -2349,18 +2345,41 @@ function setAiProvider(btn){
   aiProvider = btn.getAttribute('data-p');
   renderEinst();
 }
-function saveApiKey(){
+async function saveApiKey(){
   var k = (elQ('set-key')||{value:''}).value.trim();
   if(!k){ toast('Bitte Key eingeben','error'); return; }
   if(aiProvider === 'gemini'){
     geminiKey = k;
-    toast('Gemini-Key gespeichert &#10003;','ok');
   } else {
     if(!k.startsWith('sk-')){ toast('Claude-Key muss mit sk- beginnen','error'); return; }
     apiKey = k;
-    toast('Claude-Key gespeichert &#10003;','ok');
+  }
+  // Save to Supabase so ALL users share the same key
+  try {
+    var sb = getSB();
+    await sb.from('einstellungen').upsert([
+      {key: aiProvider==='gemini'?'gemini_key':'claude_key', value: k},
+      {key: 'ai_provider', value: aiProvider}
+    ], {onConflict:'key'});
+    toast('KI-Key gespeichert & geteilt &#10003;','ok');
+  } catch(e){
+    toast('Lokal gespeichert (DB-Sync fehlgeschlagen)','ok');
   }
   renderEinst();
+}
+
+async function loadSettings(){
+  try {
+    var sb = getSB();
+    var {data} = await sb.from('einstellungen').select('*');
+    if(!data) return;
+    data.forEach(function(row){
+      if(row.key==='gemini_key' && row.value) geminiKey=row.value;
+      if(row.key==='claude_key' && row.value) apiKey=row.value;
+      if(row.key==='ai_provider' && row.value) aiProvider=row.value;
+    });
+    console.log('Settings loaded, provider:', aiProvider, 'key set:', !!(geminiKey||apiKey));
+  } catch(e){ console.warn('loadSettings:', e.message); }
 }
 async function testApiKey(){
   var st=elQ('key-status'); if(st) st.innerHTML='<span style="color:#6b7199">Teste&hellip;</span>';
@@ -3078,7 +3097,7 @@ async function aiCallClaude(prompt, maxTokens){
 }
 
 async function aiCallGemini(prompt, maxTokens){
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+geminiKey;
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+geminiKey;
   const r = await fetch(url,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -3164,10 +3183,13 @@ async function sbUpsert(table, row){
 // ── Realtime via Supabase JS SDK ─────────────────────────
 var sbRT = null;
 
+var _rtStatus = 'disconnected';
+var _chatPollInterval = null;
+
 function sbRealtime(){
   try {
     var sb = getSB();
-    sbRT = sb.channel('mariana-changes')
+    sbRT = sb.channel('mariana-v11')
       .on('postgres_changes', {event:'*', schema:'public', table:'aufgaben'},
           function(p){ handleRealtimeChange('aufgaben', p.eventType, p.new||p.old); })
       .on('postgres_changes', {event:'*', schema:'public', table:'nachrichten'},
@@ -3179,10 +3201,63 @@ function sbRealtime(){
       .on('postgres_changes', {event:'*', schema:'public', table:'konzepte'},
           function(p){ handleRealtimeChange('konzepte', p.eventType, p.new||p.old); })
       .subscribe(function(status){
+        _rtStatus = status;
         console.log('Supabase Realtime:', status);
-        if(status === 'SUBSCRIBED') showSyncIndicator();
+        var dot = document.getElementById('sync-dot');
+        if(status === 'SUBSCRIBED'){
+          showSyncIndicator();
+          if(dot) dot.title = 'Live-Sync aktiv';
+          // Stop polling if it was running
+          if(_chatPollInterval){ clearInterval(_chatPollInterval); _chatPollInterval=null; }
+        } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
+          if(dot){ dot.style.background='#ef4444'; dot.title='Sync-Fehler - polling'; }
+          startChatPolling();
+        }
       });
-  } catch(err){ console.warn('RT not available:', err); }
+  } catch(err){
+    console.warn('RT not available:', err);
+    startChatPolling();
+  }
+}
+
+// Fallback: poll Supabase every 4 seconds if realtime fails
+var _lastChatCheck = {};
+function startChatPolling(){
+  if(_chatPollInterval) return;
+  console.log('Starting chat polling fallback...');
+  _chatPollInterval = setInterval(async function(){
+    if(!curUser) return;
+    // Poll chats for currently open workspace
+    if(curView && curView.startsWith('ws_')){
+      var eid = curView.replace('ws_','');
+      try {
+        var sb = getSB();
+        var since = _lastChatCheck[eid] || '2000-01-01';
+        var {data} = await sb.from('chats').select('*')
+          .eq('entity_id', eid)
+          .gt('created_at', since)
+          .order('created_at');
+        if(data && data.length){
+          _lastChatCheck[eid] = new Date().toISOString();
+          data.forEach(function(r){
+            if(r.autor !== curUser.name){
+              handleRealtimeChange('chats','INSERT',r);
+            }
+          });
+        }
+      } catch(e){}
+    }
+    // Poll aufgaben changes
+    try {
+      var sb2 = getSB();
+      var since2 = _lastChatCheck['__aufgaben'] || new Date(Date.now()-10000).toISOString();
+      var {data:td} = await sb2.from('aufgaben').select('*').gt('updated_at', since2);
+      if(td && td.length){
+        _lastChatCheck['__aufgaben'] = new Date().toISOString();
+        td.forEach(function(r){ handleRealtimeChange('aufgaben','UPDATE',r); });
+      }
+    } catch(e){}
+  }, 4000);
 }
 
 function handleRealtimeChange(table, event, record){
