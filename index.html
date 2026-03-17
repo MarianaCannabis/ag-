@@ -2408,8 +2408,56 @@ function renderPosteingang(){
       +'<div style="font-size:11px;color:var(--muted);margin-top:4px">Von: '+n.von+' &middot; '+n.ts+'</div>'
       +'<div style="font-size:11px;color:var(--muted2);margin-top:3px">'+n.text.slice(0,60)+'&hellip;</div></div>';
   });
-  if(!db.nachrichten.length) h+='<div style="text-align:center;padding:50px;color:var(--muted)"><div style="font-size:40px">&#128237;</div><h3>Keine Nachrichten</h3></div>';
+  if(!db.nachrichten.length) h+='<div style="text-align:center;padding:30px;color:var(--muted)"><div style="font-size:40px">&#128237;</div><h3>Keine Nachrichten</h3></div>';
+  
+  // Quick-PN buttons for each member
+  h += '<div style="margin-top:20px"><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">&#9889; Schnell-Nachricht senden</div>';
+  h += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+  db.mitglieder.filter(function(m){ return m.aktiv!==false && m.id!==curUser.id; }).forEach(function(m){
+    h += '<button class="btn btn-ghost btn-sm" style="display:flex;align-items:center;gap:6px;padding:6px 12px" data-name="'+m.name+'" onclick="openQuickNach(this.dataset.name)">'
+       + '<div style="width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+m.name.slice(0,2).toUpperCase()+'</div>'
+       + m.name+'</button>';
+  });
+  h += '</div></div>';
+  
   elQ('content').innerHTML=h;
+}
+
+function openQuickNach(name){
+  // Show inline compose form for this person
+  var existing = elQ('quick-nach-form');
+  if(existing) existing.remove();
+  var form = document.createElement('div');
+  form.id = 'quick-nach-form';
+  form.style.cssText = 'position:fixed;bottom:60px;right:14px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;width:320px;z-index:300;box-shadow:0 4px 24px rgba(0,0,0,.4)';
+  form.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+    + '<strong style="font-size:13px">&#9993; PN an '+name+'</strong>'
+    + '<button class="qn-close" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px">&#215;</button></div>'
+    + '<input id="qn-betr" placeholder="Betreff (optional)..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box;margin-bottom:8px">'
+    + '<textarea id="qn-txt" rows="3" placeholder="Nachricht..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;resize:none;box-sizing:border-box;margin-bottom:8px"></textarea>'
+    + '<div style="display:flex;gap:8px">'
+    + '<button class="btn btn-primary btn-sm" style="flex:1" data-name="'+name+'" onclick="sendQuickNach(this.dataset.name)">Senden &#10148;</button>'
+    + '<button class="btn btn-ghost btn-sm qn-close">Abbrechen</button>'
+    + '</div>';
+  document.body.appendChild(form);
+  // Attach close buttons via JS (no inline handlers needed)
+  form.querySelectorAll('.qn-close').forEach(function(btn){
+    btn.addEventListener('click', function(){ form.remove(); });
+  });
+  setTimeout(function(){ var t=document.getElementById('qn-txt'); if(t) t.focus(); }, 50);
+}
+
+async function sendQuickNach(toName){
+  var txt = (document.getElementById('qn-txt')||{value:''}).value.trim();
+  if(!txt){ toast('Bitte Text eingeben','error'); return; }
+  var betr = (document.getElementById('qn-betr')||{value:''}).value.trim() || '(Schnell-Nachricht)';
+  var n = {id:'MSG-'+Date.now(), von:curUser?curUser.name:'Admin', an:toName,
+           betreff:betr, text:txt, ts:nowTs(), gelesen:false, antworten:[]};
+  db.nachrichten.push(n);
+  await sbUpsert('nachrichten', n);
+  var form=document.getElementById('quick-nach-form'); if(form) form.remove();
+  updateBadges();
+  toast('Nachricht an '+toName+' gesendet &#10003;','ok');
 }
 function openNachDet(id){
   var n=db.nachrichten.find(function(x){return x.id===id;}); if(!n) return;
@@ -2748,7 +2796,7 @@ async function aiCallClaude(prompt,maxTokens){
   var d=await r.json(); return d.content.map(function(b){return b.text||'';}).join('');
 }
 async function aiCallGemini(prompt,maxTokens){
-  var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:Math.max(100,maxTokens),temperature:0.3}})});
+  var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:Math.max(100,maxTokens),temperature:0.3}})});
   if(!r.ok){ var e=await r.json().catch(function(){return {};}); throw new Error('Gemini: '+(e.error&&e.error.message||'HTTP '+r.status)); }
   var d=await r.json(); return (d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||'';
 }
