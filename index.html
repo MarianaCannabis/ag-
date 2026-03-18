@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V16</title>
+<title>Mariana CSC - AG-Verwaltung V17</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -262,14 +262,14 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 .login-btn{width:100%;padding:11px;border-radius:8px;border:none;background:#4f7cff;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;}
 .login-btn:hover{filter:brightness(1.1);}
 .login-err{color:#ef4444;font-size:12px;text-align:center;margin-top:8px;display:none;min-height:18px;}
-#ubadge{position:fixed;bottom:14px;left:14px;background:#1a2035;border:1px solid #2a3350;border-radius:20px;padding:6px 11px;display:none;align-items:center;gap:7px;cursor:pointer;z-index:100;font-size:11px;}
+#ubadge{position:fixed;bottom:14px;right:30px;background:#1a2035;border:1px solid #2a3350;border-radius:20px;padding:6px 11px;display:none;align-items:center;gap:7px;cursor:pointer;z-index:100;font-size:11px;}
 .ubdot{width:8px;height:8px;border-radius:50%;}
-#livepanel{position:fixed;bottom:50px;left:14px;background:#1a2035;border:1px solid #2a3350;border-radius:10px;padding:12px;min-width:200px;display:none;z-index:99;}
+#livepanel{position:fixed;bottom:50px;right:14px;background:#1a2035;border:1px solid #2a3350;border-radius:10px;padding:12px;min-width:200px;display:none;z-index:99;}
 .live-u{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;}
 .live-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 
 
-/* V16 */
+/* V17 */
 #login-overlay{position:fixed;inset:0;background:#0d1117;display:none;align-items:center;justify-content:center;z-index:9999}
 .login-box{background:#161b27;border:1px solid #2a3350;border-radius:16px;padding:36px 32px;width:100%;max-width:400px}
 .login-logo{text-align:center;font-size:32px;margin-bottom:6px}
@@ -299,13 +299,13 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 .live-u{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px}
 .live-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .ws-plan-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px}
+.task-clickable:hover{border-color:var(--accent)!important;cursor:pointer}
 .timeline-row{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
 .timeline-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:3px}
 .gantt-bar{height:24px;border-radius:4px;background:var(--accent);opacity:.8;position:relative;cursor:pointer}
 .gantt-label{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:absolute;left:6px;top:50%;transform:translateY(-50%);color:#fff}
 #tb-user{display:none;align-items:center;gap:8px;flex-shrink:0}
 .nach-item:hover{border-color:#4f7cff!important;cursor:pointer}
-.task-clickable:hover{border-color:var(--accent)!important}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 </style>
@@ -330,7 +330,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V16</div>
+    <div class="login-sub">AG-Verwaltung V17</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -394,7 +394,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V16</p>
+    <p>AG-Verwaltung V17</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -414,9 +414,11 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
       <div class="nav-item" data-view="aufgaben" onclick="nav(this)"><span class="ico">✅</span>Aufgaben <span class="nav-badge" id="nb-aufgaben"></span></div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Konzepte</div>
-      <div class="nav-item" data-view="konzepte" onclick="nav(this)"><span class="ico">📄</span>Konzept-Archiv</div>
-      <div class="nav-item" data-view="wizard" onclick="nav(this)"><span class="ico">✨</span>KI-Assistent</div>
+      <div class="nav-label">Konzepte &amp; KI</div>
+      <div class="nav-item" data-view="konzepte" onclick="nav(this)"><span class="ico">&#128196;</span>Konzept-Archiv</div>
+      <div class="nav-item" data-view="wizard" onclick="nav(this)"><span class="ico">&#10024;</span>KI-Assistent</div>
+      <div class="nav-item" data-view="upload" onclick="nav(this)"><span class="ico">&#128204;</span>Konzept hochladen</div>
+    </div>
     <div class="nav-section">
       <div class="nav-label">Kommunikation</div>
       <div class="nav-item" data-view="posteingang" onclick="nav(this)"><span class="ico">&#9993;</span>Posteingang<span id="nb-post" style="margin-left:auto;background:#4f7cff;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;display:none"></span></div>
@@ -424,19 +426,10 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
     </div>
     <div class="nav-section">
       <div class="nav-label">Tools</div>
-      
       <div class="nav-item" data-view="freigaben" onclick="nav(this)"><span class="ico">&#128274;</span>Freigaben<span id="nb-frg" style="margin-left:auto;background:#f59e0b;color:#000;border-radius:10px;padding:1px 6px;font-size:10px;display:none"></span></div>
       <div class="nav-item" data-view="notizen" onclick="nav(this)"><span class="ico">&#128221;</span>Notizen</div>
-      <div class="nav-item" data-view="upload" onclick="nav(this)"><span class="ico">&#128204;</span>Konzept hochladen</div>
       <div class="nav-item" data-view="einst" onclick="nav(this)"><span class="ico">&#9881;</span>Einstellungen</div>
     </div>
-    <div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#6b7199;padding:12px 16px 4px;text-transform:uppercase">Kommunikation</div>
-    
-    
-    <div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#6b7199;padding:12px 16px 4px;text-transform:uppercase">Verwaltung</div>
-    
-    
-    
     </div>
   </div>
   <div id="ag-nav" style="display:none">
@@ -568,6 +561,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <div class="net-tooltip" id="net-tip"></div>
 <div class="toast" id="toast"></div>
 
+<scrip
 <script>
 
 // ═══════════════════════════════════════════════════════════
@@ -1013,11 +1007,9 @@ function delKonzept(id){
   renderView('konzepte');toast('Konzept gelöscht','ok');
 }
 function buildTargetOpts(sel=''){
-  var none='<option value=""'+((!sel||sel==='')?' selected':'')+'>-- kein Bezug --</option>';
-  var all='<option value="*"'+(sel==='*'?' selected':'')+'>&#9733; Alle Gruppen (Vollzugriff)</option>';
   const ag=db.ags.map(a=>`<option value="${a.id}" ${sel===a.id?'selected':''}>[AG] ${a.id} – ${a.name}</option>`).join('');
   const ug=db.ugs.map(u=>`<option value="${u.id}" ${sel===u.id?'selected':''}>[UG] ${u.id} – ${u.name}</option>`).join('');
-  return none+all+ag+ug;
+  return ag+ug;
 }
 function openKonzeptModal(preId=''){
   editId=null;
@@ -1149,16 +1141,34 @@ function openDetail(type,id){
     el('m-detail-title').textContent=m.name;
     el('m-detail-edit').onclick=()=>{cm('m-detail');openMitgliedModal(id)};
     const roles=db.rollen.filter(r=>r.personId===id&&r.aktiv);
+    const nutzerAcc=db.nutzer.find(u=>u.name===m.name);
     body.innerHTML=`
-    <div style="text-align:center;margin-bottom:20px">
-      ${avatar(m.name,60,20)}
-      <h3 style="margin-top:10px;font-size:16px">${m.name}</h3>
-      <p class="text-m">${m.region||''} ${m.verfueg?'· '+m.verfueg:''}</p>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+      ${avatar(m.name,56,18)}
+      <div>
+        <h3 style="font-size:16px;margin:0 0 4px">${m.name}</h3>
+        <div style="font-size:12px;color:var(--muted2)">${m.region||''} ${m.verfueg?'&middot; Verf&uuml;gbarkeit: '+m.verfueg:''}</div>
+        ${nutzerAcc?`<span style="font-size:10px;background:rgba(79,124,255,.2);color:#4f7cff;border-radius:4px;padding:2px 6px;margin-top:4px;display:inline-block">&#128275; Login: ${nutzerAcc.rolle}</span>`:'<span style="font-size:10px;color:var(--muted2)">Kein Login-Konto</span>'}
+      </div>
     </div>
     <div class="dgrid mb16">
       <div class="di"><label>ID</label><p><code>${m.id}</code></p></div>
       <div class="di"><label>Aktiv</label><p>${m.aktiv?'<span class="badge b-green">Ja</span>':'<span class="badge b-gray">Nein</span>'}</p></div>
-      <div class="di"><label>Verfügbarkeit</label><p>${sbadge(m.verfueg||'–')}</p></div>
+      <div class="di"><label>Kontakt</label><p>${m.kontakt||'&ndash;'}</p></div>
+      <div class="di"><label>Region</label><p>${m.region||'&ndash;'}</p></div>
+      <div class="di"><label>Kompetenzen</label><p>${m.kompetenzen||'&ndash;'}</p></div>
+      <div class="di"><label>Verf&uuml;gbarkeit</label><p>${m.verfueg||'&ndash;'}</p></div>
+      <div class="di"><label>Start</label><p>${m.start||'&ndash;'}</p></div>
+      ${m.notizen?`<div class="di full"><label>Notizen</label><p>${m.notizen}</p></div>`:''}
+    </div>
+    <div class="sep">Rollen &amp; Zuordnungen</div>
+    ${roles.length?`<div class="dgrid">${roles.map(r=>{
+      const ent=r.entityTyp==='AG'?db.ags.find(a=>a.id===r.entityId):db.ugs.find(u=>u.id===r.entityId);
+      const col=r.entityTyp==='AG'?'#4f7cff':'#a78bfa';
+      return '<div class="di"><label style="color:'+col+'">'+r.entityTyp+': '+r.entityId+'</label><p>'+(r.rolle||'Mitglied')+(ent?' &middot; '+ent.name:'')+'</p></div>';
+    }).join('')}</div>`:'<p style="color:var(--muted);font-size:12px">Noch keiner AG/UG zugeordnet.</p>'}
+    ${nutzerAcc?`<div class="sep">Login-Zugriff</div><div class="dgrid"><div class="di"><label>Rolle</label><p>${nutzerAcc.rolle}</p></div><div class="di"><label>AGs</label><p>${nutzerAcc.agIds.includes('*')?'Alle':nutzerAcc.agIds.join(', ')||'&ndash;'}</p></div><div class="di"><label>UGs</label><p>${nutzerAcc.ugIds.includes('*')?'Alle':nutzerAcc.ugIds.join(', ')||'&ndash;'}</p></div></div>`:''}
+    <div class="sep">Verfügbarkeit</label><p>${sbadge(m.verfueg||'–')}</p></div>
       <div class="di"><label>Start</label><p>${m.start||'–'}</p></div>
       <div class="di full"><label>Kompetenzen</label><p>${m.kompetenzen||'–'}</p></div>
       ${m.notizen?`<div class="di full"><label>Notizen</label><p>${m.notizen}</p></div>`:''}
@@ -2089,11 +2099,12 @@ function updateBadges(){
 // Login
 function L_init(){
   var q=G('Lquick'); if(!q) return; q.innerHTML='';
-  db.nutzer.filter(function(u){return u.aktiv!==false;}).forEach(function(u){
+  // Only show one "Admin" button for SuperAdmin users (fills own name)
+  var superAdmins=db.nutzer.filter(function(u){return u.aktiv!==false&&u.rolle==='SuperAdmin';});
+  superAdmins.forEach(function(u){
     var btn=document.createElement('button'); btn.className='qbtn';
-    var col=u.rolle==='SuperAdmin'?'#4f7cff':u.rolle==='Admin'?'#22c55e':'#a78bfa';
-    btn.style.borderColor=col;
-    btn.innerHTML='<b>'+u.name+'</b><s style="color:'+col+'">'+u.rolle+'</s>';
+    btn.style.borderColor='#4f7cff';
+    btn.innerHTML='<b>&#128100; Admin</b><s style="color:#4f7cff">'+u.name+'</s>';
     btn.setAttribute('data-n',u.name);
     btn.addEventListener('click',function(){ G('L_name').value=this.getAttribute('data-n'); G('L_pw').value=''; G('L_pw').focus(); });
     q.appendChild(btn);
@@ -2193,6 +2204,7 @@ setInterval(function(){if(bc&&curUser) bc.postMessage({type:'presence',name:curU
 // Final renderView - overrides any previous versions
 var _RV=window._origRV||renderView;
 renderView=function(view){
+  if(curView&&curView.startsWith('nachDet_')) return; // Stay in nachricht detail
   var m={posteingang:renderPosteingang,freigaben:renderFreigaben,notizen:renderNotizen,allchats:renderAllchats,einst:renderEinst,upload:renderKonzeptUpload,konzepte:renderKonzepte};
   if(m[view]){m[view]();return;}
   // V3/V9 views
@@ -2234,41 +2246,16 @@ saveUG=function(){var id=(G('f-ug-id')||{value:''}).value.trim();_sUG();setTimeo
 saveTask=function(){var id=(G('f-t-id')||{value:''}).value.trim();_sT();setTimeout(function(){var t=db.aufgaben.find(function(x){return x.id===id;});if(t) sbUp('aufgaben',t);updateBadges();},100);};
 saveKonzept=function(){_sK();setTimeout(function(){var k=db.konzepte[db.konzepte.length-1];if(k) sbUp('konzepte',k);},100);};
 saveMitglied=function(){
-  var id=(G('f-m-id')||{value:''}).value.trim();
-  var name=(G('f-m-name')||{value:''}).value.trim();
-  var wasNew=!editId;
-  var rolle=(G('f-m-rolle')||{value:'Mitglied'}).value.trim()||'Mitglied';
-  var entityId=(G('f-m-entity')||{value:''}).value.trim();
+  var id=(G('f-m-id')||{value:''}).value.trim(), name=(G('f-m-name')||{value:''}).value.trim(), wasNew=!editId;
   _sM();
   setTimeout(async function(){
-    var m=db.mitglieder.find(function(x){return x.id===id;});
-    if(m) await sbUp('mitglieder',m);
-    // Save role assignment
-    if(entityId && entityId!=='*'){
-      var existing=db.rollen.find(function(r){return r.personId===id&&r.entityId===entityId;});
-      if(existing){ existing.rolle=rolle; await sbUp('rollen',existing); }
-      else {
-        var eTyp=db.ags.some(function(a){return a.id===entityId;})?'AG':'UG';
-        var nr={id:'ZU-'+Date.now(),personId:id,name:name,entityTyp:eTyp,entityId:entityId,rolle:rolle,zugriff:'intern',aktiv:true,start:new Date().toISOString().slice(0,10)};
-        db.rollen.push(nr); await sbUp('rollen',nr);
-      }
-    } else if(entityId==='*'){
-      // Alle Gruppen
-      for(var ai=0;ai<db.ags.length;ai++){
-        var a=db.ags[ai];
-        if(!db.rollen.find(function(r){return r.personId===id&&r.entityId===a.id;})){
-          var nr2={id:'ZU-'+Date.now()+ai,personId:id,name:name,entityTyp:'AG',entityId:a.id,rolle:rolle,zugriff:'intern',aktiv:true,start:new Date().toISOString().slice(0,10)};
-          db.rollen.push(nr2); await sbUp('rollen',nr2);
-        }
-      }
-    }
+    var m=db.mitglieder.find(function(x){return x.id===id;}); if(m) await sbUp('mitglieder',m);
     if(wasNew&&name&&!db.nutzer.find(function(u){return u.name===name;})){
       var pw=name.toLowerCase().replace(/\s+/g,'')+'2024';
-      var nu={id:'U-'+Date.now(),name:name,pw:pw,rolle:'intern',agIds:entityId==='*'?['*']:[entityId].filter(Boolean),ugIds:[],aktiv:true,farbe:'#6b7199'};
+      var nu={id:'U-'+Date.now(),name:name,pw:pw,rolle:'intern',agIds:[],ugIds:[],aktiv:true,farbe:'#6b7199'};
       db.nutzer.push(nu); await sbUp('nutzer',nu);
-      toast('Login erstellt: '+name+' PW: '+pw,'ok');
+      toast('Login erstellt: '+name+' / PW: '+pw,'ok');
     }
-    updateBadges();
   },100);
 };
 var _tT=toggleTask;
@@ -2689,6 +2676,7 @@ function renderPosteingang(){
   });
 }
 function openNachDet(id){
+  curView='nachDet_'+id;  // Prevent re-render by nav/updateBadges
   var n=db.nachrichten.find(function(x){return x.id===id;}); if(!n){toast('Nicht gefunden','error');return;}
   n.gelesen=true; sbUp('nachrichten',n); updateBadges();
   var c=el('content');
@@ -2983,7 +2971,7 @@ function renderKonzeptUpload(){
   wrap.innerHTML='<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px">'
     +'<h3 style="font-size:14px;margin:0 0 14px">&#128204; Konzept hochladen</h3>'
     +'<select id="up-tgt" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;margin-bottom:12px">'+tOpts+'</select>'
-    +'<div id="up-zone" style="border:2px dashed var(--border);border-radius:10px;padding:36px;text-align:center;cursor:pointer"><div style="font-size:32px;margin-bottom:8px">&#128196;</div><p style="font-size:13px;font-weight:600;margin-bottom:4px">Datei ablegen oder klicken</p><p style="font-size:11px;color:var(--muted)">TXT MD PDF DOCX XLSX CSV &middot; max 10MB</p></div>'
+    +'<div id="up-zone" style="border:2px dashed var(--border);border-radius:10px;padding:36px;text-align:center;cursor:pointer"><div style="font-size:32px;margin-bottom:8px">&#128196;</div><p style="font-size:13px;font-weight:600;margin-bottom:4px">Datei ablegen oder klicken</p><p style="font-size:11px;color:var(--muted)">TXT, MD &middot; max 2MB</p></div>'
     +'<input type="file" id="up-file" accept=".txt,.md,.pdf,.docx,.doc,.xlsx,.xls,.csv,.pptx" style="display:none"></div>'
     +'<div id="up-preview" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">'
     +'<div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong id="up-fname"></strong><span id="up-fsize" style="color:var(--muted);font-size:11px"></span></div>'
@@ -3050,6 +3038,8 @@ window.addEventListener('load', function(){
   G('login-overlay').style.display='flex';
   L_init();
 });
+
+
 
 </script>
 </body>
