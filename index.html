@@ -305,6 +305,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 .gantt-label{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:absolute;left:6px;top:50%;transform:translateY(-50%);color:#fff}
 #tb-user{display:none;align-items:center;gap:8px;flex-shrink:0}
 .nach-item:hover{border-color:#4f7cff!important;cursor:pointer}
+.task-clickable:hover{border-color:var(--accent)!important}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 </style>
@@ -322,7 +323,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   </div>
   <div id="sb-loading-err" style="display:none;text-align:center;max-width:300px">
     <p id="sb-err-msg" style="font-size:12px;color:#ef4444;margin-bottom:12px"></p>
-    <button class="login-btn" style="width:auto;padding:8px 20px" onclick="retryLoad()">Nochmal versuchen</button>
+    <button class="login-btn" style="width:auto;padding:8px 20px" onclick="retryLoad()">Nochmal</button>
   </div>
 </div>
 <div id="login-overlay">
@@ -423,19 +424,19 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
     </div>
     <div class="nav-section">
       <div class="nav-label">Tools</div>
-      <div class="nav-item" data-view="konzepte" onclick="nav(this)"><span class="ico">&#128196;</span>Konzept-Archiv</div>
+      
       <div class="nav-item" data-view="freigaben" onclick="nav(this)"><span class="ico">&#128274;</span>Freigaben<span id="nb-frg" style="margin-left:auto;background:#f59e0b;color:#000;border-radius:10px;padding:1px 6px;font-size:10px;display:none"></span></div>
       <div class="nav-item" data-view="notizen" onclick="nav(this)"><span class="ico">&#128221;</span>Notizen</div>
       <div class="nav-item" data-view="upload" onclick="nav(this)"><span class="ico">&#128204;</span>Konzept hochladen</div>
       <div class="nav-item" data-view="einst" onclick="nav(this)"><span class="ico">&#9881;</span>Einstellungen</div>
     </div>
     <div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#6b7199;padding:12px 16px 4px;text-transform:uppercase">Kommunikation</div>
-    <div class="nav-item" data-view="posteingang" onclick="nav(this)"><span class="ico">&#9993;</span>Posteingang<span id="nb-post" style="margin-left:auto;background:#4f7cff;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;display:none"></span></div>
-    <div class="nav-item" data-view="allchats" onclick="nav(this)"><span class="ico">&#128172;</span>Alle Chats</div>
+    
+    
     <div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#6b7199;padding:12px 16px 4px;text-transform:uppercase">Verwaltung</div>
-    <div class="nav-item" data-view="freigaben" onclick="nav(this)"><span class="ico">&#128274;</span>Freigaben<span id="nb-frg" style="margin-left:auto;background:#f59e0b;color:#000;border-radius:10px;padding:1px 6px;font-size:10px;display:none"></span></div>
-    <div class="nav-item" data-view="notizen" onclick="nav(this)"><span class="ico">&#128221;</span>Notizen</div>
-    <div class="nav-item" data-view="einst" onclick="nav(this)"><span class="ico">&#9881;</span>Einstellungen</div>
+    
+    
+    
     </div>
   </div>
   <div id="ag-nav" style="display:none">
@@ -1012,10 +1013,8 @@ function delKonzept(id){
   renderView('konzepte');toast('Konzept gelöscht','ok');
 }
 function buildTargetOpts(sel=''){
-  var noSel=sel===''||sel==='*'?'selected':'';
-  var allSel=sel==='*'?'selected':'';
-  var none='<option value="" '+noSel+'>(kein Bezug)</option>';
-  var all='<option value="*" '+allSel+'>&#9733; Alle Gruppen (Vollzugriff)</option>';
+  var none='<option value=""'+((!sel||sel==='')?' selected':'')+'>-- kein Bezug --</option>';
+  var all='<option value="*"'+(sel==='*'?' selected':'')+'>&#9733; Alle Gruppen (Vollzugriff)</option>';
   const ag=db.ags.map(a=>`<option value="${a.id}" ${sel===a.id?'selected':''}>[AG] ${a.id} – ${a.name}</option>`).join('');
   const ug=db.ugs.map(u=>`<option value="${u.id}" ${sel===u.id?'selected':''}>[UG] ${u.id} – ${u.name}</option>`).join('');
   return none+all+ag+ug;
@@ -2235,16 +2234,41 @@ saveUG=function(){var id=(G('f-ug-id')||{value:''}).value.trim();_sUG();setTimeo
 saveTask=function(){var id=(G('f-t-id')||{value:''}).value.trim();_sT();setTimeout(function(){var t=db.aufgaben.find(function(x){return x.id===id;});if(t) sbUp('aufgaben',t);updateBadges();},100);};
 saveKonzept=function(){_sK();setTimeout(function(){var k=db.konzepte[db.konzepte.length-1];if(k) sbUp('konzepte',k);},100);};
 saveMitglied=function(){
-  var id=(G('f-m-id')||{value:''}).value.trim(), name=(G('f-m-name')||{value:''}).value.trim(), wasNew=!editId;
+  var id=(G('f-m-id')||{value:''}).value.trim();
+  var name=(G('f-m-name')||{value:''}).value.trim();
+  var wasNew=!editId;
+  var rolle=(G('f-m-rolle')||{value:'Mitglied'}).value.trim()||'Mitglied';
+  var entityId=(G('f-m-entity')||{value:''}).value.trim();
   _sM();
   setTimeout(async function(){
-    var m=db.mitglieder.find(function(x){return x.id===id;}); if(m) await sbUp('mitglieder',m);
+    var m=db.mitglieder.find(function(x){return x.id===id;});
+    if(m) await sbUp('mitglieder',m);
+    // Save role assignment
+    if(entityId && entityId!=='*'){
+      var existing=db.rollen.find(function(r){return r.personId===id&&r.entityId===entityId;});
+      if(existing){ existing.rolle=rolle; await sbUp('rollen',existing); }
+      else {
+        var eTyp=db.ags.some(function(a){return a.id===entityId;})?'AG':'UG';
+        var nr={id:'ZU-'+Date.now(),personId:id,name:name,entityTyp:eTyp,entityId:entityId,rolle:rolle,zugriff:'intern',aktiv:true,start:new Date().toISOString().slice(0,10)};
+        db.rollen.push(nr); await sbUp('rollen',nr);
+      }
+    } else if(entityId==='*'){
+      // Alle Gruppen
+      for(var ai=0;ai<db.ags.length;ai++){
+        var a=db.ags[ai];
+        if(!db.rollen.find(function(r){return r.personId===id&&r.entityId===a.id;})){
+          var nr2={id:'ZU-'+Date.now()+ai,personId:id,name:name,entityTyp:'AG',entityId:a.id,rolle:rolle,zugriff:'intern',aktiv:true,start:new Date().toISOString().slice(0,10)};
+          db.rollen.push(nr2); await sbUp('rollen',nr2);
+        }
+      }
+    }
     if(wasNew&&name&&!db.nutzer.find(function(u){return u.name===name;})){
       var pw=name.toLowerCase().replace(/\s+/g,'')+'2024';
-      var nu={id:'U-'+Date.now(),name:name,pw:pw,rolle:'intern',agIds:[],ugIds:[],aktiv:true,farbe:'#6b7199'};
+      var nu={id:'U-'+Date.now(),name:name,pw:pw,rolle:'intern',agIds:entityId==='*'?['*']:[entityId].filter(Boolean),ugIds:[],aktiv:true,farbe:'#6b7199'};
       db.nutzer.push(nu); await sbUp('nutzer',nu);
-      toast('Login erstellt: '+name+' / PW: '+pw,'ok');
+      toast('Login erstellt: '+name+' PW: '+pw,'ok');
     }
+    updateBadges();
   },100);
 };
 var _tT=toggleTask;
@@ -2400,7 +2424,7 @@ function renderTaskCards(tasks, entityId){
       var col=t.prio==='Hoch'||t.prio==='Kritisch'?'#ef4444':t.prio==='Mittel'?'#f59e0b':'#6b7199';
       var done=t.status==='Erledigt';
       var today=new Date(), ov=t.faellig&&new Date(t.faellig)<today&&!done;
-      return '<div class="ws-plan-card" style="display:flex;align-items:center;gap:10px;border-left:3px solid '+col+'">'
+      return '<div class="ws-plan-card task-clickable" style="display:flex;align-items:center;gap:10px;border-left:3px solid '+col+'" data-tid="'+t.id+'">'
         +'<input type="checkbox"'+(done?' checked':'')+' style="cursor:pointer;flex-shrink:0;width:16px;height:16px" data-tid="'+t.id+'" onchange="toggleTask(this.dataset.tid)">'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:12px;font-weight:500'+(done?';opacity:.5':'')+'">'+(ov?'&#9888; ':'')+t.titel+'</div>'
@@ -2959,8 +2983,8 @@ function renderKonzeptUpload(){
   wrap.innerHTML='<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px">'
     +'<h3 style="font-size:14px;margin:0 0 14px">&#128204; Konzept hochladen</h3>'
     +'<select id="up-tgt" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;margin-bottom:12px">'+tOpts+'</select>'
-    +'<div id="up-zone" style="border:2px dashed var(--border);border-radius:10px;padding:36px;text-align:center;cursor:pointer"><div style="font-size:32px;margin-bottom:8px">&#128196;</div><p style="font-size:13px;font-weight:600;margin-bottom:4px">Datei ablegen oder klicken</p><p style="font-size:11px;color:var(--muted)">TXT, MD &middot; max 2MB</p></div>'
-    +'<input type="file" id="up-file" accept=".txt,.md" style="display:none"></div>'
+    +'<div id="up-zone" style="border:2px dashed var(--border);border-radius:10px;padding:36px;text-align:center;cursor:pointer"><div style="font-size:32px;margin-bottom:8px">&#128196;</div><p style="font-size:13px;font-weight:600;margin-bottom:4px">Datei ablegen oder klicken</p><p style="font-size:11px;color:var(--muted)">TXT MD PDF DOCX XLSX CSV &middot; max 10MB</p></div>'
+    +'<input type="file" id="up-file" accept=".txt,.md,.pdf,.docx,.doc,.xlsx,.xls,.csv,.pptx" style="display:none"></div>'
     +'<div id="up-preview" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">'
     +'<div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong id="up-fname"></strong><span id="up-fsize" style="color:var(--muted);font-size:11px"></span></div>'
     +'<div id="up-text-pre" style="background:var(--card2);border-radius:6px;padding:10px;font-size:11px;color:var(--muted2);max-height:100px;overflow-y:auto;white-space:pre-wrap;margin-bottom:12px"></div>'
@@ -2978,25 +3002,9 @@ function renderKonzeptUpload(){
 }
 function processUpFile(file){
   if(file.size>10*1024*1024){toast('Zu gro&szlig; (max 10MB)','error');return;}
-  var isBinary=/\.(pdf|docx|doc|xlsx|xls|pptx)$/i.test(file.name);
-  window._uploadFile=file;
-  if(isBinary){
-    // For binary files: store file object, show metadata
-    window._uploadText='['+file.name+'] - '+file.type+' ('+Math.round(file.size/1024)+'KB). Binärdatei.';
-    G('up-fname').textContent=file.name;
-    G('up-fsize').textContent=(file.size/1024).toFixed(1)+'KB';
-    G('up-text-pre').textContent=window._uploadText;
-    G('up-preview').style.display='';
-    // Show a note about binary files
-    var note=document.createElement('div');
-    note.style.cssText='font-size:11px;color:#f59e0b;margin-top:6px;padding:6px;background:rgba(245,158,11,.1);border-radius:6px';
-    note.textContent='Binärdatei erkannt. Für KI-Analyse bitte Inhalt als .txt exportieren. Die Datei wird im Archiv vermerkt.';
-    G('up-preview').appendChild(note);
-  } else {
-    var r=new FileReader();
-    r.onload=function(e){window._uploadText=e.target.result;G('up-fname').textContent=file.name;G('up-fsize').textContent=(file.size/1024).toFixed(1)+'KB';G('up-text-pre').textContent=window._uploadText.slice(0,400)+(window._uploadText.length>400?'...':'');G('up-preview').style.display='';};
-    r.readAsText(file,'UTF-8');
-  }
+  var r=new FileReader();
+  r.onload=function(e){window._uploadText=e.target.result;G('up-fname').textContent=file.name;G('up-fsize').textContent=(file.size/1024).toFixed(1)+'KB';G('up-text-pre').textContent=window._uploadText.slice(0,400)+(window._uploadText.length>400?'...':'');G('up-preview').style.display='';};
+  r.readAsText(file,'UTF-8');
 }
 async function analyzeKonzept(){
   if(!geminiKey&&!apiKey){toast('Bitte API-Key in Einstellungen','error');return;}
@@ -3031,6 +3039,13 @@ async function analyzeKonzept(){
 }
 
 // ── Boot ──────────────────────────────────────────────────
+document.addEventListener('click', function(e){
+  var row=e.target.closest('.task-clickable');
+  if(row && e.target.type!=='checkbox' && !e.target.closest('button')){
+    openTaskDetail(row.getAttribute('data-tid'));
+  }
+});
+
 window.addEventListener('load', function(){
   G('login-overlay').style.display='flex';
   L_init();
