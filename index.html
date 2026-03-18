@@ -269,7 +269,6 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 .live-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 
 
-/* ── V12 LOGIN & BADGES ── */
 #login-overlay{position:fixed;inset:0;background:#0d1117;display:none;align-items:center;justify-content:center;z-index:9999}
 .login-box{background:#161b27;border:1px solid #2a3350;border-radius:16px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
 .login-logo{text-align:center;font-size:32px;margin-bottom:6px}
@@ -291,7 +290,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 .lf-drop-item span{font-size:10px;color:#6b7199}
 .login-btn{width:100%;padding:11px;border-radius:8px;border:none;background:#4f7cff;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px}
 .login-btn:hover{filter:brightness(1.1)}
-.login-err{color:#ef4444;font-size:12px;text-align:center;margin-top:8px;display:none;min-height:18px}
+.login-err{color:#ef4444;font-size:12px;text-align:center;margin-top:8px;display:none}
 #sb-loading{position:fixed;inset:0;background:#0d1117;display:none;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:14px}
 #sync-dot{position:fixed;bottom:18px;right:14px;width:10px;height:10px;border-radius:50%;background:#4f7cff;z-index:200;transition:background .5s;cursor:pointer}
 #ubadge{position:fixed;bottom:14px;right:30px;background:#1a2035;border:1px solid #2a3350;border-radius:20px;padding:5px 10px;display:none;align-items:center;gap:7px;cursor:pointer;z-index:199;font-size:11px}
@@ -299,20 +298,25 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 #livepanel{position:fixed;bottom:46px;right:14px;background:#1a2035;border:1px solid #2a3350;border-radius:10px;padding:12px;min-width:200px;display:none;z-index:198;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .live-u{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px}
 .live-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.nach-item:hover{border-color:#4f7cff!important}
+#tb-user{display:none;align-items:center;gap:8px;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
-.ai-dot{width:8px;height:8px;border-radius:50%;background:#4f7cff;animation:pulse 1s ease-in-out infinite}
-.ai-dot:nth-child(2){animation-delay:.2s}
-.ai-dot:nth-child(3){animation-delay:.4s}
 
 </style>
 </head>
 <body>
-<div id="sb-loading">
+
+<div id="sb-loading" style="flex-direction:column;gap:14px">
   <div style="font-size:36px">🌿</div>
   <div style="font-size:14px;font-weight:600">Mariana CSC</div>
-  <div id="sb-loading-msg" style="font-size:12px;color:#6b7199">Verbinde…</div>
-  <div style="display:flex;gap:6px"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
-  <div id="sb-loading-err" style="display:none;text-align:center;max-width:320px">
+  <div id="sb-loading-msg" style="font-size:12px;color:#6b7199">Verbinde...</div>
+  <div style="display:flex;gap:6px">
+    <div style="width:8px;height:8px;border-radius:50%;background:#4f7cff;animation:pulse 1s ease-in-out infinite"></div>
+    <div style="width:8px;height:8px;border-radius:50%;background:#4f7cff;animation:pulse 1s ease-in-out .2s infinite"></div>
+    <div style="width:8px;height:8px;border-radius:50%;background:#4f7cff;animation:pulse 1s ease-in-out .4s infinite"></div>
+  </div>
+  <div id="sb-loading-err" style="display:none;text-align:center;max-width:300px">
     <div style="font-size:24px;margin-bottom:8px">⚠️</div>
     <p id="sb-err-msg" style="font-size:12px;color:#ef4444;margin-bottom:12px"></p>
     <button class="login-btn" style="width:auto;padding:8px 20px" onclick="retryLoad()">Nochmal versuchen</button>
@@ -326,29 +330,27 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
     <div class="login-quick" id="Lquick"></div>
     <div class="lf-label">Name</div>
     <div class="lf-wrap">
-      <input type="text" id="L_name" placeholder="Name…" autocomplete="off"
-             oninput="L_filter(this.value)"
-             onkeydown="if(event.keyCode===13)document.getElementById('L_pw').focus()">
+      <input type="text" id="L_name" placeholder="Name..." autocomplete="off"
+        oninput="L_filter(this.value)" onkeydown="if(event.keyCode===13)document.getElementById('L_pw').focus()">
       <div class="lf-drop" id="L_drop"></div>
     </div>
     <div class="lf-label">Passwort</div>
     <div class="lf-wrap">
-      <input type="password" id="L_pw" placeholder="Passwort…"
-             onkeydown="if(event.keyCode===13)L_submit()">
-      <span class="lf-eye" id="L_eye" onclick="L_eye_toggle()">&#128065;</span>
+      <input type="password" id="L_pw" placeholder="Passwort..." onkeydown="if(event.keyCode===13)L_submit()">
+      <span class="lf-eye" id="L_eye" onclick="L_eye_toggle()">👁</span>
     </div>
     <button class="login-btn" onclick="L_submit()">Anmelden</button>
     <div class="login-err" id="L_err"></div>
   </div>
 </div>
-<div id="sync-dot" title="Sync-Status" onclick="toggleLivePanel()"></div>
+<div id="sync-dot" title="Sync" onclick="toggleLivePanel()"></div>
 <div id="ubadge" onclick="toggleLivePanel()">
   <div class="ubdot" id="ubdot"></div>
   <span id="ubname"></span>
 </div>
-<div id="livepanel" style="display:none">
-  <div style="font-size:11px;font-weight:600;margin-bottom:8px;color:#6b7199">Aktive Nutzer</div>
-  <div id="live-users-list"><div style="font-size:11px;color:#6b7199">Lade…</div></div>
+<div id="livepanel">
+  <div style="font-size:11px;font-weight:600;margin-bottom:8px;color:var(--muted)">Aktive Nutzer</div>
+  <div id="live-users-list"></div>
 </div>
 
 <div id="login-overlay">
@@ -388,7 +390,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V12</p>
+    <p>AG-Verwaltung V13</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -417,7 +419,8 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
       <div class="nav-item" data-view="allchats" onclick="nav(this)"><span class="ico">&#128172;</span>Alle Chats</div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Verwaltung</div>
+      <div class="nav-label">Tools</div>
+      <div class="nav-item" data-view="konzepte" onclick="nav(this)"><span class="ico">&#128196;</span>Konzept-Archiv</div>
       <div class="nav-item" data-view="freigaben" onclick="nav(this)"><span class="ico">&#128274;</span>Freigaben<span id="nb-frg" style="margin-left:auto;background:#f59e0b;color:#000;border-radius:10px;padding:1px 6px;font-size:10px;display:none"></span></div>
       <div class="nav-item" data-view="notizen" onclick="nav(this)"><span class="ico">&#128221;</span>Notizen</div>
       <div class="nav-item" data-view="upload" onclick="nav(this)"><span class="ico">&#128204;</span>Konzept hochladen</div>
@@ -444,15 +447,15 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <div class="main">
   <div class="topbar">
     <h2 id="tb-title">Dashboard</h2>
-    <div class="search-box" style="flex:1;max-width:240px">
+    <div class="search-box" style="flex:1;max-width:260px">
       <span class="search-ico">🔍</span>
       <input type="text" id="global-search" placeholder="Suchen…" oninput="globalSearch(this.value)">
     </div>
     <button class="btn btn-primary" id="tb-btn" onclick="tbAction()">+ Neue AG</button>
-    <div id="tb-user" style="display:none;align-items:center;gap:8px;flex-shrink:0">
+    <div id="tb-user">
       <div id="tb-user-dot" style="width:8px;height:8px;border-radius:50%;background:#4f7cff"></div>
       <span id="tb-user-name" style="font-size:12px;color:var(--muted);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-      <button onclick="L_logout()" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:inherit;cursor:pointer">⏻ Abmelden</button>
+      <button onclick="L_logout()" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:inherit;cursor:pointer">&#9211; Abmelden</button>
     </div>
   </div>
   <div class="content" id="content"></div>
@@ -990,10 +993,6 @@ function konzeptToText(k){
     k.ziel&&`Zielsetzung:\n${k.ziel}`,
     k.zielgruppe&&`\nZielgruppen:\n${k.zielgruppe}`,
     k.schwerpunkte&&`\nInhaltliche Schwerpunkte:\n${k.schwerpunkte}`,
-    k.struktur&&`\nStruktur:\n${k.struktur}`,
-    k.aw&&`\nArbeitsweise:\n${k.aw}`,
-    k.ns&&`\nN\u00e4chste Schritte:\n${k.ns}`,
-    k.op&&`\nOffene Punkte:\n${k.op}`,
     k.struktur&&`\nStruktur / Rollen:\n${k.struktur}`,
     k.sollgroesse&&`\nSollgröße: ${k.sollgroesse} Personen`,
     k.arbeitsweise&&`\nArbeitsweise:\n${k.arbeitsweise}`,
@@ -1482,275 +1481,126 @@ let netTransform={x:0,y:0,scale:1}, netHighlightId='';
 
 function renderNet(){
   const canvas=el('net-canvas');if(!canvas)return;
-  // HiDPI / Retina fix
-  const dpr=window.devicePixelRatio||1;
-  const W=canvas.offsetWidth;
-  const H=Math.max(520,window.innerHeight-230);
-  canvas.width=W*dpr; canvas.height=H*dpr;
-  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  const W=canvas.offsetWidth,H=Math.max(480,window.innerHeight-220);
+  canvas.height=H;
   const ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
 
-  // ── Build graph ──────────────────────────────────────────
-  netNodes=[]; netEdges=[];
-  const cx=W/2, cy=H/2;
-
-  // AGs in a circle
-  const agR = Math.min(W,H)*0.30;
+  // Build nodes
+  netNodes=[];netEdges=[];
+  const cx=W/2,cy=H/2;
   db.ags.forEach((ag,i)=>{
     const angle=(2*Math.PI*i/Math.max(db.ags.length,1))-Math.PI/2;
-    netNodes.push({
-      id:ag.id, label:ag.name, sublabel:'AG · '+ag.koo,
-      x:cx+agR*Math.cos(angle), y:cy+agR*Math.sin(angle),
-      type:'ag', color:ag.farbe||'#4f7cff', r:38, data:ag
-    });
+    const r=Math.min(W,H)*0.28;
+    netNodes.push({id:ag.id,label:ag.name,x:cx+r*Math.cos(angle),y:cy+r*Math.sin(angle),type:'ag',color:ag.farbe||'#4f7cff',r:34,data:ag});
   });
-
-  // UGs orbiting their AG
-  db.ugs.forEach((ug)=>{
+  db.ugs.forEach((ug,i)=>{
     const links=db.agUgLinks.filter(l=>l.ugId===ug.id);
-    const anchor=links.length ? netNodes.find(n=>n.id===links[0].agId) : null;
-    const ax=anchor?anchor.x:cx, ay=anchor?anchor.y:cy;
-    const siblings=db.ugs.filter(u=>
-      links[0] ? db.agUgLinks.some(l=>l.ugId===u.id&&l.agId===links[0].agId) : false
-    );
+    const anchor=links.length?netNodes.find(n=>n.id===links[0].agId):null;
+    const ax=anchor?anchor.x:cx,ay=anchor?anchor.y:cy;
+    const siblings=db.ugs.filter(u=>links[0]?db.agUgLinks.some(l=>l.ugId===u.id&&l.agId===links[0].agId):true);
     const idx=siblings.findIndex(u=>u.id===ug.id);
-    const cnt=Math.max(siblings.length,1);
-    const baseAngle=anchor ? Math.atan2(ay-cy,ax-cx) : 0;
-    const spread=Math.PI*0.7;
-    const angle=baseAngle + (cnt>1 ? (idx/(cnt-1))*spread-spread/2 : 0);
-    const dist=150;
-    netNodes.push({
-      id:ug.id, label:ug.name, sublabel:'UG · '+ug.typ,
-      x:ax+dist*Math.cos(angle), y:ay+dist*Math.sin(angle),
-      type:'ug', color:'#a78bfa', r:26, data:ug
-    });
-    links.forEach(l=>netEdges.push({from:l.agId,to:ug.id,color:'rgba(167,139,250,.4)',w:1.5,dashed:false}));
+    const baseAngle=Math.atan2(ay-cy,ax-cx);
+    const spread=Math.PI*0.65;
+    const angle=baseAngle+(idx/(Math.max(siblings.length-1,1)))*spread-spread/2;
+    const dist=140;
+    netNodes.push({id:ug.id,label:ug.name,x:ax+dist*Math.cos(angle),y:ay+dist*Math.sin(angle),type:'ug',color:'#a78bfa',r:22,data:ug});
+    links.forEach(l=>netEdges.push({from:l.agId,to:ug.id,color:'rgba(167,139,250,0.35)',w:1.5}));
   });
-
-  // Members orbiting their primary entity
   db.mitglieder.filter(m=>m.aktiv).forEach(m=>{
     const roles=db.rollen.filter(r=>r.personId===m.id&&r.aktiv);
-    const anchor=roles.length ? netNodes.find(n=>n.id===roles[0].entityId) : null;
-    const ax=anchor?anchor.x:cx+Math.random()*80-40;
-    const ay=anchor?anchor.y:cy+Math.random()*80-40;
-    // Spread members around their anchor
-    const siblings=db.mitglieder.filter(mx=>
-      db.rollen.some(r=>r.personId===mx.id&&r.entityId===(roles[0]?.entityId)&&r.aktiv)
-    );
-    const midx=siblings.findIndex(mx=>mx.id===m.id);
-    const mcnt=Math.max(siblings.length,1);
-    const mbase=anchor ? Math.atan2(ay-cy,ax-cx)+Math.PI : 0;
-    const mspread=Math.PI*1.2;
-    const mangle=mbase+(mcnt>1?(midx/(mcnt-1))*mspread-mspread/2:0);
-    const mdist=80;
-    netNodes.push({
-      id:m.id, label:m.name, sublabel:roles[0]?.rolle||'Mitglied',
-      x:ax+mdist*Math.cos(mangle), y:ay+mdist*Math.sin(mangle),
-      type:'m', color:'#22c55e', r:20, data:m
-    });
-    roles.forEach(r=>netEdges.push({from:r.entityId,to:m.id,color:'rgba(34,197,94,.25)',w:1,dashed:true}));
+    const anchor=roles.length?netNodes.find(n=>n.id===roles[0].entityId):null;
+    const ax=anchor?anchor.x:cx+Math.random()*100-50;
+    const ay=anchor?anchor.y:cy+Math.random()*100-50;
+    const angle=Math.random()*2*Math.PI;
+    const dist=75+Math.random()*20;
+    netNodes.push({id:m.id,label:m.name,x:ax+dist*Math.cos(angle),y:ay+dist*Math.sin(angle),type:'m',color:'#22c55e',r:17,data:m});
+    roles.forEach(r=>netEdges.push({from:r.entityId,to:m.id,color:'rgba(34,197,94,0.2)',w:1}));
   });
 
-  // ── Draw ─────────────────────────────────────────────────
   function draw(){
     ctx.save();
     ctx.clearRect(0,0,W,H);
-
-    // Background subtle grid
-    ctx.fillStyle='rgba(255,255,255,.015)';
-    for(let x=-W;x<W*2;x+=32) for(let y=-H;y<H*2;y+=32){
-      ctx.beginPath(); ctx.arc(x,y,.7,0,2*Math.PI); ctx.fill();
-    }
-
-    ctx.translate(netTransform.x, netTransform.y);
-    ctx.scale(netTransform.scale, netTransform.scale);
-
+    ctx.translate(netTransform.x,netTransform.y);
+    ctx.scale(netTransform.scale,netTransform.scale);
+    // Grid
+    ctx.fillStyle='rgba(255,255,255,.02)';
+    for(let x=-500;x<W+500;x+=28)for(let y=-500;y<H+500;y+=28){ctx.beginPath();ctx.arc(x,y,.8,0,2*Math.PI);ctx.fill();}
     // Edges
     netEdges.forEach(e=>{
-      const f=netNodes.find(n=>n.id===e.from);
-      const t=netNodes.find(n=>n.id===e.to);
-      if(!f||!t) return;
-      ctx.save();
-      if(e.dashed){ ctx.setLineDash([4,4]); }
-      ctx.beginPath();
-      // Curved edges
-      const mx=(f.x+t.x)/2, my=(f.y+t.y)/2;
-      const dx=t.x-f.x, dy=t.y-f.y;
-      const len=Math.hypot(dx,dy);
-      const nx=-dy/len*20, ny=dx/len*20;
-      ctx.moveTo(f.x,f.y);
-      ctx.quadraticCurveTo(mx+nx,my+ny,t.x,t.y);
-      ctx.strokeStyle=e.color;
-      ctx.lineWidth=e.w/netTransform.scale;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.restore();
+      const f=netNodes.find(n=>n.id===e.from),t=netNodes.find(n=>n.id===e.to);
+      if(!f||!t)return;
+      ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(t.x,t.y);
+      ctx.strokeStyle=e.color;ctx.lineWidth=e.w/netTransform.scale;ctx.stroke();
     });
-
     // Nodes
     netNodes.forEach(n=>{
-      const hl=netHighlightId&&!n.label.toLowerCase().includes(netHighlightId.toLowerCase());
-      ctx.globalAlpha=hl?.15:1;
-
-      // Outer glow
-      const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*2.5);
-      g.addColorStop(0,n.color+'33'); g.addColorStop(1,'transparent');
-      ctx.fillStyle=g;
-      ctx.beginPath(); ctx.arc(n.x,n.y,n.r*2.5,0,2*Math.PI); ctx.fill();
-
-      // Node background circle
-      ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,2*Math.PI);
-      ctx.fillStyle=n.color+'1a'; ctx.fill();
-      ctx.strokeStyle=n.color;
-      ctx.lineWidth=(n.type==='ag'?2.8:n.type==='ug'?2:1.5)/netTransform.scale;
-      ctx.stroke();
-
-      // Type icon (crisp text)
-      const iconSize=n.r*0.72;
-      ctx.font=`${iconSize}px sans-serif`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillStyle=n.color;
-      ctx.fillText(n.type==='ag'?'🏛':n.type==='ug'?'◈':'●',n.x,n.y);
-
-      // Main label — always readable
-      const fs=n.type==='ag'?13:n.type==='ug'?11:10;
-      ctx.font=`${n.type==='ag'?700:n.type==='ug'?600:400} ${fs}px Segoe UI,system-ui,sans-serif`;
-      ctx.textAlign='center'; ctx.textBaseline='top';
-
-      // Label background for readability
-      const lw=ctx.measureText(n.label).width;
-      const lx=n.x-lw/2-4, ly=n.y+n.r+4;
-      ctx.fillStyle='rgba(13,15,24,.75)';
-      ctx.beginPath();
-      ctx.roundRect ? ctx.roundRect(lx,ly,lw+8,fs+4,3) :
-        ctx.rect(lx,ly,lw+8,fs+4);
-      ctx.fill();
-
-      // Label text
-      ctx.fillStyle=n.type==='ag'?'#dde1f0':n.type==='ug'?'#c4b5fd':'#86efac';
-      ctx.fillText(n.label,n.x,ly+2);
-
-      // Sublabel (role / type)
-      if(n.sublabel && netTransform.scale>0.7){
-        ctx.font=`400 9px Segoe UI,system-ui,sans-serif`;
-        ctx.fillStyle='rgba(160,170,200,.7)';
-        ctx.fillText(n.sublabel,n.x,ly+fs+5);
-      }
-
+      const hl=netHighlightId&&!n.label.toLowerCase().includes(netHighlightId);
+      ctx.globalAlpha=hl?.2:1;
+      // glow
+      const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*2.2);
+      g.addColorStop(0,n.color+'44');g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(n.x,n.y,n.r*2.2,0,2*Math.PI);ctx.fill();
+      // circle
+      ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,2*Math.PI);
+      ctx.fillStyle=n.color+'28';ctx.fill();
+      ctx.strokeStyle=n.color;ctx.lineWidth=n.type==='ag'?2.5:1.8;ctx.stroke();
+      // icon
+      ctx.font=`${n.r*.75}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle=n.color;ctx.fillText(n.type==='ag'?'🏛':n.type==='ug'?'⬡':'◎',n.x,n.y);
+      // label
+      ctx.font=`${n.type==='ag'?600:400} ${n.type==='ag'?12.5:10}px Segoe UI,system-ui,sans-serif`;
+      ctx.fillStyle='rgba(221,225,240,.9)';ctx.textAlign='center';ctx.textBaseline='top';
+      const lab=n.label.length>15?n.label.slice(0,13)+'…':n.label;
+      ctx.fillText(lab,n.x,n.y+n.r+3);
       ctx.globalAlpha=1;
     });
-
-    // Legend
-    if(netTransform.scale>0.5){
-      ctx.save();
-      ctx.setTransform(1,0,0,1,0,0); // reset transform for legend
-      const items=[
-        {color:'#4f7cff',label:'Arbeitsgruppe (AG)',icon:'🏛'},
-        {color:'#a78bfa',label:'Untergruppe (UG)',icon:'◈'},
-        {color:'#22c55e',label:'Mitglied',icon:'●'},
-      ];
-      let ly2=16;
-      items.forEach(item=>{
-        ctx.fillStyle='rgba(13,15,24,.7)';
-        ctx.beginPath(); ctx.roundRect ? ctx.roundRect(12,ly2,170,20,4) : ctx.rect(12,ly2,170,20);
-        ctx.fill();
-        ctx.font='12px sans-serif'; ctx.fillStyle=item.color;
-        ctx.fillText(item.icon,22,ly2+14);
-        ctx.font='400 11px Segoe UI,system-ui,sans-serif'; ctx.fillStyle='rgba(200,210,230,.8)';
-        ctx.fillText(item.label,38,ly2+14);
-        ly2+=24;
-      });
-      ctx.restore();
-    }
-
     ctx.restore();
   }
 
-  // ── Touch / Mouse interactions ────────────────────────────
+  // interaction
   function getPos(e){
-    const rect=canvas.getBoundingClientRect();
-    return {
-      x:(e.clientX-rect.left-netTransform.x)/netTransform.scale,
-      y:(e.clientY-rect.top-netTransform.y)/netTransform.scale,
-      cx:e.clientX-rect.left, cy:e.clientY-rect.top
-    };
+    const r=canvas.getBoundingClientRect();
+    const mx=(e.clientX-r.left-netTransform.x)/netTransform.scale;
+    const my=(e.clientY-r.top-netTransform.y)/netTransform.scale;
+    return{x:mx,y:my,cx:e.clientX-r.left,cy:e.clientY-r.top};
   }
-
   canvas.onmousedown=e=>{
     const p=getPos(e);
-    netDrag=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+8);
-    if(netDrag){ netDrag._ox=p.x-netDrag.x; netDrag._oy=p.y-netDrag.y; }
-    else{ netPan.dragging=true; netPan.sx=e.clientX; netPan.sy=e.clientY; netPan.ox=netTransform.x; netPan.oy=netTransform.y; }
+    netDrag=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+6);
+    if(netDrag){netDrag._ox=p.x-netDrag.x;netDrag._oy=p.y-netDrag.y;}
+    else{netPan.dragging=true;netPan.sx=e.clientX;netPan.sy=e.clientY;netPan.ox=netTransform.x;netPan.oy=netTransform.y;}
   };
   canvas.onmousemove=e=>{
     const p=getPos(e);
-    if(netDrag){ netDrag.x=p.x-netDrag._ox; netDrag.y=p.y-netDrag._oy; draw(); }
-    else if(netPan.dragging){
-      netTransform.x=netPan.ox+(e.clientX-netPan.sx);
-      netTransform.y=netPan.oy+(e.clientY-netPan.sy);
-      draw();
-    }
-    const hover=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+8);
+    if(netDrag){netDrag.x=p.x-netDrag._ox;netDrag.y=p.y-netDrag._oy;draw();}
+    else if(netPan.dragging){netTransform.x=netPan.ox+(e.clientX-netPan.sx);netTransform.y=netPan.oy+(e.clientY-netPan.sy);draw();}
+    // cursor
+    const hover=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+6);
     canvas.style.cursor=hover?'pointer':netPan.dragging?'grabbing':'grab';
-    if(hover&&!netDrag) showNetTip(hover,e); else hideNetTip();
+    // tooltip
+    if(hover&&!netDrag)showNetTip(hover,e);else hideNetTip();
   };
   canvas.onmouseup=e=>{
     const p=getPos(e);
     if(!netPan.dragging&&!netDrag){
-      const hit=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+8);
-      if(hit) openDetail(hit.type==='ag'?'ag':hit.type==='ug'?'ug':'mitglied',hit.id);
+      const hit=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+6);
+      if(hit)openDetail(hit.type==='ag'?'ag':hit.type==='ug'?'ug':'mitglied',hit.id);
     }
-    netDrag=null; netPan.dragging=false; hideNetTip();
+    netDrag=null;netPan.dragging=false;hideNetTip();
   };
   canvas.onwheel=e=>{
     e.preventDefault();
-    const rect=canvas.getBoundingClientRect();
-    const mx=e.clientX-rect.left, my=e.clientY-rect.top;
-    const f=e.deltaY>0?.88:1.12;
-    netTransform.x=mx+(netTransform.x-mx)*f;
-    netTransform.y=my+(netTransform.y-my)*f;
-    netTransform.scale=Math.min(4,Math.max(.25,netTransform.scale*f));
+    const r=canvas.getBoundingClientRect();
+    const mx=e.clientX-r.left,my=e.clientY-r.top;
+    const delta=e.deltaY>0?.9:1.1;
+    netTransform.x=mx+(netTransform.x-mx)*delta;
+    netTransform.y=my+(netTransform.y-my)*delta;
+    netTransform.scale=Math.min(3,Math.max(.3,netTransform.scale*delta));
     draw();
   };
-  // Touch support
-  let lastTouchDist=0;
-  canvas.ontouchstart=e=>{
-    e.preventDefault();
-    if(e.touches.length===1){
-      const t=e.touches[0];
-      const p=getPos(t);
-      netDrag=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+12);
-      if(netDrag){ netDrag._ox=p.x-netDrag.x; netDrag._oy=p.y-netDrag.y; }
-      else{ netPan.dragging=true; netPan.sx=t.clientX; netPan.sy=t.clientY; netPan.ox=netTransform.x; netPan.oy=netTransform.y; }
-    } else if(e.touches.length===2){
-      lastTouchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-    }
-  };
-  canvas.ontouchmove=e=>{
-    e.preventDefault();
-    if(e.touches.length===1){
-      const t=e.touches[0];
-      const p=getPos(t);
-      if(netDrag){ netDrag.x=p.x-netDrag._ox; netDrag.y=p.y-netDrag._oy; draw(); }
-      else if(netPan.dragging){
-        netTransform.x=netPan.ox+(t.clientX-netPan.sx);
-        netTransform.y=netPan.oy+(t.clientY-netPan.sy);
-        draw();
-      }
-    } else if(e.touches.length===2){
-      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      const f=d/lastTouchDist;
-      netTransform.scale=Math.min(4,Math.max(.25,netTransform.scale*f));
-      lastTouchDist=d; draw();
-    }
-  };
-  canvas.ontouchend=e=>{ netDrag=null; netPan.dragging=false; };
-
   window._netDraw=draw;
   draw();
 }
-
 function showNetTip(n,e){
   const tip=el('net-tip');
   const a=ampel(n.data||{},{});
@@ -1904,8 +1754,7 @@ function openAgWorkspace(agId,navEl2){
   document.querySelectorAll('[data-ag]').forEach(n=>n.classList.remove('active'));
   navEl2?.classList.add('active');
   curView='ws_'+agId;
-  const ag=db.ags.find(a=>a.id===agId);
-  if(!ag){ openUGWorkspace(agId,navEl2); return; }
+  const ag=db.ags.find(a=>a.id===agId);if(!ag)return;
   el('tb-title').textContent=ag.name+' – Workspace';
   el('tb-btn').style.display='none';
 
@@ -1986,115 +1835,6 @@ function openAgWorkspace(agId,navEl2){
   </div>`;
 }
 
-function openUGWorkspace(ugId, navEl2){
-  document.querySelectorAll('[data-ag]').forEach(function(n){ n.classList.remove('active'); });
-  if(navEl2) navEl2.classList.add('active');
-  curView='ws_'+ugId;
-  var ug=db.ugs.find(function(u){ return u.id===ugId; }); if(!ug) return;
-  el('tb-title').textContent=ug.name+' \u2013 Workspace';
-  el('tb-btn').style.display='none';
-
-  var ws=wsOf(ugId);
-  var members=db.rollen.filter(function(r){ return r.entityId===ugId&&r.aktiv; })
-    .map(function(r){ return db.mitglieder.find(function(m){ return m.id===r.personId; }); }).filter(Boolean);
-  var tasks=db.aufgaben.filter(function(t){ return t.entityId===ugId; });
-  var done=tasks.filter(function(t){ return t.status==='Erledigt'; }).length;
-  var pct=tasks.length?Math.round(done/tasks.length*100):0;
-  var konzept=db.konzepte.find(function(k){ return k.entityId===ugId; });
-  var notizen=db.notizen.filter(function(n){ return n.targetId===ugId; });
-  var msgs=chatOf(ugId);
-
-  el('content').innerHTML=
-    '<div class="ws-header">'
-    +'<div class="fbet mb12"><div><h2>\u29C1 '+ug.name+'</h2><p style="color:var(--muted2);font-size:12px">'+(ug.fokus||ug.typ||'Untergruppe')+'</p></div>'
-    +'<div class="frow">'+sbadge(ug.status)+pbadge(ug.prio||'Mittel')+'</div></div>'
-    +'<div class="fbet"><span style="font-size:11px;color:var(--muted2)">Fortschritt: '+done+'/'+tasks.length+'</span>'
-    +'<span style="font-size:11px;color:var(--accent)">'+pct+'%</span></div>'
-    +'<div class="prog-bar mt12"><div class="prog-fill" style="width:'+pct+'%"></div></div></div>'
-
-    +'<div class="tabs" id="ws-tabs">'
-    +'<div class="tab active" data-tab="ws-aufg" onclick="switchTab(this,this.dataset.tab)">\ud83d\udccb Aufgaben ('+tasks.filter(function(t){return t.status!=='Erledigt';}).length+')</div>'
-    +'<div class="tab" data-tab="ws-team" onclick="switchTab(this,this.dataset.tab)">\ud83d\udc65 Team ('+members.length+')</div>'
-    +'<div class="tab" data-tab="ws-docs" onclick="switchTab(this,this.dataset.tab)">\ud83d\udcc1 Dokumente</div>'
-    +'<div class="tab" data-tab="ws-proto" onclick="switchTab(this,this.dataset.tab)">\ud83d\udcdd Protokolle</div>'
-    +'<div class="tab" data-tab="ws-konz" onclick="switchTab(this,this.dataset.tab)">\ud83d\udcc4 Konzept</div>'
-    +'<div class="tab" data-tab="ws-chat" onclick="switchTab(this,this.dataset.tab)">\ud83d\udcac Chat ('+msgs.length+')</div>'
-    +'<div class="tab" data-tab="ws-notes" onclick="switchTab(this,this.dataset.tab)">\ud83d\udccc Notizen ('+notizen.length+')</div>'
-    +'</div>'
-
-    +'<div class="tab-content active" id="ws-aufg">'
-    +'<div class="fbet mb12"><span style="font-size:13px;font-weight:600">Aufgaben</span>'
-    +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="openTaskModal(null,this.dataset.eid)">+ Aufgabe</button></div>'
-    +'<div id="ws-ug-tasks"></div></div>'
-
-    +'<div class="tab-content" id="ws-team"><div id="ws-ug-team"></div></div>'
-
-    +'<div class="tab-content" id="ws-docs">'
-    +'<div class="fbet mb12"><span>Dokumente</span>'
-    +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="wsAddDoc(this.dataset.eid)">+ Dokument</button></div>'
-    +'<div id="ws-ug-docs"></div></div>'
-
-    +'<div class="tab-content" id="ws-proto">'
-    +'<div class="fbet mb12"><span>Protokolle</span>'
-    +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="wsAddProto(this.dataset.eid)">+ Protokoll</button></div>'
-    +'<div id="ws-ug-protos"></div></div>'
-
-    +'<div class="tab-content" id="ws-konz"><div id="ws-ug-konz"></div></div>'
-
-    +'<div class="tab-content" id="ws-chat">'
-    +'<div id="chatbox-ws-'+ugId+'" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;height:300px;overflow-y:auto;margin-bottom:8px"></div>'
-    +'<div style="display:flex;gap:8px">'
-    +'<input type="text" id="ws-chat-inp-'+ugId+'" placeholder="Nachricht\u2026" style="flex:1;background:var(--bg);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px" data-eid="'+ugId+'" onkeydown="if(event.keyCode===13)wsSendChat(this.dataset.eid)">'
-    +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="wsSendChat(this.dataset.eid)">Senden</button>'
-    +'</div></div>'
-
-    +'<div class="tab-content" id="ws-notes">'
-    +'<div class="fbet mb12"><span>Notizen</span>'
-    +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="openNotizForm(this.dataset.eid)">+ Notiz</button></div>'
-    +'<div id="ws-ug-notes"></div></div>';
-
-  // Populate
-  var tl=el('ws-ug-tasks');
-  if(tl) tl.innerHTML=tasks.length?tasks.map(function(t){return taskRowHtml(t);}).join(''):'<p style="color:var(--muted);font-size:12px">Keine Aufgaben.</p>';
-
-  var ml=el('ws-ug-team');
-  if(ml) ml.innerHTML=members.length?members.map(function(m){
-    var rol=db.rollen.find(function(r){return r.personId===m.id&&r.entityId===ugId;});
-    return '<div class="mitem">'+avatar(m.name,28,10)+'<div class="minfo"><div class="mname">'+m.name+'</div><div class="mrole">'+(rol?rol.rolle:'')+'</div></div></div>';
-  }).join(''):'<p style="color:var(--muted);font-size:12px">Keine Mitglieder.</p>';
-
-  renderWsDocs(ugId);
-  renderWsProtos(ugId);
-
-  var kl=el('ws-ug-konz');
-  if(kl){
-    if(konzept) kl.innerHTML='<div class="fbet mb12"><strong>'+konzept.name+'</strong>'+sbadge(konzept.status)+'</div>'
-      +'<div class="concept-box">'+konzeptToText(konzept).replace(/\n/g,'<br>')+'</div>';
-    else kl.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)"><div style="font-size:32px">&#128196;</div><h3>Kein Konzept</h3>'
-      +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="openKonzeptModal(this.dataset.eid)" style="margin-top:8px">+ Konzept erstellen</button></div>';
-  }
-
-  var cb=el('chatbox-ws-'+ugId);
-  if(cb){
-    cb.innerHTML=msgs.length?msgs.map(function(m){
-      var mine=m.autor===(curUser?curUser.name:'');
-      return '<div style="margin-bottom:8px;text-align:'+(mine?'right':'left')+'">'
-        +'<div style="display:inline-block;background:'+(mine?'rgba(79,124,255,.25)':'var(--card2)')+';border:1px solid var(--border);border-radius:8px;padding:6px 10px;max-width:75%">'
-        +'<div style="font-size:12px">'+m.text+'</div>'
-        +'<div style="font-size:10px;color:var(--muted2);margin-top:2px">'+m.autor+' &middot; '+m.ts+'</div></div></div>';
-    }).join(''):'<p style="text-align:center;padding:20px;color:var(--muted);font-size:12px">Noch keine Nachrichten.</p>';
-    setTimeout(function(){ cb.scrollTop=cb.scrollHeight; },60);
-  }
-
-  var nl=el('ws-ug-notes');
-  if(nl) nl.innerHTML=notizen.length?notizen.map(function(n){
-    var col=n.prio==='Dringend'?'#ef4444':n.prio==='Wichtig'?'#f59e0b':'var(--border)';
-    return '<div style="background:var(--card2);border:1px solid var(--border);border-left:3px solid '+col+';border-radius:8px;padding:10px;margin-bottom:6px">'
-      +'<div style="font-size:12px">'+n.text+'</div>'
-      +'<div style="font-size:10px;color:var(--muted2);margin-top:4px">'+n.autor+' &middot; '+n.ts+'</div></div>';
-  }).join(''):'<p style="color:var(--muted);font-size:12px">Keine Notizen.</p>';
-}
-
 function renderWsDocs(agId){
   const ws=wsOf(agId);
   if(!ws.docs.length)return`<div class="empty" style="padding:24px"><div class="empty-ico">📁</div><h3>Keine Dokumente</h3><p>Füge Links oder Beschreibungen zu wichtigen Dokumenten hinzu.</p></div>`;
@@ -2157,51 +1897,54 @@ function globalSearch(val){
 // ════════════════════════════════════════════════════════
 
 // ════════════════════════════════════════════════════════
-// V12 — Supabase + Login + Permissions + Features
+// V9 ADDITIONS: Login, Permissions, Neue Features
 // ════════════════════════════════════════════════════════
+var curUser = null;
 
-// ── Config ────────────────────────────────────────────────
-var SB_URL = 'https://gvzayggvtlychyjbnsgv.supabase.co';
-var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2emF5Z2d2dGx5Y2h5amJuc2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODEzMTIsImV4cCI6MjA4OTM1NzMxMn0.1L2e98IjFjF8z_-t0Fpm20wwVyrtWfkMdjGG79fJwMg';
-aiProvider = 'gemini';
-geminiKey  = '';
-apiKey     = '';
-curUser    = null;
-bc         = null;
-liveUsers  = {};
-var sbRT       = null;
-var _sbClient  = null;
-var _chatPollTimer = null;
-var _lastPoll  = {};
-
-// ── Supabase Client ──────────────────────────────────────
-function getSB(){
-  if(!_sbClient) _sbClient = window.supabase.createClient(SB_URL, SB_KEY);
-  return _sbClient;
-}
-
-// ── Permissions ──────────────────────────────────────────
-function isSA(){ return !!(curUser && curUser.rolle==='SuperAdmin'); }
+function isSA(){ return !!(curUser && curUser.rolle === 'SuperAdmin'); }
 function isAdmin(){ return !!(curUser && (curUser.rolle==='SuperAdmin'||curUser.rolle==='Admin')); }
 function canSee(id){
-  if(!curUser) return false;
-  if(isSA()) return true;
-  var ai=curUser.agIds||[], ui=curUser.ugIds||[];
-  return ai.includes('*')||ai.includes(id)||ui.includes('*')||ui.includes(id);
+  if(!curUser) return false; if(isSA()) return true;
+  var ai=curUser.agIds, ui=curUser.ugIds;
+  if(ai&&(ai.indexOf('*')>-1||ai.indexOf(id)>-1)) return true;
+  if(ui&&(ui.indexOf('*')>-1||ui.indexOf(id)>-1)) return true;
+  return false;
 }
-
-// ── Helpers ───────────────────────────────────────────────
 function elQ(id){ return document.getElementById(id); }
 function nowTs(){ return new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
 function chatOf(id){ if(!db.chats[id]) db.chats[id]=[]; return db.chats[id]; }
-function showSyncDot(ok){
-  var d=elQ('sync-dot');
-  if(!d) return;
-  d.style.background = ok ? '#22c55e' : '#4f7cff';
-  if(ok) setTimeout(function(){ if(d) d.style.background='#4f7cff'; }, 1500);
-}
 
-// ── Badges ────────────────────────────────────────────────
+// ── LIVE PRESENCE ──
+var bc=null, liveUsers={};
+function initLive(){
+  try{
+    bc=new BroadcastChannel('mariana_v9');
+    bc.onmessage=function(e){
+      var d=e.data; if(!d||!d.name) return;
+      if(d.type==='leave'){ delete liveUsers[d.name]; }
+      else { liveUsers[d.name]={view:d.view||'',ts:Date.now(),farbe:d.farbe||'#4f7cff'}; }
+      renderLiveUsers();
+    };
+  }catch(err){ bc=null; }
+}
+function bcPresence(v){ if(!bc||!curUser) return; bc.postMessage({type:'presence',name:curUser.name,view:v||curView,farbe:curUser.farbe}); }
+function bcLeave(){ if(!bc||!curUser) return; bc.postMessage({type:'leave',name:curUser.name}); }
+function renderLiveUsers(){
+  var d=elQ('live-users-list'); if(!d) return;
+  var now=Date.now();
+  var active=Object.keys(liveUsers).filter(function(n){ return now-liveUsers[n].ts<35000; });
+  if(!active.length){ d.innerHTML='<div style="font-size:11px;color:#6b7199">Nur du bist aktiv.</div>'; return; }
+  var h='';
+  active.forEach(function(n){
+    var u=liveUsers[n];
+    h+='<div class="live-u"><div class="live-dot" style="background:'+u.farbe+'"></div><span>'+n+'</span><span style="margin-left:auto;font-size:10px;color:#6b7199">'+(u.view||'')+'</span></div>';
+  });
+  d.innerHTML=h;
+}
+function toggleLivePanel(){ var p=elQ('livepanel'); p.style.display=p.style.display==='block'?'none':'block'; renderLiveUsers(); }
+setInterval(function(){ bcPresence(); }, 12000);
+
+// ── BADGES ──
 function updateBadges(){
   var frg=db.aufgaben.filter(function(t){ return t.freigabe&&t.status!=='Erledigt'&&t.status!=='Freigegeben'; }).length;
   var fb=elQ('nb-frg'); if(fb){ fb.textContent=frg; fb.style.display=frg?'':'none'; }
@@ -2209,23 +1952,465 @@ function updateBadges(){
   var pb=elQ('nb-post'); if(pb){ pb.textContent=post; pb.style.display=post?'':'none'; }
 }
 
-// ── Supabase: Load all data ───────────────────────────────
-function sbRow(table, r){
+// ── LOGIN ──
+function L_init(){
+  var quick=elQ('Lquick'); if(!quick) return;
+  quick.innerHTML='';
+  var colors=['#4f7cff','#22c55e','#a78bfa','#f59e0b','#14b8a6'];
+  db.nutzer.filter(function(u){ return u.aktiv!==false; }).forEach(function(u,i){
+    var btn=document.createElement('button');
+    btn.className='qbtn';
+    btn.style.borderColor=colors[i%colors.length];
+    btn.innerHTML='<b>'+u.name+'</b><s style="color:'+colors[i%colors.length]+'">'+u.rolle+'</s>';
+    btn.setAttribute('data-n',u.name);
+    btn.setAttribute('data-p',u.pw);
+    btn.addEventListener('click',function(){
+      elQ('L_name').value=this.getAttribute('data-n');
+      elQ('L_pw').value=this.getAttribute('data-p');
+      L_submit();
+    });
+    quick.appendChild(btn);
+  });
+  elQ('L_name').focus();
+}
+function L_filter(val){
+  var drop=elQ('L_drop');
+  if(!val){ drop.style.display='none'; return; }
+  var lo=val.toLowerCase();
+  var matches=db.nutzer.filter(function(u){ return u.aktiv!==false&&u.name.toLowerCase().indexOf(lo)===0; });
+  if(!matches.length){ drop.style.display='none'; return; }
+  drop.innerHTML='';
+  matches.forEach(function(u){
+    var item=document.createElement('div');
+    item.className='lf-drop-item';
+    item.innerHTML=u.name+'<span>'+u.rolle+'</span>';
+    item.addEventListener('click',function(){ elQ('L_name').value=u.name; drop.style.display='none'; elQ('L_pw').focus(); });
+    drop.appendChild(item);
+  });
+  drop.style.display='block';
+}
+function L_eye_toggle(){
+  var pw=elQ('L_pw'), eye=elQ('L_eye');
+  if(pw.type==='password'){ pw.type='text'; eye.innerHTML='&#128584;'; }
+  else { pw.type='password'; eye.innerHTML='&#128065;'; }
+  pw.focus();
+}
+function L_submit(){
+  var errEl=elQ('L_err'); errEl.style.display='none';
+  var name=elQ('L_name').value.trim(), pw=elQ('L_pw').value;
+  if(!name){ errEl.textContent='Bitte Name eingeben.'; errEl.style.display='block'; elQ('L_name').focus(); return; }
+  if(!pw){   errEl.textContent='Bitte Passwort eingeben.'; errEl.style.display='block'; elQ('L_pw').focus(); return; }
+  var found=null;
+  for(var i=0;i<db.nutzer.length;i++){
+    var u=db.nutzer[i];
+    if(u.name.toLowerCase()===name.toLowerCase()&&u.pw===pw){
+      if(u.aktiv===false){ errEl.textContent='Konto ist gesperrt.'; errEl.style.display='block'; return; }
+      found=u; break;
+    }
+  }
+  if(!found){
+    var nameOk=db.nutzer.some(function(u){ return u.name.toLowerCase()===name.toLowerCase(); });
+    errEl.textContent=nameOk?'Passwort falsch.':'Name nicht gefunden.';
+    errEl.style.display='block'; elQ('L_pw').value=''; elQ('L_pw').focus(); return;
+  }
+  curUser={id:found.id,name:found.name,rolle:found.rolle,agIds:found.agIds,ugIds:found.ugIds,farbe:found.farbe||'#4f7cff'};
+  elQ('login-overlay').style.display='none';
+  elQ('main-app').style.display='';
+  var dot=elQ('ubdot'); if(dot) dot.style.cssText='background:'+curUser.farbe+';box-shadow:0 0 5px '+curUser.farbe;
+  var ubn=elQ('ubname'); if(ubn) ubn.textContent=curUser.name+' ('+curUser.rolle+')';
+  elQ('ubadge').style.display='flex';
+  initLive(); bcPresence('Dashboard');
+  updateBadges();
+  nav(document.querySelector('[data-view="dashboard"]'));
+  setTimeout(function(){ toast('Willkommen, '+curUser.name+'!','ok'); },300);
+}
+function L_logout(){
+  bcLeave(); if(bc){ try{ bc.close(); }catch(e){} bc=null; } curUser=null; liveUsers={};
+  elQ('main-app').style.display='none'; elQ('login-overlay').style.display='flex';
+  elQ('ubadge').style.display='none'; elQ('livepanel').style.display='none';
+  elQ('L_name').value=''; elQ('L_pw').value=''; elQ('L_pw').type='password';
+  elQ('L_eye').innerHTML='&#128065;'; elQ('L_err').style.display='none';
+  setTimeout(function(){ elQ('L_name').focus(); },80);
+}
+document.addEventListener('click',function(e){
+  var drop=elQ('L_drop'), inp=elQ('L_name');
+  if(drop&&inp&&e.target!==inp&&!drop.contains(e.target)) drop.style.display='none';
+});
+
+// ── PATCH renderView ──
+var _origRV=renderView;
+renderView=function(view){
+  if(view==='posteingang'){ renderPosteingang(); return; }
+  if(view==='freigaben'){   renderFreigaben();   return; }
+  if(view==='notizen'){     renderNotizen();     return; }
+  if(view==='allchats'){    renderAllchats();    return; }
+  if(view==='einst'){       renderEinst();       return; }
+  _origRV(view);
+};
+
+// ── PATCH nav to update badges ──
+var _origNav=nav;
+nav=function(el){ _origNav(el); updateBadges(); bcPresence(curView); };
+
+// ── POSTEINGANG ──
+function renderPosteingang(){
+  var unread=db.nachrichten.filter(function(n){ return !n.gelesen; }).length;
+  var h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+      +'<span style="font-size:12px;color:#6b7199">'+unread+' ungelesen</span>'
+      +'<button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="openNachModal()">+ Nachricht</button></div>';
+  var msgs=db.nachrichten.slice().reverse();
+  if(msgs.length){
+    msgs.forEach(function(n){
+      h+='<div style="background:#1a2035;border:1px solid '+(n.gelesen?'#2a3350':'#4f7cff')+';border-left:3px solid '+(n.gelesen?'#2a3350':'#4f7cff')+';border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer" data-id="'+n.id+'" onclick="openNachDet(this.dataset.id)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+        +'<span style="font-size:13px'+(n.gelesen?'':';font-weight:700')+'">'+(n.gelesen?'&#128237;':'&#128236;')+' '+n.betreff+'</span>'
+        +(n.gelesen?'':'<span style="background:#4f7cff;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px">Neu</span>')+'</div>'
+        +'<div style="font-size:11px;color:#6b7199;margin-top:4px">Von: '+n.von+' &middot; '+n.ts+'</div>'
+        +'<div style="font-size:11px;color:#9ca3c0;margin-top:3px">'+n.text.slice(0,60)+'&hellip;</div></div>';
+    });
+  } else {
+    h+='<div style="text-align:center;padding:50px;color:#6b7199"><div style="font-size:40px;margin-bottom:8px">&#128237;</div><div>Keine Nachrichten</div></div>';
+  }
+  document.getElementById('content').innerHTML=h;
+}
+function openNachDet(id){
+  var n=db.nachrichten.find(function(x){ return x.id===id; }); if(!n) return;
+  n.gelesen=true; updateBadges();
+  var h='<button class="btn btn-secondary" style="padding:5px 10px;font-size:11px;margin-bottom:14px" onclick="renderPosteingang()">&larr; Zurück</button>'
+      +'<div style="background:#0d1117;border:1px solid #2a3350;border-radius:8px;padding:14px;margin-bottom:14px">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>'+n.betreff+'</strong><span style="font-size:11px;color:#6b7199">'+n.ts+'</span></div>'
+      +'<div style="font-size:11px;color:#6b7199;margin-bottom:10px">Von: '+n.von+' &rarr; An: '+n.an+'</div>'
+      +'<div style="font-size:12px;line-height:1.7;white-space:pre-wrap">'+n.text+'</div></div>';
+  if(n.antworten&&n.antworten.length){
+    h+='<div style="font-size:11px;font-weight:600;color:#6b7199;margin-bottom:6px">Verlauf</div>';
+    n.antworten.forEach(function(a){
+      h+='<div style="background:rgba(79,124,255,.1);border:1px solid rgba(79,124,255,.2);border-radius:6px;padding:8px 10px;margin-bottom:6px">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:3px"><strong style="font-size:11px">'+a.autor+'</strong><span style="font-size:10px;color:#6b7199">'+a.ts+'</span></div>'
+        +'<div style="font-size:12px">'+a.text+'</div></div>';
+    });
+  }
+  h+='<div style="font-size:11px;font-weight:600;color:#6b7199;margin:10px 0 6px">Antworten</div>'
+    +'<textarea id="nach-reply" rows="3" style="width:100%;margin-bottom:8px;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px;resize:vertical;box-sizing:border-box" placeholder="Antwort&hellip;"></textarea>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn btn-primary" style="padding:6px 12px;font-size:12px" data-id="'+id+'" onclick="sendAntwort(this.dataset.id)">Senden</button>'
+    +'<button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" data-id="'+id+'" onclick="delNach(this.dataset.id)">Löschen</button></div>';
+  document.getElementById('content').innerHTML=h;
+}
+function openNachModal(){
+  var h='<button class="btn btn-secondary" style="padding:5px 10px;font-size:11px;margin-bottom:14px" onclick="renderPosteingang()">&larr; Zurück</button>'
+      +'<div style="background:#1a2035;border:1px solid #2a3350;border-radius:10px;padding:20px;max-width:480px">'
+      +'<h3 style="font-size:14px;margin-bottom:14px">Neue Nachricht</h3>'
+      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:#6b7199;display:block;margin-bottom:4px">An</label>'
+      +'<input id="nach-an" placeholder="Empfänger&hellip;" style="width:100%;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:#6b7199;display:block;margin-bottom:4px">Betreff</label>'
+      +'<input id="nach-betr" placeholder="Betreff&hellip;" style="width:100%;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+      +'<div style="margin-bottom:12px"><label style="font-size:11px;color:#6b7199;display:block;margin-bottom:4px">Text</label>'
+      +'<textarea id="nach-txt" rows="4" style="width:100%;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px;resize:vertical;box-sizing:border-box" placeholder="Nachricht&hellip;"></textarea></div>'
+      +'<div style="display:flex;gap:8px">'
+      +'<button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="sendNach()">Senden</button>'
+      +'<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px" onclick="renderPosteingang()">Abbrechen</button></div></div>';
+  document.getElementById('content').innerHTML=h;
+}
+function sendNach(){
+  var an=(elQ('nach-an')||{value:''}).value.trim(), txt=(elQ('nach-txt')||{value:''}).value.trim();
+  if(!an||!txt){ toast('Empfänger und Text Pflicht','error'); return; }
+  db.nachrichten.push({id:'MSG-'+Date.now(),von:curUser?curUser.name:'Admin',an:an,
+    betreff:(elQ('nach-betr')||{value:''}).value||'(kein Betreff)',
+    text:txt,ts:nowTs(),gelesen:false,antworten:[]});
+  updateBadges(); toast('Nachricht gesendet','ok'); renderPosteingang();
+}
+function sendAntwort(msgId){
+  var n=db.nachrichten.find(function(x){ return x.id===msgId; }); if(!n) return;
+  var txt=(elQ('nach-reply')||{value:''}).value.trim(); if(!txt){ toast('Text Pflicht','error'); return; }
+  if(!n.antworten) n.antworten=[];
+  n.antworten.push({autor:curUser?curUser.name:'Admin',text:txt,ts:nowTs()});
+  toast('Antwort gesendet','ok'); openNachDet(msgId);
+}
+function delNach(id){ db.nachrichten=db.nachrichten.filter(function(n){ return n.id!==id; }); updateBadges(); renderPosteingang(); }
+
+// ── FREIGABEN ──
+function renderFreigaben(){
+  if(!isAdmin()){
+    document.getElementById('content').innerHTML='<div style="text-align:center;padding:60px;color:#6b7199"><div style="font-size:40px">&#128274;</div><h3>Kein Zugriff</h3></div>';
+    return;
+  }
+  var pending=db.aufgaben.filter(function(t){ return t.freigabe&&t.status!=='Erledigt'&&t.status!=='Freigegeben'&&t.status!=='Archiviert'; });
+  var h='<h3 style="font-size:14px;margin-bottom:14px">&#128274; Ausstehende Freigaben ('+pending.length+')</h3>';
+  if(pending.length){
+    pending.forEach(function(t){
+      h+='<div style="background:#1a2035;border:1px solid #2a3350;border-left:3px solid #f59e0b;border-radius:8px;padding:12px;margin-bottom:8px">'
+        +'<div style="font-size:13px;font-weight:600;margin-bottom:4px">'+t.titel+'</div>'
+        +'<div style="font-size:11px;color:#6b7199;margin-bottom:8px">'+t.entityId+' &middot; Fällig: '+(t.faellig||'?')+' &middot; '+(t.sensibel||'')+'</div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+        +'<button class="btn btn-primary" style="padding:5px 10px;font-size:11px" data-id="'+t.id+'" onclick="freigebenTask(this.dataset.id)">&#10003; Freigeben</button>'
+        +'<button class="btn btn-secondary" style="padding:5px 10px;font-size:11px" data-id="'+t.id+'" onclick="ablehnenTask(this.dataset.id)">&#10007; Ablehnen</button>'
+        +'<button class="btn btn-secondary" style="padding:5px 10px;font-size:11px" data-id="'+t.id+'" onclick="openTaskDetail(this.dataset.id)">Details</button>'
+        +'</div></div>';
+    });
+  } else {
+    h+='<div style="text-align:center;padding:50px;color:#6b7199"><div style="font-size:40px">&#128275;</div><h3>Keine ausstehenden Freigaben</h3></div>';
+  }
+  document.getElementById('content').innerHTML=h;
+}
+function freigebenTask(id){ var t=db.aufgaben.find(function(x){ return x.id===id; }); if(t) t.status='Freigegeben'; updateBadges(); toast('Freigegeben &#10003;','ok'); renderFreigaben(); }
+function ablehnenTask(id){ var t=db.aufgaben.find(function(x){ return x.id===id; }); if(t) t.status='Blockiert'; toast('Abgelehnt','error'); renderFreigaben(); }
+
+// ── NOTIZEN ──
+function renderNotizen(){
+  var notes=db.notizen.slice().reverse();
+  var h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+      +'<span style="font-size:12px;color:#6b7199">'+db.notizen.length+' Notizen</span>'
+      +'<button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="openNotizForm()">+ Notiz</button></div>';
+  if(notes.length){
+    notes.forEach(function(n){
+      var col=n.prio==='Dringend'?'#ef4444':n.prio==='Wichtig'?'#f59e0b':'#2a3350';
+      h+='<div style="background:#1a2035;border:1px solid #2a3350;border-left:3px solid '+col+';border-radius:8px;padding:12px;margin-bottom:8px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
+        +'<span style="font-size:11px;color:#6b7199">'+(n.kat||'Allgemein')+(n.targetId?' &middot; '+n.targetId:'')+'</span>'
+        +'<button style="background:none;border:none;color:#6b7199;cursor:pointer;font-size:14px;line-height:1" data-id="'+n.id+'" onclick="delNotiz(this.dataset.id)">&#215;</button></div>'
+        +'<div style="font-size:12px;line-height:1.6">'+n.text+'</div>'
+        +'<div style="font-size:10px;color:#6b7199;margin-top:6px">&#9998; '+(n.autor||'')+' &middot; '+(n.ts||'')+'</div></div>';
+    });
+  } else {
+    h+='<div style="text-align:center;padding:50px;color:#6b7199"><div style="font-size:40px">&#128221;</div><h3>Keine Notizen</h3></div>';
+  }
+  document.getElementById('content').innerHTML=h;
+}
+function openNotizForm(preTarget){
+  preTarget=preTarget||'';
+  var tgtOpts='<option value="">Allgemein</option>';
+  db.ags.forEach(function(a){ tgtOpts+='<option value="'+a.id+'"'+(preTarget===a.id?' selected':'')+'>[AG] '+a.id+' - '+a.name+'</option>'; });
+  db.ugs.forEach(function(u){ tgtOpts+='<option value="'+u.id+'"'+(preTarget===u.id?' selected':'')+'>[UG] '+u.id+' - '+u.name+'</option>'; });
+  var h='<button class="btn btn-secondary" style="padding:5px 10px;font-size:11px;margin-bottom:14px" onclick="renderNotizen()">&larr; Zurück</button>'
+      +'<div style="background:#1a2035;border:1px solid #2a3350;border-radius:10px;padding:20px;max-width:480px">'
+      +'<h3 style="font-size:14px;margin-bottom:14px">Neue Notiz</h3>'
+      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:#6b7199;display:block;margin-bottom:4px">Zuordnung</label>'
+      +'<select id="nz-tgt" style="width:100%;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px">'+tgtOpts+'</select></div>'
+      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:#6b7199;display:block;margin-bottom:4px">Kategorie</label>'
+      +'<input id="nz-kat" value="Allgemein" style="width:100%;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:#6b7199;display:block;margin-bottom:4px">Priorität</label>'
+      +'<select id="nz-prio" style="width:100%;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px"><option>Normal</option><option>Wichtig</option><option>Dringend</option></select></div>'
+      +'<div style="margin-bottom:12px"><label style="font-size:11px;color:#6b7199;display:block;margin-bottom:4px">Text</label>'
+      +'<textarea id="nz-txt" rows="4" style="width:100%;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px;resize:vertical;box-sizing:border-box" placeholder="Notiz&hellip;"></textarea></div>'
+      +'<div style="display:flex;gap:8px">'
+      +'<button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="saveNotiz()">Speichern</button>'
+      +'<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px" onclick="renderNotizen()">Abbrechen</button></div></div>';
+  document.getElementById('content').innerHTML=h;
+  setTimeout(function(){ var t=elQ('nz-txt'); if(t) t.focus(); },60);
+}
+function saveNotiz(){
+  var txt=(elQ('nz-txt')||{value:''}).value.trim(); if(!txt){ toast('Bitte Text eingeben','error'); return; }
+  db.notizen.push({id:'N-'+Date.now(),targetId:(elQ('nz-tgt')||{value:''}).value,
+    kat:(elQ('nz-kat')||{value:'Allgemein'}).value,prio:(elQ('nz-prio')||{value:'Normal'}).value,
+    autor:curUser?curUser.name:'?',text:txt,ts:nowTs()});
+  toast('Notiz gespeichert','ok'); renderNotizen();
+}
+function delNotiz(id){ db.notizen=db.notizen.filter(function(n){ return n.id!==id; }); renderNotizen(); }
+
+// ── ALLE CHATS ──
+function renderAllchats(){
+  var all=[];
+  db.ags.forEach(function(a){ all.push({id:a.id,name:a.name,typ:'AG',farbe:a.farbe||'#4f7cff'}); });
+  db.ugs.forEach(function(u){ all.push({id:u.id,name:u.name,typ:'UG',farbe:'#a78bfa'}); });
+  var h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">';
+  all.forEach(function(e){
+    var msgs=chatOf(e.id), last=msgs.length?msgs[msgs.length-1]:null;
+    h+='<div style="background:#1a2035;border:1px solid #2a3350;border-radius:8px;padding:12px;cursor:pointer" data-id="'+e.id+'" onclick="openChatView(this.dataset.id)">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      +'<div style="width:8px;height:8px;border-radius:50%;background:'+e.farbe+';flex-shrink:0"></div>'
+      +'<strong style="font-size:12px;flex:1">'+e.name+'</strong>'
+      +'<span style="font-size:10px;color:#6b7199">'+e.typ+'</span></div>'
+      +'<div style="font-size:11px;color:#6b7199">'+msgs.length+' Nachrichten</div>'
+      +(last?'<div style="font-size:11px;color:#9ca3c0;margin-top:3px">'+last.text.slice(0,40)+'&hellip;</div>':'')
+      +'</div>';
+  });
+  h+='</div>';
+  document.getElementById('content').innerHTML=h;
+}
+function openChatView(entityId){
+  var ent=db.ags.find(function(a){ return a.id===entityId; })||db.ugs.find(function(u){ return u.id===entityId; });
+  var msgs=chatOf(entityId);
+  var h='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
+      +'<button class="btn btn-secondary" style="padding:5px 10px;font-size:11px" onclick="renderAllchats()">&larr; Alle Chats</button>'
+      +'<strong>'+(ent?ent.name:entityId)+'</strong></div>'
+      +'<div id="chatbox-'+entityId+'" style="background:#0d1117;border:1px solid #2a3350;border-radius:8px;padding:12px;height:320px;overflow-y:auto;margin-bottom:8px">';
+  if(msgs.length){
+    msgs.forEach(function(m){
+      var mine=m.autor===(curUser?curUser.name:'');
+      h+='<div style="margin-bottom:8px;text-align:'+(mine?'right':'left')+'">'
+        +'<div style="display:inline-block;background:'+(mine?'rgba(79,124,255,.25)':'#1a2035')+';border:1px solid #2a3350;border-radius:8px;padding:6px 10px;max-width:75%">'
+        +'<div style="font-size:12px">'+m.text+'</div>'
+        +'<div style="font-size:10px;color:#6b7199;margin-top:2px">'+m.autor+' &middot; '+m.ts+'</div></div></div>';
+    });
+  } else {
+    h+='<div style="text-align:center;padding:30px;color:#6b7199">Noch keine Nachrichten.</div>';
+  }
+  h+='</div><div style="display:flex;gap:8px">'
+    +'<input type="text" id="chat-inp-'+entityId+'" placeholder="Nachricht&hellip;" style="flex:1;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px" data-eid="'+entityId+'" onkeydown="if(event.keyCode===13)sendChatMsg(this.dataset.eid)">'
+    +'<button class="btn btn-primary" style="padding:6px 12px;font-size:12px" data-eid="'+entityId+'" onclick="sendChatMsg(this.dataset.eid)">Senden</button></div>';
+  document.getElementById('content').innerHTML=h;
+  setTimeout(function(){ var b=elQ('chatbox-'+entityId); if(b) b.scrollTop=b.scrollHeight; },60);
+}
+function sendChatMsg(entityId){
+  var inp=elQ('chat-inp-'+entityId); if(!inp) return;
+  var text=inp.value.trim(); if(!text) return;
+  var ts=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  chatOf(entityId).push({autor:curUser?curUser.name:'?',text:text,ts:ts});
+  inp.value=''; openChatView(entityId);
+}
+
+// ── EINSTELLUNGEN ──
+function renderEinst(){
+  var nutzerHtml='';
+  if(isSA()){
+    nutzerHtml='<div style="background:#1a2035;border:1px solid #2a3350;border-radius:10px;padding:16px;margin-bottom:16px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+      +'<h3 style="font-size:13px;margin:0">&#128101; Nutzerverwaltung</h3>'
+      +'<button class="btn btn-primary" style="padding:5px 10px;font-size:11px" onclick="openNutzerForm()">+ Nutzer</button></div>'
+      +'<div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">'
+      +'<thead><tr style="color:#6b7199;border-bottom:1px solid #2a3350">'
+      +'<th style="padding:6px 8px;text-align:left">Name</th><th style="padding:6px 8px;text-align:left">Rolle</th>'
+      +'<th style="padding:6px 8px;text-align:left">AGs</th><th style="padding:6px 8px;text-align:left">Status</th>'
+      +'<th style="padding:6px 8px"></th></tr></thead><tbody>';
+    db.nutzer.forEach(function(u){
+      var roleCol=u.rolle==='SuperAdmin'?'#ef4444':u.rolle==='Admin'?'#f59e0b':'#4f7cff';
+      nutzerHtml+='<tr style="border-bottom:1px solid rgba(42,51,80,.5)">'
+        +'<td style="padding:6px 8px"><strong>'+u.name+'</strong></td>'
+        +'<td style="padding:6px 8px"><span style="background:rgba(0,0,0,.3);color:'+roleCol+';border-radius:4px;padding:2px 6px;font-size:10px">'+u.rolle+'</span></td>'
+        +'<td style="padding:6px 8px;color:#6b7199">'+(u.agIds.indexOf('*')>-1?'Alle':u.agIds.join(', '))+'</td>'
+        +'<td style="padding:6px 8px"><span style="color:'+(u.aktiv!==false?'#22c55e':'#ef4444')+'">'+(u.aktiv!==false?'Aktiv':'Gesperrt')+'</span></td>'
+        +'<td style="padding:6px 8px">'
+        +(u.rolle!=='SuperAdmin'?'<button class="btn btn-secondary" style="padding:3px 7px;font-size:10px" data-id="'+u.id+'" onclick="toggleNutzerAktiv(this.dataset.id)">'+(u.aktiv!==false?'Sperren':'Freisch.')+'</button>':'')
+        +'</td></tr>';
+    });
+    nutzerHtml+='</tbody></table></div></div>';
+  }
+  var h=nutzerHtml
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div style="background:#1a2035;border:1px solid #2a3350;border-radius:10px;padding:16px">'
+    +'<h3 style="font-size:13px;margin:0 0 10px">&#128273; API-Key</h3>'
+    +'<p style="font-size:11px;color:#6b7199;margin:0 0 10px">Für KI-Konzeptgenerierung.</p>'
+    +'<input id="set-key" type="password" placeholder="sk-ant-&hellip;" style="width:100%;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px;font-family:monospace;box-sizing:border-box;margin-bottom:8px">'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="saveApiKey()">Speichern</button>'
+    +'<button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="testApiKey()">Testen</button></div>'
+    +'<div id="key-status" style="margin-top:8px;font-size:11px"></div></div>'
+    +'<div style="background:#1a2035;border:1px solid #2a3350;border-radius:10px;padding:16px">'
+    +'<h3 style="font-size:13px;margin:0 0 10px">&#128100; Profil</h3>'
+    +'<div style="font-size:12px;margin-bottom:6px"><span style="color:#6b7199">Angemeldet:</span> <strong>'+(curUser?curUser.name:'')+'</strong></div>'
+    +'<div style="font-size:12px;margin-bottom:14px"><span style="color:#6b7199">Rolle:</span> '+(curUser?curUser.rolle:'')+'</div>'
+    +'<button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="L_logout()">Abmelden</button></div>'
+    +'<div style="background:#1a2035;border:1px solid #2a3350;border-radius:10px;padding:16px">'
+    +'<h3 style="font-size:13px;margin:0 0 10px">&#127864; Live-Präsenz</h3>'
+    +'<div id="live-users-list2"></div>'
+    +'<button class="btn btn-secondary" style="padding:5px 10px;font-size:11px;margin-top:8px" onclick="renderLiveUsers()">Aktualisieren</button></div>'
+    +'</div>';
+  document.getElementById('content').innerHTML=h;
+  var sk=elQ('set-key'); if(sk) sk.value=apiKey;
+}
+function saveApiKey(){ apiKey=(elQ('set-key')||{value:''}).value; toast('API-Key gespeichert &#10003;','ok'); }
+async function testApiKey(){
+  var k=(elQ('set-key')||{value:''}).value;
+  if(!k.startsWith('sk-')){ var st=elQ('key-status'); if(st) st.innerHTML='<span style="color:#ef4444">Kein gültiger Key.</span>'; return; }
+  apiKey=k; var st=elQ('key-status'); if(st) st.innerHTML='<span style="color:#6b7199">Teste&hellip;</span>';
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true','x-api-key':apiKey},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:10,messages:[{role:'user',content:'OK'}]})});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    if(st) st.innerHTML='<span style="color:#22c55e">&#10003; Verbindung OK!</span>';
+  }catch(err){ if(st) st.innerHTML='<span style="color:#ef4444">Fehler: '+err.message+'</span>'; }
+}
+function openNutzerForm(){
+  var h='<button class="btn btn-secondary" style="padding:5px 10px;font-size:11px;margin-bottom:14px" onclick="renderEinst()">&larr; Zurück</button>'
+      +'<div style="background:#1a2035;border:1px solid #2a3350;border-radius:10px;padding:20px;max-width:400px">'
+      +'<h3 style="font-size:14px;margin-bottom:14px">Neuer Nutzer</h3>'
+      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:#6b7199;display:block;margin-bottom:4px">Name</label>'
+      +'<input id="nu-name" style="width:100%;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:#6b7199;display:block;margin-bottom:4px">Passwort</label>'
+      +'<input id="nu-pw" type="password" style="width:100%;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+      +'<div style="margin-bottom:14px"><label style="font-size:11px;color:#6b7199;display:block;margin-bottom:4px">Rolle</label>'
+      +'<select id="nu-rolle" style="width:100%;background:#0d1117;border:1px solid #2a3350;color:inherit;border-radius:6px;padding:8px;font-size:12px"><option>Admin</option><option>Editor</option><option>intern</option></select></div>'
+      +'<div style="display:flex;gap:8px">'
+      +'<button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="saveNewNutzer()">Erstellen</button>'
+      +'<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px" onclick="renderEinst()">Abbrechen</button></div></div>';
+  document.getElementById('content').innerHTML=h;
+}
+function saveNewNutzer(){
+  var name=(elQ('nu-name')||{value:''}).value.trim(), pw=(elQ('nu-pw')||{value:''}).value;
+  if(!name||!pw){ toast('Name und Passwort Pflicht','error'); return; }
+  db.nutzer.push({id:'U-'+String(db.nutzer.length+1).padStart(3,'0'),name:name,pw:pw,
+    rolle:(elQ('nu-rolle')||{value:'intern'}).value,agIds:[],ugIds:[],aktiv:true,farbe:'#4f7cff'});
+  toast('Nutzer erstellt','ok'); renderEinst();
+}
+function toggleNutzerAktiv(id){
+  var u=db.nutzer.find(function(x){ return x.id===id; });
+  if(!u||u.rolle==='SuperAdmin') return;
+  u.aktiv=u.aktiv===false?true:false;
+  toast(u.aktiv?'Freigeschaltet':'Gesperrt','ok'); renderEinst();
+}
+
+// ── BOOT (LOGIN) ──
+L_init();
+
+
+
+// ═══════════════════════════════════════════════════════════
+// V13 — Supabase + vollständige Features
+// Kein Patching — alle Funktionen eigenständig definiert
+// ═══════════════════════════════════════════════════════════
+
+var SB_URL = 'https://gvzayggvtlychyjbnsgv.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2emF5Z2d2dGx5Y2h5amJuc2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODEzMTIsImV4cCI6MjA4OTM1NzMxMn0.1L2e98IjFjF8z_-t0Fpm20wwVyrtWfkMdjGG79fJwMg';
+aiProvider = 'gemini';
+geminiKey  = '';
+apiKey     = '';
+curUser    = null;
+var sbRT       = null;
+var _sb        = null;
+var _poll      = null;
+var _lastPoll  = {};
+var _liveUsers = {};
+
+// ── Supabase helpers ─────────────────────────────────────
+function getSB(){
+  if(!_sb) _sb = window.supabase.createClient(SB_URL, SB_KEY);
+  return _sb;
+}
+async function sbQ(table){ return getSB().from(table).select('*'); }
+async function sbUp(table,obj){
+  if(!obj||!obj.id) return;
+  var row = toSB(table,obj);
+  var {error} = await getSB().from(table).upsert(row,{onConflict:'id'});
+  if(error) console.warn('sbUp',table,error.message); else syncDot(1);
+}
+async function sbDel(table,id){
+  var {error} = await getSB().from(table).delete().eq('id',id);
+  if(error) console.warn('sbDel',table,error.message); else syncDot(1);
+}
+
+function syncDot(ok){
+  var d=document.getElementById('sync-dot');
+  if(!d) return;
+  d.style.background=ok?'#22c55e':'#ef4444';
+  setTimeout(function(){ d.style.background='#4f7cff'; },1500);
+}
+
+// ── Data mapping ─────────────────────────────────────────
+function fromSB(table,r){
   if(table==='ags') return {id:r.id,name:r.name,kat:r.kat||'',status:r.status||'In Planung',prio:r.prio||'Mittel',koo:r.koo||'',stv:r.stv||'',ziel:r.ziel||'',rhythmus:r.rhythmus||'',farbe:r.farbe||'#4f7cff',notizen:r.notizen||'',letzteAktu:r.letzte_aktu||''};
   if(table==='ugs') return {id:r.id,name:r.name,typ:r.typ||'Team',status:r.status||'In Planung',prio:r.prio||'Mittel',lead:r.lead||'',kanal:r.kanal||'',fokus:r.fokus||'',notizen:r.notizen||''};
-  if(table==='ag_ug_links') return {id:r.id,agId:r.ag_id,ugId:r.ug_id,art:r.art||'Zuarbeit',aktiv:r.aktiv};
-  if(table==='mitglieder') return {id:r.id,name:r.name,kontakt:r.kontakt||'',region:r.region||'',kompetenzen:r.kompetenzen||'',verfueg:r.verfueg||'mittel',aktiv:r.aktiv,start:r.start_datum||'',notizen:r.notizen||''};
-  if(table==='rollen') return {id:r.id,personId:r.person_id,name:r.name||'',entityTyp:r.entity_typ,entityId:r.entity_id,rolle:r.rolle||'',zugriff:r.zugriff||'intern',aktiv:r.aktiv,start:r.start_datum||''};
+  if(table==='ag_ug_links') return {id:r.id,agId:r.ag_id,ugId:r.ug_id,art:r.art||'',aktiv:r.aktiv};
+  if(table==='mitglieder') return {id:r.id,name:r.name,kontakt:r.kontakt||'',region:r.region||'',kompetenzen:r.kompetenzen||'',verfueg:r.verfueg||'mittel',aktiv:r.aktiv!==false,start:r.start_datum||'',notizen:r.notizen||''};
+  if(table==='rollen') return {id:r.id,personId:r.person_id,name:r.name||'',entityTyp:r.entity_typ,entityId:r.entity_id,rolle:r.rolle||'',zugriff:r.zugriff||'intern',aktiv:r.aktiv!==false,start:r.start_datum||''};
   if(table==='aufgaben') return {id:r.id,entityTyp:r.entity_typ,entityId:r.entity_id,titel:r.titel,verantw:r.verantw||'',faellig:r.faellig||'',prio:r.prio||'Mittel',status:r.status||'Offen',freigabe:r.freigabe||false,sensibel:r.sensibel||'Nein',naechster:r.naechster||'',notizen:r.notizen||''};
   if(table==='konzepte') return {id:r.id,entityId:r.entity_id,entityTyp:r.entity_typ||'AG',name:r.name,version:r.version||'1.0',status:r.status||'Entwurf',ziel:r.ziel||'',struktur:r.struktur||'',aw:r.aw||'',ns:r.ns||'',op:r.op||'',stand:r.stand||'',verantw:r.verantw||'',notizen:r.notizen||''};
   if(table==='nachrichten') return {id:r.id,von:r.von||'',an:r.an||'',betreff:r.betreff||'',text:r.text||'',ts:r.ts||'',gelesen:r.gelesen||false,antworten:Array.isArray(r.antworten)?r.antworten:[]};
   if(table==='notizen') return {id:r.id,targetId:r.target_id||'',kat:r.kat||'Allgemein',prio:r.prio||'Normal',autor:r.autor||'',text:r.text||'',ts:r.ts||''};
-  if(table==='nutzer') return {id:r.id,name:r.name,pw:r.pw||'',rolle:r.rolle||'intern',agIds:Array.isArray(r.ag_ids)?r.ag_ids:[],ugIds:Array.isArray(r.ug_ids)?r.ug_ids:[],aktiv:r.aktiv,farbe:r.farbe||'#4f7cff'};
-  if(table==='einstellungen') return {key:r.key,value:r.value||''};
+  if(table==='nutzer') return {id:r.id,name:r.name,pw:r.pw||'',rolle:r.rolle||'intern',agIds:Array.isArray(r.ag_ids)?r.ag_ids:[],ugIds:Array.isArray(r.ug_ids)?r.ug_ids:[],aktiv:r.aktiv!==false,farbe:r.farbe||'#4f7cff'};
   return r;
 }
-
-function localRow(table, o){
+function toSB(table,o){
   if(table==='ags') return {id:o.id,name:o.name,kat:o.kat,status:o.status,prio:o.prio,koo:o.koo,stv:o.stv,ziel:o.ziel,rhythmus:o.rhythmus,farbe:o.farbe,notizen:o.notizen,letzte_aktu:o.letzteAktu||new Date().toISOString().slice(0,10)};
   if(table==='ugs') return {id:o.id,name:o.name,typ:o.typ,status:o.status,prio:o.prio,lead:o.lead,kanal:o.kanal,fokus:o.fokus,notizen:o.notizen};
   if(table==='ag_ug_links') return {id:o.id,ag_id:o.agId,ug_id:o.ugId,art:o.art,aktiv:o.aktiv!==false};
@@ -2239,27 +2424,18 @@ function localRow(table, o){
   return o;
 }
 
-async function sbUpsert(table, obj){
-  if(!obj||!obj.id) return;
-  var {error} = await getSB().from(table).upsert(localRow(table,obj),{onConflict:'id'});
-  if(error) console.warn('sbUpsert',table,error.message);
-  else showSyncDot(true);
-}
-async function sbDel(table, id){
-  var {error} = await getSB().from(table).delete().eq('id',id);
-  if(error) console.warn('sbDel',table,error.message);
-  else showSyncDot(true);
-}
-
+// ── Load all data ────────────────────────────────────────
 async function sbLoadAll(){
-  var ld=elQ('sb-loading'), msg=elQ('sb-loading-msg'), err=elQ('sb-loading-err');
-  if(ld){ ld.style.display='flex'; }
-  if(msg) msg.style.display='block';
-  if(err) err.style.display='none';
-  try {
-    if(msg) msg.textContent='Lade Daten…';
-    var sb = getSB();
-    var results = await Promise.all([
+  var ld=document.getElementById('sb-loading');
+  var msg=document.getElementById('sb-loading-msg');
+  var errDiv=document.getElementById('sb-loading-err');
+  if(ld) ld.style.display='flex';
+  if(msg) msg.textContent='Lade Daten...';
+  if(errDiv) errDiv.style.display='none';
+  try{
+    if(msg) msg.textContent='Verbinde mit Datenbank...';
+    var sb=getSB();
+    var res=await Promise.all([
       sb.from('ags').select('*').order('id'),
       sb.from('ugs').select('*').order('id'),
       sb.from('ag_ug_links').select('*'),
@@ -2269,36 +2445,41 @@ async function sbLoadAll(){
       sb.from('konzepte').select('*'),
       sb.from('nachrichten').select('*'),
       sb.from('notizen').select('*'),
-      sb.from('nutzer').select('*').order('name'),
-      sb.from('einstellungen').select('*').then(function(r){ return r.error ? {data:[]} : r; })
+      sb.from('nutzer').select('*').order('name')
     ]);
-    var errs = results.filter(function(r){ return r.error; });
-    if(errs.length){ throw new Error(errs[0].error.message); }
-    db.ags         = (results[0].data||[]).map(function(r){ return sbRow('ags',r); });
-    db.ugs         = (results[1].data||[]).map(function(r){ return sbRow('ugs',r); });
-    db.agUgLinks   = (results[2].data||[]).map(function(r){ return sbRow('ag_ug_links',r); });
-    db.mitglieder  = (results[3].data||[]).map(function(r){ return sbRow('mitglieder',r); });
-    db.rollen      = (results[4].data||[]).map(function(r){ return sbRow('rollen',r); });
-    db.aufgaben    = (results[5].data||[]).map(function(r){ return sbRow('aufgaben',r); });
-    db.konzepte    = (results[6].data||[]).map(function(r){ return sbRow('konzepte',r); });
-    db.nachrichten = (results[7].data||[]).map(function(r){ return sbRow('nachrichten',r); });
-    db.notizen     = (results[8].data||[]).map(function(r){ return sbRow('notizen',r); });
-    db.nutzer      = (results[9].data||[]).map(function(r){ return sbRow('nutzer',r); });
-    // Load settings (AI key)
-    (results[10].data||[]).forEach(function(r){
-      if(r.key==='gemini_key'&&r.value) geminiKey=r.value;
-      if(r.key==='claude_key'&&r.value) apiKey=r.value;
-      if(r.key==='ai_provider'&&r.value) aiProvider=r.value;
-    });
+    var errs=res.filter(function(r){return r.error;});
+    if(errs.length) throw new Error(errs[0].error.message);
+
+    db.ags        = (res[0].data||[]).map(function(r){return fromSB('ags',r);});
+    db.ugs        = (res[1].data||[]).map(function(r){return fromSB('ugs',r);});
+    db.agUgLinks  = (res[2].data||[]).map(function(r){return fromSB('ag_ug_links',r);});
+    db.mitglieder = (res[3].data||[]).map(function(r){return fromSB('mitglieder',r);});
+    db.rollen     = (res[4].data||[]).map(function(r){return fromSB('rollen',r);});
+    db.aufgaben   = (res[5].data||[]).map(function(r){return fromSB('aufgaben',r);});
+    db.konzepte   = (res[6].data||[]).map(function(r){return fromSB('konzepte',r);});
+    db.nachrichten= (res[7].data||[]).map(function(r){return fromSB('nachrichten',r);});
+    db.notizen    = (res[8].data||[]).map(function(r){return fromSB('notizen',r);});
+    db.nutzer     = (res[9].data||[]).map(function(r){return fromSB('nutzer',r);});
+
+    // Load settings (API key)
+    try{
+      var sr=await sb.from('einstellungen').select('*');
+      if(sr.data) sr.data.forEach(function(r){
+        if(r.key==='gemini_key'&&r.value) geminiKey=r.value;
+        if(r.key==='claude_key'&&r.value) apiKey=r.value;
+        if(r.key==='ai_provider'&&r.value) aiProvider=r.value;
+      });
+    }catch(e){}
+
     if(msg) msg.textContent='Bereit!';
-    setTimeout(function(){ if(ld) ld.style.display='none'; }, 300);
+    setTimeout(function(){ if(ld) ld.style.display='none'; },300);
     return true;
-  } catch(e){
-    console.error('sbLoadAll:', e);
+  }catch(e){
+    console.error('sbLoadAll:',e);
     if(msg) msg.style.display='none';
-    if(err){
-      err.style.display='block';
-      var em=elQ('sb-err-msg');
+    if(errDiv){
+      errDiv.style.display='block';
+      var em=document.getElementById('sb-err-msg');
       if(em) em.textContent=e.message;
     }
     return false;
@@ -2306,119 +2487,108 @@ async function sbLoadAll(){
 }
 
 function retryLoad(){
-  var err=elQ('sb-loading-err'), msg=elQ('sb-loading-msg');
-  if(err) err.style.display='none';
-  if(msg){ msg.style.display='block'; msg.textContent='Verbinde…'; }
+  var errDiv=document.getElementById('sb-loading-err');
+  var msg=document.getElementById('sb-loading-msg');
+  if(errDiv) errDiv.style.display='none';
+  if(msg){ msg.style.display='block'; msg.textContent='Verbinde...'; }
   sbLoadAll();
 }
 
-// ── Realtime + Polling ────────────────────────────────────
+// ── Realtime ─────────────────────────────────────────────
 function sbRealtime(){
-  try {
-    var sb = getSB();
-    sbRT = sb.channel('mariana-v12')
-      .on('postgres_changes',{event:'*',schema:'public',table:'aufgaben'},    function(p){ onRT('aufgaben',p); })
-      .on('postgres_changes',{event:'*',schema:'public',table:'nachrichten'}, function(p){ onRT('nachrichten',p); })
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'chats'},  function(p){ onChatRT(p.new); })
-      .on('postgres_changes',{event:'*',schema:'public',table:'notizen'},     function(p){ onRT('notizen',p); })
-      .on('postgres_changes',{event:'*',schema:'public',table:'konzepte'},    function(p){ onRT('konzepte',p); })
-      .subscribe(function(status){
-        console.log('RT:', status);
-        if(status==='SUBSCRIBED') showSyncDot(true);
-      });
-  } catch(e){ console.warn('RT unavailable'); }
+  try{
+    sbRT=getSB().channel('mariana-v13')
+      .on('postgres_changes',{event:'*',schema:'public',table:'aufgaben'},    function(p){onRT('aufgaben',p);})
+      .on('postgres_changes',{event:'*',schema:'public',table:'nachrichten'}, function(p){onRT('nachrichten',p);})
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'chats'},  function(p){onChatRT(p.new);})
+      .on('postgres_changes',{event:'*',schema:'public',table:'notizen'},     function(p){onRT('notizen',p);})
+      .on('postgres_changes',{event:'*',schema:'public',table:'konzepte'},    function(p){onRT('konzepte',p);})
+      .subscribe(function(s){ console.log('RT:',s); if(s==='SUBSCRIBED') syncDot(1); });
+  }catch(e){ console.warn('RT:',e); }
 }
 
-function onRT(table, p){
-  var rec = p.new || p.old;
-  if(!rec) return;
-  var key = table;
-  if(!db[key]) return;
-  if(p.eventType==='INSERT'||p.eventType==='UPDATE'){
-    var row = sbRow(table, rec);
-    var idx = db[key].findIndex(function(x){ return x.id===row.id; });
-    if(idx>=0) db[key][idx]=row; else db[key].push(row);
-  } else if(p.eventType==='DELETE'){
-    db[key] = db[key].filter(function(x){ return x.id!==rec.id; });
+function onRT(table,p){
+  var rec=p.new||p.old; if(!rec) return;
+  if(!db[table]) return;
+  if(p.eventType==='DELETE'){
+    db[table]=db[table].filter(function(x){return x.id!==rec.id;});
+  } else {
+    var row=fromSB(table,rec);
+    var idx=db[table].findIndex(function(x){return x.id===row.id;});
+    if(idx>=0) db[table][idx]=row; else db[table].push(row);
   }
-  updateBadges(); refreshCurrentView(table);
+  updateBadges();
+  if(curView==='dashboard') renderDash();
+  else if(curView==='aufgaben'&&table==='aufgaben') applyTaskFilter();
+  else if(curView==='konzepte'&&table==='konzepte') renderKonzepte();
+  else if(curView==='posteingang'&&table==='nachrichten') renderPosteingang();
+  else if(curView==='notizen'&&table==='notizen') renderNotizen();
 }
 
 function onChatRT(rec){
   if(!rec||!rec.entity_id) return;
-  var msgs = chatOf(rec.entity_id);
-  // Deduplicate
-  var exists = msgs.find(function(m){
-    return m._sbid===rec.id || (m.autor===rec.autor&&m.text===rec.text&&m.ts===rec.ts);
-  });
+  var msgs=chatOf(rec.entity_id);
+  var exists=msgs.find(function(m){ return m._sbid===rec.id||(m.autor===rec.autor&&m.text===rec.text&&m.ts===rec.ts); });
   if(exists) return;
-  msgs.push({autor:rec.autor, text:rec.text, ts:rec.ts, _sbid:rec.id});
-  // Update open chat
-  var cb = elQ('chatbox-ws-'+rec.entity_id);
+  msgs.push({autor:rec.autor,text:rec.text,ts:rec.ts,_sbid:rec.id});
+  // Update open chatbox
+  var cb=document.getElementById('chatbox-ws-'+rec.entity_id);
   if(cb){
-    var mine = rec.autor===(curUser?curUser.name:'');
-    var d = document.createElement('div');
-    d.style.cssText='margin-bottom:8px;text-align:'+(mine?'right':'left');
+    var mine=rec.autor===(curUser?curUser.name:'');
+    var d=document.createElement('div'); d.style.cssText='margin-bottom:8px;text-align:'+(mine?'right':'left');
     d.innerHTML='<div style="display:inline-block;background:'+(mine?'rgba(79,124,255,.25)':'var(--card2)')+';border:1px solid var(--border);border-radius:8px;padding:6px 10px;max-width:75%"><div style="font-size:12px">'+rec.text+'</div><div style="font-size:10px;color:var(--muted2);margin-top:2px">'+rec.autor+' &middot; '+rec.ts+'</div></div>';
     cb.appendChild(d); cb.scrollTop=cb.scrollHeight;
   }
   if(rec.autor!==(curUser?curUser.name:'')) toast('&#128172; '+rec.autor+': '+rec.text.slice(0,25),'ok');
 }
 
-// Chat polling fallback (every 3s when workspace open)
+// Chat polling fallback
 function startPolling(){
-  if(_chatPollTimer) return;
-  _chatPollTimer = setInterval(async function(){
+  if(_poll) return;
+  _poll=setInterval(async function(){
     if(!curUser||!curView||!curView.startsWith('ws_')) return;
-    var eid = curView.replace('ws_','');
-    try {
-      var since = _lastPoll[eid] || new Date(Date.now()-15000).toISOString();
-      var {data} = await getSB().from('chats').select('*')
-        .eq('entity_id',eid).gt('created_at',since).order('created_at',{ascending:true});
-      if(data&&data.length){
-        _lastPoll[eid] = new Date().toISOString();
-        data.forEach(function(r){ onChatRT(r); });
-      }
-    } catch(e){}
-  }, 3000);
+    var eid=curView.replace('ws_','');
+    try{
+      var since=_lastPoll[eid]||new Date(Date.now()-20000).toISOString();
+      var {data}=await getSB().from('chats').select('*').eq('entity_id',eid).gt('created_at',since).order('created_at',{ascending:true});
+      if(data&&data.length){ _lastPoll[eid]=new Date().toISOString(); data.forEach(function(r){onChatRT(r);}); }
+    }catch(e){}
+  },3000);
 }
 
-function refreshCurrentView(changedTable){
-  var v=curView||'';
-  if(v==='dashboard') renderDash();
-  else if(v==='aufgaben'&&changedTable==='aufgaben') applyTaskFilter();
-  else if(v==='freigaben'&&changedTable==='aufgaben') renderFreigaben();
-  else if(v==='notizen'&&changedTable==='notizen') renderNotizen();
-  else if(v==='posteingang'&&changedTable==='nachrichten') renderPosteingang();
-  else if(v==='konzepte'&&changedTable==='konzepte') renderKonzepte();
+// ── Permissions ──────────────────────────────────────────
+function isSA(){ return !!(curUser&&curUser.rolle==='SuperAdmin'); }
+function isAdmin(){ return !!(curUser&&(curUser.rolle==='SuperAdmin'||curUser.rolle==='Admin')); }
+function canSee(id){
+  if(!curUser) return false;
+  if(isSA()) return true;
+  var ai=curUser.agIds||[], ui=curUser.ugIds||[];
+  return ai.includes('*')||ai.includes(id)||ui.includes('*')||ui.includes(id);
 }
 
-// ── Login / Logout ────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────
+function elQ(id){ return document.getElementById(id); }
+function nowTs(){ return new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function chatOf(id){ if(!db.chats[id]) db.chats[id]=[]; return db.chats[id]; }
+function nxtId(prefix,arr){ return prefix+'-'+String((arr.length+1)).padStart(3,'0')+'-'+Date.now().toString().slice(-4); }
+
+// ── Login ────────────────────────────────────────────────
 function L_init(){
-  var quick=elQ('Lquick'); if(!quick) return;
-  quick.innerHTML='';
-  // Quick buttons only pre-fill name — password ALWAYS required
-  var users=db.nutzer.filter(function(u){ return u.aktiv!==false; }).slice(0,6);
-  users.forEach(function(u){
-    var btn=document.createElement('button');
-    btn.className='qbtn';
+  var q=elQ('Lquick'); if(!q) return; q.innerHTML='';
+  db.nutzer.filter(function(u){return u.aktiv!==false;}).forEach(function(u){
+    var btn=document.createElement('button'); btn.className='qbtn';
     var col=u.rolle==='SuperAdmin'?'#4f7cff':u.rolle==='Admin'?'#22c55e':'#a78bfa';
     btn.style.borderColor=col;
     btn.innerHTML='<b>'+u.name+'</b><s style="color:'+col+'">'+u.rolle+'</s>';
     btn.setAttribute('data-n',u.name);
-    btn.addEventListener('click',function(){
-      elQ('L_name').value=this.getAttribute('data-n');
-      elQ('L_pw').value='';
-      elQ('L_pw').focus();
-    });
-    quick.appendChild(btn);
+    btn.addEventListener('click',function(){ elQ('L_name').value=this.getAttribute('data-n'); elQ('L_pw').value=''; elQ('L_pw').focus(); });
+    q.appendChild(btn);
   });
-  elQ('L_name').focus();
+  if(elQ('L_name')) elQ('L_name').focus();
 }
-
 function L_filter(val){
-  var drop=elQ('L_drop');
-  if(!val||!db.nutzer){ drop.style.display='none'; return; }
+  var drop=elQ('L_drop'); if(!drop) return;
+  if(!val){ drop.style.display='none'; return; }
   var lo=val.toLowerCase();
   var matches=db.nutzer.filter(function(u){ return u.aktiv!==false&&u.name.toLowerCase().startsWith(lo); });
   if(!matches.length){ drop.style.display='none'; return; }
@@ -2431,95 +2601,101 @@ function L_filter(val){
   });
   drop.style.display='block';
 }
-
 function L_eye_toggle(){
   var pw=elQ('L_pw'),eye=elQ('L_eye');
-  if(pw.type==='password'){ pw.type='text'; eye.innerHTML='&#128584;'; }
-  else{ pw.type='password'; eye.innerHTML='&#128065;'; }
+  if(!pw) return;
+  if(pw.type==='password'){ pw.type='text'; if(eye) eye.innerHTML='&#128584;'; }
+  else{ pw.type='password'; if(eye) eye.innerHTML='&#128065;'; }
   pw.focus();
 }
-
 async function L_submit(){
-  var err=elQ('L_err'); err.style.display='none';
+  var err=elQ('L_err'); if(err) err.style.display='none';
   var name=(elQ('L_name')||{value:''}).value.trim();
-  var pw  =(elQ('L_pw')||{value:''}).value;
-  if(!name){ err.textContent='Bitte Name eingeben.'; err.style.display='block'; elQ('L_name').focus(); return; }
-  if(!pw){   err.textContent='Bitte Passwort eingeben.'; err.style.display='block'; elQ('L_pw').focus(); return; }
-
+  var pw=(elQ('L_pw')||{value:''}).value;
+  if(!name){ if(err){err.textContent='Bitte Name eingeben.';err.style.display='block';} elQ('L_name').focus(); return; }
+  if(!pw){   if(err){err.textContent='Bitte Passwort eingeben.';err.style.display='block';} elQ('L_pw').focus(); return; }
   var btn=document.querySelector('.login-btn');
   if(btn){ btn.textContent='Verbinde\u2026'; btn.disabled=true; }
-
-  var ok = await sbLoadAll();
+  var ok=await sbLoadAll();
   if(!ok){ if(btn){btn.textContent='Anmelden';btn.disabled=false;} return; }
-
-  L_init();
-  elQ('L_name').value=name; elQ('L_pw').value=pw;
-
+  L_init(); elQ('L_name').value=name; elQ('L_pw').value=pw;
   var found=null;
   for(var i=0;i<db.nutzer.length;i++){
     var u=db.nutzer[i];
     if(u.name.toLowerCase()===name.toLowerCase()&&u.pw===pw){
-      if(u.aktiv===false){ err.textContent='Konto gesperrt.'; err.style.display='block'; break; }
+      if(u.aktiv===false){ if(err){err.textContent='Konto gesperrt.';err.style.display='block';} break; }
       found=u; break;
     }
   }
   if(btn){ btn.textContent='Anmelden'; btn.disabled=false; }
   if(!found){
-    var nameOk=db.nutzer.some(function(u){ return u.name.toLowerCase()===name.toLowerCase(); });
-    err.textContent=nameOk?'Passwort falsch.':'Name nicht gefunden.';
-    err.style.display='block'; elQ('L_pw').value=''; elQ('L_pw').focus(); return;
+    var nameOk=db.nutzer.some(function(u){return u.name.toLowerCase()===name.toLowerCase();});
+    if(err){ err.textContent=nameOk?'Passwort falsch.':'Name nicht gefunden.'; err.style.display='block'; }
+    elQ('L_pw').value=''; if(elQ('L_pw')) elQ('L_pw').focus(); return;
   }
-
-  // SUCCESS
   curUser={id:found.id,name:found.name,rolle:found.rolle,agIds:found.agIds||[],ugIds:found.ugIds||[],farbe:found.farbe||'#4f7cff'};
   elQ('login-overlay').style.display='none';
   elQ('main-app').style.display='';
-
-  // Show user in topbar
   var tu=elQ('tb-user'); if(tu) tu.style.display='flex';
   var tn=elQ('tb-user-name'); if(tn) tn.textContent=curUser.name;
   var td=elQ('tb-user-dot'); if(td) td.style.background=curUser.farbe;
-
-  // Badge
-  var dot=elQ('ubdot'); if(dot) dot.style.cssText='background:'+curUser.farbe;
+  var dot=elQ('ubdot'); if(dot) dot.style.background=curUser.farbe;
   var ubn=elQ('ubname'); if(ubn) ubn.textContent=curUser.name+' ('+curUser.rolle+')';
   elQ('ubadge').style.display='flex';
-
   updateBadges();
   nav(document.querySelector('[data-view="dashboard"]'));
-  setTimeout(function(){ sbRealtime(); startPolling(); }, 400);
-  setTimeout(function(){ toast('Willkommen, '+curUser.name+'! &#128075;','ok'); }, 600);
+  setTimeout(function(){ sbRealtime(); startPolling(); },400);
+  setTimeout(function(){ toast('Willkommen, '+curUser.name+'! &#128075;','ok'); },600);
 }
-
 function L_logout(){
-  if(sbRT){ try{ getSB().removeChannel(sbRT); }catch(e){} sbRT=null; }
-  if(_chatPollTimer){ clearInterval(_chatPollTimer); _chatPollTimer=null; }
-  curUser=null; liveUsers={};
+  if(sbRT){ try{getSB().removeChannel(sbRT);}catch(e){} sbRT=null; }
+  if(_poll){ clearInterval(_poll); _poll=null; }
+  curUser=null; _liveUsers={};
   elQ('main-app').style.display='none';
   elQ('login-overlay').style.display='flex';
   var tu=elQ('tb-user'); if(tu) tu.style.display='none';
   elQ('ubadge').style.display='none';
   elQ('livepanel').style.display='none';
   elQ('L_name').value=''; elQ('L_pw').value='';
-  elQ('L_pw').type='password'; elQ('L_eye').innerHTML='&#128065;';
-  elQ('L_err').style.display='none';
-  setTimeout(function(){ elQ('L_name').focus(); },80);
+  elQ('L_pw').type='password'; if(elQ('L_eye')) elQ('L_eye').innerHTML='&#128065;';
+  if(elQ('L_err')) elQ('L_err').style.display='none';
+  setTimeout(function(){ if(elQ('L_name')) elQ('L_name').focus(); },80);
 }
-
 document.addEventListener('click',function(e){
   var drop=elQ('L_drop'),inp=elQ('L_name');
   if(drop&&inp&&e.target!==inp&&!drop.contains(e.target)) drop.style.display='none';
 });
 
-// ── Live Presence ─────────────────────────────────────────
+// ── Badges ────────────────────────────────────────────────
+function updateBadges(){
+  var frg=db.aufgaben.filter(function(t){return t.freigabe&&t.status!=='Erledigt'&&t.status!=='Freigegeben';}).length;
+  var fb=elQ('nb-frg'); if(fb){fb.textContent=frg;fb.style.display=frg?'':'none';}
+  var post=db.nachrichten.filter(function(n){return !n.gelesen;}).length;
+  var pb=elQ('nb-post'); if(pb){pb.textContent=post;pb.style.display=post?'':'none';}
+}
+
+// ── Live presence ─────────────────────────────────────────
+var bc=null;
+function initLive(){
+  try{
+    bc=new BroadcastChannel('mariana_v13');
+    bc.onmessage=function(e){
+      var d=e.data; if(!d||!d.name) return;
+      if(d.type==='leave') delete _liveUsers[d.name];
+      else _liveUsers[d.name]={view:d.view||'',ts:Date.now(),farbe:d.farbe||'#4f7cff'};
+      renderLiveUsers();
+    };
+    bc.postMessage({type:'presence',name:curUser.name,view:'Dashboard',farbe:curUser.farbe});
+  }catch(e){ bc=null; }
+}
 function renderLiveUsers(){
   var d=elQ('live-users-list'); if(!d) return;
   var now=Date.now();
-  var active=Object.keys(liveUsers).filter(function(n){ return now-liveUsers[n].ts<35000; });
-  if(!active.length){ d.innerHTML='<div style="font-size:11px;color:#6b7199">Nur du bist aktiv.</div>'; return; }
+  var active=Object.keys(_liveUsers).filter(function(n){return now-_liveUsers[n].ts<35000;});
+  if(!active.length){ d.innerHTML='<div style="font-size:11px;color:var(--muted)">Nur du bist aktiv.</div>'; return; }
   d.innerHTML=active.map(function(n){
-    var u=liveUsers[n];
-    return '<div class="live-u"><div class="live-dot" style="background:'+u.farbe+'"></div><span style="flex:1">'+n+'</span><span style="font-size:10px;color:#6b7199">'+u.view+'</span></div>';
+    var u=_liveUsers[n];
+    return '<div class="live-u"><div class="live-dot" style="background:'+u.farbe+'"></div><span style="flex:1">'+n+'</span><span style="font-size:10px;color:var(--muted)">'+u.view+'</span></div>';
   }).join('');
 }
 function toggleLivePanel(){
@@ -2530,524 +2706,705 @@ function toggleLivePanel(){
 setInterval(function(){
   if(bc&&curUser) bc.postMessage({type:'presence',name:curUser.name,view:curView||'',farbe:curUser.farbe});
 },10000);
-function initLive(){
-  try{
-    bc=new BroadcastChannel('mariana_v12');
-    bc.onmessage=function(e){
-      var d=e.data; if(!d||!d.name) return;
-      if(d.type==='leave') delete liveUsers[d.name];
-      else liveUsers[d.name]={view:d.view||'',ts:Date.now(),farbe:d.farbe||'#4f7cff'};
-      renderLiveUsers();
-    };
-    bc.postMessage({type:'presence',name:curUser.name,view:'Dashboard',farbe:curUser.farbe});
-  }catch(e){ bc=null; }
-}
 
-// ── Permission-filtered render overrides ──────────────────
-var _origRenderView = renderView;
-renderView = function(view){
-  var newViews = ['posteingang','freigaben','notizen','allchats','einst','upload'];
-  if(newViews.includes(view)){
-    var map={posteingang:renderPosteingang,freigaben:renderFreigaben,notizen:renderNotizen,allchats:renderAllchats,einst:renderEinst,upload:renderKonzeptUpload};
-    if(map[view]) map[view]();
-    return;
-  }
-  _origRenderView(view);
+// ── renderView override ───────────────────────────────────
+var _origRV=renderView;
+renderView=function(view){
+  var mine={posteingang:renderPosteingang,freigaben:renderFreigaben,notizen:renderNotizen,allchats:renderAllchats,einst:renderEinst,upload:renderKonzeptUpload,konzepte:renderKonzepte};
+  if(mine[view]){ mine[view](); return; }
+  _origRV(view);
 };
 
-var _origNav = nav;
-nav = function(el){
-  _origNav(el);
+// ── nav override ──────────────────────────────────────────
+var _origNav=nav;
+nav=function(el2){
+  _origNav(el2);
   updateBadges();
   if(bc&&curUser) bc.postMessage({type:'presence',name:curUser.name,view:curView||'',farbe:curUser.farbe});
 };
 
-// ── Permission filters injected into V3 renders ───────────
-var _origRenderAGs = renderAGs;
-renderAGs = function(filter){
-  _origRenderAGs(filter);
-  // Filter rows after render
-  if(!isSA()){
-    document.querySelectorAll('#ag-tbody tr').forEach(function(tr){
-      var id=tr.querySelector('code')?.textContent;
-      if(id&&!canSee(id)) tr.style.display='none';
+// ── setMode override (workspace sidebar nav) ──────────────
+var _origSetMode=setMode;
+setMode=function(m,btn){
+  _origSetMode(m,btn);
+  if(m==='ag'){
+    var list=el('ag-nav-list'); if(!list) return;
+    var html='';
+    db.ags.filter(function(a){return isSA()||canSee(a.id);}).forEach(function(a){
+      html+='<div class="nav-item" data-eid="'+a.id+'" onclick="openWorkspace(this.dataset.eid,this)" style="padding-left:18px;display:flex;align-items:center;gap:7px">'
+        +'<span style="width:8px;height:8px;border-radius:50%;background:'+(a.farbe||'#4f7cff')+';flex-shrink:0"></span>'+a.name+'</div>';
+      db.agUgLinks.filter(function(l){return l.agId===a.id;}).forEach(function(l){
+        var u=db.ugs.find(function(x){return x.id===l.ugId;});
+        if(!u||(!isSA()&&!canSee(u.id))) return;
+        html+='<div class="nav-item" data-eid="'+u.id+'" onclick="openWorkspace(this.dataset.eid,this)" style="padding-left:32px;font-size:11px;display:flex;align-items:center;gap:6px">'
+          +'<span style="color:#a78bfa;font-size:10px">&#11053;</span>'+u.name+'</div>';
+      });
     });
+    list.innerHTML=html;
+    var first=list.querySelector('.nav-item');
+    if(first) openWorkspace(first.getAttribute('data-eid'),first);
   }
 };
 
-// ── Supabase sync hooks ───────────────────────────────────
-var _origSaveAG=saveAG, _origSaveUG=saveUG, _origSaveTask=saveTask;
-var _origSaveKonzept=saveKonzept, _origSaveMitglied=saveMitglied;
+// ── Universal Workspace (AG + UG) ────────────────────────
+async function openWorkspace(entityId, navEl2){
+  document.querySelectorAll('[data-eid]').forEach(function(n){n.classList.remove('active');});
+  if(navEl2) navEl2.classList.add('active');
+  curView='ws_'+entityId;
 
-saveAG = function(){
-  var id=(elQ('f-ag-id')||{value:''}).value.trim();
-  _origSaveAG();
-  setTimeout(function(){ var a=db.ags.find(function(x){return x.id===id;}); if(a) sbUpsert('ags',a); },100);
-};
-saveUG = function(){
-  var id=(elQ('f-ug-id')||{value:''}).value.trim();
-  _origSaveUG();
-  setTimeout(function(){ var u=db.ugs.find(function(x){return x.id===id;}); if(u) sbUpsert('ugs',u); },100);
-};
-saveTask = function(){
-  var id=(elQ('f-t-id')||{value:''}).value.trim();
-  _origSaveTask();
-  setTimeout(function(){ var t=db.aufgaben.find(function(x){return x.id===id;}); if(t) sbUpsert('aufgaben',t); },100);
-};
-saveKonzept = function(){
-  _origSaveKonzept();
-  setTimeout(function(){ var k=db.konzepte[db.konzepte.length-1]; if(k) sbUpsert('konzepte',k); },100);
-};
-saveMitglied = function(){
-  var id=(elQ('f-m-id')||{value:''}).value.trim();
-  _origSaveMitglied();
-  setTimeout(function(){ var m=db.mitglieder.find(function(x){return x.id===id;}); if(m) sbUpsert('mitglieder',m); },100);
-};
+  var ag=db.ags.find(function(a){return a.id===entityId;});
+  var ug=ag?null:db.ugs.find(function(u){return u.id===entityId;});
+  var ent=ag||ug; if(!ent) return;
+  var isAGtype=!!ag;
 
-// toggleTask + setTaskStatus
-var _origToggleTask=toggleTask, _origSTS=setTaskStatus;
-toggleTask=function(id){ _origToggleTask(id); setTimeout(function(){ var t=db.aufgaben.find(function(x){return x.id===id;}); if(t) sbUpsert('aufgaben',t); },100); };
-setTaskStatus=function(id,s){ _origSTS(id,s); setTimeout(function(){ var t=db.aufgaben.find(function(x){return x.id===id;}); if(t) sbUpsert('aufgaben',t); },100); };
+  el('tb-title').textContent=ent.name+' \u2013 Workspace';
+  el('tb-btn').style.display='none';
 
-// ── Workspace (AG + UG) ───────────────────────────────────
-var _origOpenAgWS = openAgWorkspace;
-openAgWorkspace = async function(entityId, navEl2){
-  // Load chats from Supabase first
+  // Load chats
   try{
-    var {data} = await getSB().from('chats').select('*')
-      .eq('entity_id',entityId).order('created_at',{ascending:true});
-    db.chats[entityId] = (data||[]).map(function(r){
-      return {autor:r.autor,text:r.text,ts:r.ts,_sbid:r.id};
-    });
-    _lastPoll[entityId] = new Date().toISOString();
+    var {data}=await getSB().from('chats').select('*').eq('entity_id',entityId).order('created_at',{ascending:true});
+    db.chats[entityId]=(data||[]).map(function(r){return{autor:r.autor,text:r.text,ts:r.ts,_sbid:r.id};});
+    _lastPoll[entityId]=new Date().toISOString();
   }catch(e){}
-  _origOpenAgWS(entityId, navEl2);
-};
 
-// ── Chat ──────────────────────────────────────────────────
-// Override V3's chat send if exists, otherwise define
+  var tasks=db.aufgaben.filter(function(t){return t.entityId===entityId;});
+  var openTasks=tasks.filter(function(t){return t.status!=='Erledigt';});
+  var done=tasks.length-openTasks.length;
+  var pct=tasks.length?Math.round(done/tasks.length*100):0;
+  var members=db.rollen.filter(function(r){return r.entityId===entityId&&r.aktiv;})
+    .map(function(r){return db.mitglieder.find(function(m){return m.id===r.personId;});}).filter(Boolean);
+  var ugs=isAGtype?db.agUgLinks.filter(function(l){return l.agId===entityId;})
+    .map(function(l){return db.ugs.find(function(u){return u.id===l.ugId;});}).filter(Boolean):[];
+  var konzept=db.konzepte.find(function(k){return k.entityId===entityId;});
+  var notizen=db.notizen.filter(function(n){return n.targetId===entityId;});
+  var msgs=chatOf(entityId);
+
+  var statusInfo=isAGtype
+    ?('Koordination: '+(ag.koo||'-')+' | Status: '+ag.status)
+    :('Lead: '+(ug.lead||'-')+' | Typ: '+(ug.typ||'-'));
+
+  var c=el('content');
+  c.innerHTML=
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
+    +'<div><h2 style="font-size:16px;font-weight:700;margin-bottom:4px">'+(isAGtype?'&#127963;':'&#11053;')+' '+ent.name+'</h2>'
+    +'<div style="font-size:11px;color:var(--muted2)">'+statusInfo+'</div></div>'
+    +'<div style="display:flex;gap:6px">'+sbadge(ent.status)+pbadge(ent.prio||'Mittel')+'</div></div>'
+    +'<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:11px;color:var(--muted)">Fortschritt: '+done+'/'+tasks.length+' Aufgaben</span><span style="font-size:11px;color:var(--accent)">'+pct+'%</span></div>'
+    +'<div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%"></div></div></div>'
+
+    +'<div class="tabs" id="ws-tabs">'
+    +['ws-aufg:&#128203; Aufgaben ('+openTasks.length+')','ws-team:&#128100; Team ('+members.length+')',(isAGtype?'ws-ugs:&#9681; UGs ('+ugs.length+')':''),'ws-konz:&#128196; Konzept','ws-chat:&#128172; Chat ('+msgs.length+')','ws-notiz:&#128204; Notizen ('+notizen.length+')','ws-docs:&#128193; Dokumente','ws-proto:&#128221; Protokolle'].filter(Boolean).map(function(s,i){
+      var parts=s.split(':'); return '<div class="tab'+(i===0?' active':'')+'" data-tab="'+parts[0]+'" onclick="switchTab(this,this.dataset.tab)">'+parts[1]+'</div>';
+    }).join('')
+    +'</div>'
+
+    // Tab: Aufgaben
+    +'<div class="tab-content active" id="ws-aufg">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<span style="font-size:12px;font-weight:600">Aufgaben</span>'
+    +'<button class="btn btn-primary btn-sm" data-eid="'+entityId+'" onclick="openTaskModal(null,this.dataset.eid)">+ Aufgabe</button></div>'
+    +'<div id="ws-task-list">'+renderTaskList(tasks)+'</div></div>'
+
+    // Tab: Team
+    +'<div class="tab-content" id="ws-team">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<span style="font-size:12px;font-weight:600">Team ('+members.length+')</span></div>'
+    +(members.length?members.map(function(m){
+      var rol=db.rollen.find(function(r){return r.personId===m.id&&r.entityId===entityId;});
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--card2);border-radius:8px;margin-bottom:6px">'
+        +avatar(m.name,30,11)
+        +'<div style="flex:1"><div style="font-size:13px;font-weight:500">'+m.name+'</div>'
+        +'<div style="font-size:11px;color:var(--muted)">'+(rol?rol.rolle:'')+' &middot; '+(m.region||m.kontakt||'')+'</div></div>'
+        +(isAdmin()&&m?'<button class="btn btn-ghost btn-sm" style="padding:3px 7px;font-size:11px;color:#ef4444" data-mid="'+m.id+'" data-eid="'+entityId+'" onclick="removeFromEntity(this.dataset.mid,this.dataset.eid)">&#10007;</button>':'')
+        +'</div>';
+    }).join(''):'<p style="color:var(--muted);font-size:12px">Keine Mitglieder zugeordnet.</p>')
+    +'</div>'
+
+    // Tab: UGs (only for AGs)
+    +(isAGtype?'<div class="tab-content" id="ws-ugs">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<span style="font-size:12px;font-weight:600">Untergruppen ('+ugs.length+')</span></div>'
+    +(ugs.length?ugs.map(function(u){
+      var utasks=db.aufgaben.filter(function(t){return t.entityId===u.id;});
+      var udone=utasks.filter(function(t){return t.status==='Erledigt';}).length;
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--card2);border-radius:8px;margin-bottom:6px;cursor:pointer" data-uid="'+u.id+'" onclick="openWorkspace(this.dataset.uid,null)">'
+        +'<div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;flex-shrink:0"></div>'
+        +'<div style="flex:1"><div style="font-size:12px;font-weight:600">'+u.name+'</div>'
+        +'<div style="font-size:11px;color:var(--muted)">'+u.typ+' &middot; Lead: '+(u.lead||'-')+'</div></div>'
+        +'<span style="font-size:11px;color:var(--accent)">'+udone+'/'+utasks.length+'</span></div>';
+    }).join(''):'<p style="color:var(--muted);font-size:12px">Keine UGs.</p>')
+    +'</div>':'')
+
+    // Tab: Konzept
+    +'<div class="tab-content" id="ws-konz">'
+    +(konzept?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><strong style="font-size:13px">'+konzept.name+'</strong>'
+      +sbadge(konzept.status)+'</div>'
+      +'<div style="background:var(--card2);border-radius:8px;padding:14px;font-size:12px;line-height:1.8;white-space:pre-wrap">'+konzeptToText(konzept)+'</div>'
+      +(isAdmin()?'<div style="margin-top:10px;display:flex;gap:8px"><button class="btn btn-ghost btn-sm" data-kid="'+konzept.id+'" onclick="openKonzeptModal(this.dataset.kid)">&#9999; Bearbeiten</button><button class="btn btn-ghost btn-sm" style="color:#ef4444" data-kid="'+konzept.id+'" onclick="delKonzept(this.dataset.kid)">&#128465; L&ouml;schen</button></div>':'')
+      :'<div style="text-align:center;padding:30px;color:var(--muted)"><div style="font-size:36px">&#128196;</div><p style="margin:8px 0 12px">Noch kein Konzept</p>'
+      +'<button class="btn btn-primary btn-sm" data-eid="'+entityId+'" onclick="openKonzeptModal(null,this.dataset.eid)">+ Konzept erstellen</button></div>')
+    +'</div>'
+
+    // Tab: Chat
+    +'<div class="tab-content" id="ws-chat">'
+    +'<div id="chatbox-ws-'+entityId+'" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;height:320px;overflow-y:auto;margin-bottom:8px">'
+    +(msgs.length?msgs.map(function(m){
+      var mine=m.autor===(curUser?curUser.name:'');
+      return '<div style="margin-bottom:8px;text-align:'+(mine?'right':'left')+'">'
+        +'<div style="display:inline-block;background:'+(mine?'rgba(79,124,255,.25)':'var(--card2)')+';border:1px solid var(--border);border-radius:8px;padding:6px 10px;max-width:75%">'
+        +'<div style="font-size:12px">'+m.text+'</div>'
+        +'<div style="font-size:10px;color:var(--muted2);margin-top:2px">'+m.autor+' &middot; '+m.ts+'</div></div></div>';
+    }).join(''):'<p style="text-align:center;padding:30px;color:var(--muted);font-size:12px">Noch keine Nachrichten.</p>')
+    +'</div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<input type="text" id="ws-chat-inp-'+entityId+'" placeholder="Nachricht..." style="flex:1;background:var(--bg);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px" data-eid="'+entityId+'" onkeydown="if(event.keyCode===13)wsSendChat(this.dataset.eid)">'
+    +'<button class="btn btn-primary btn-sm" data-eid="'+entityId+'" onclick="wsSendChat(this.dataset.eid)">Senden</button></div></div>'
+
+    // Tab: Notizen
+    +'<div class="tab-content" id="ws-notiz">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<span style="font-size:12px;font-weight:600">Notizen</span>'
+    +'<button class="btn btn-primary btn-sm" data-eid="'+entityId+'" onclick="openNotizFormWS(this.dataset.eid)">+ Notiz</button></div>'
+    +'<div id="ws-notiz-list">'+renderNotizList(notizen)+'</div></div>'
+
+    // Tab: Dokumente
+    +'<div class="tab-content" id="ws-docs">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<span style="font-size:12px;font-weight:600">Dokumente</span>'
+    +'<button class="btn btn-primary btn-sm" data-eid="'+entityId+'" onclick="wsAddDoc(this.dataset.eid)">+ Dokument</button></div>'
+    +'<div id="ws-docs-list"></div></div>'
+
+    // Tab: Protokolle
+    +'<div class="tab-content" id="ws-proto">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<span style="font-size:12px;font-weight:600">Protokolle</span>'
+    +'<button class="btn btn-primary btn-sm" data-eid="'+entityId+'" onclick="wsAddProto(this.dataset.eid)">+ Protokoll</button></div>'
+    +'<div id="ws-proto-list"></div></div>';
+
+  // Populate docs + protos from wsOf
+  renderWsDocs(entityId);
+  renderWsProtos(entityId);
+  setTimeout(function(){ var cb=document.getElementById('chatbox-ws-'+entityId); if(cb) cb.scrollTop=cb.scrollHeight; },60);
+}
+
+function renderTaskList(tasks){
+  if(!tasks.length) return '<p style="color:var(--muted);font-size:12px">Keine Aufgaben.</p>';
+  return tasks.map(function(t){
+    var col=t.prio==='Hoch'||t.prio==='Kritisch'?'#ef4444':t.prio==='Mittel'?'#f59e0b':'#6b7199';
+    var done=t.status==='Erledigt';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--card2);border-radius:8px;margin-bottom:5px;border-left:3px solid '+col+'">'
+      +'<input type="checkbox"'+(done?' checked':'')+" style='cursor:pointer;flex-shrink:0' data-tid='"+t.id+"' onclick='toggleTask(this.dataset.tid)'>"
+      +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500'+(done?';text-decoration:line-through;color:var(--muted)':'')+'">'+(t.titel||'')+'</div>'
+      +(t.verantw||t.faellig?'<div style="font-size:10px;color:var(--muted2)">'+(t.verantw||'')+' '+(t.faellig?'&middot; '+t.faellig:'')+'</div>':'')+'</div>'
+      +(isAdmin()?'<button class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:11px;flex-shrink:0" data-tid="'+t.id+'" onclick="openTaskModal(this.dataset.tid)">&#9999;</button>':'')
+      +(isAdmin()?'<button style="background:none;border:none;color:#ef4444;cursor:pointer;padding:2px 4px;font-size:14px;flex-shrink:0" data-tid="'+t.id+'" onclick="delTaskWS(this.dataset.tid)">&#215;</button>':'')
+      +'</div>';
+  }).join('');
+}
+
+function renderNotizList(notizen){
+  if(!notizen.length) return '<p style="color:var(--muted);font-size:12px">Keine Notizen.</p>';
+  return notizen.map(function(n){
+    var col=n.prio==='Dringend'?'#ef4444':n.prio==='Wichtig'?'#f59e0b':'var(--border)';
+    return '<div style="background:var(--card2);border:1px solid var(--border);border-left:3px solid '+col+';border-radius:8px;padding:10px;margin-bottom:6px">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:10px;color:var(--muted)">'+n.kat+' &middot; '+n.prio+'</span>'
+      +(isAdmin()?'<button style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px" data-nid="'+n.id+'" onclick="delNotizWS(this.dataset.nid)">&#215;</button>':'')+'</div>'
+      +'<div style="font-size:12px;line-height:1.6">'+n.text+'</div>'
+      +'<div style="font-size:10px;color:var(--muted2);margin-top:4px">'+n.autor+' &middot; '+n.ts+'</div></div>';
+  }).join('');
+}
+
+async function delTaskWS(id){
+  if(!isAdmin()) return;
+  db.aufgaben=db.aufgaben.filter(function(t){return t.id!==id;});
+  await sbDel('aufgaben',id);
+  var tl=document.getElementById('ws-task-list');
+  if(tl) tl.innerHTML=renderTaskList(db.aufgaben.filter(function(t){return t.entityId===(curView.replace('ws_',''));}));
+  updateBadges();
+}
+
+async function delNotizWS(id){
+  if(!isAdmin()) return;
+  db.notizen=db.notizen.filter(function(n){return n.id!==id;});
+  await sbDel('notizen',id);
+  var eid=curView.replace('ws_','');
+  var nl=document.getElementById('ws-notiz-list');
+  if(nl) nl.innerHTML=renderNotizList(db.notizen.filter(function(n){return n.targetId===eid;}));
+}
+
+function openNotizFormWS(eid){
+  var nl=document.getElementById('ws-notiz-list');
+  if(!nl) return;
+  var form=document.createElement('div');
+  form.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;max-width:420px;margin-bottom:14px';
+  form.innerHTML='<h3 style="font-size:13px;margin:0 0 12px">+ Neue Notiz</h3>'
+    +'<select id="nz-prio" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;margin-bottom:8px"><option>Normal</option><option>Wichtig</option><option>Dringend</option></select>'
+    +'<textarea id="nz-txt" rows="3" placeholder="Notiz..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn btn-primary btn-sm" id="nz-save-btn">Speichern</button>'
+    +'<button class="btn btn-ghost btn-sm" id="nz-cancel-btn">Abbrechen</button>'
+    +'</div>';
+  nl.innerHTML=''; nl.appendChild(form);
+  document.getElementById('nz-save-btn').onclick=function(){ saveNotizWS(eid); };
+  document.getElementById('nz-cancel-btn').onclick=function(){ openWorkspace(eid,null); };
+  setTimeout(function(){ var t=document.getElementById('nz-txt'); if(t) t.focus(); },50);
+}
+
+async function saveNotizWS(eid){
+  var txt=(elQ('nz-txt')||{value:''}).value.trim(); if(!txt){toast('Text Pflicht','error');return;}
+  var n={id:'N-'+Date.now(),targetId:eid,kat:'Workspace',prio:(elQ('nz-prio')||{value:'Normal'}).value,autor:curUser?curUser.name:'?',text:txt,ts:nowTs()};
+  db.notizen.push(n); await sbUp('notizen',n);
+  toast('Notiz gespeichert','ok');
+  var nl=document.getElementById('ws-notiz-list');
+  if(nl) nl.innerHTML=renderNotizList(db.notizen.filter(function(x){return x.targetId===eid;}));
+}
+
+async function removeFromEntity(personId, entityId){
+  if(!isAdmin()) return;
+  db.rollen=db.rollen.filter(function(r){return !(r.personId===personId&&r.entityId===entityId);});
+  try{ await getSB().from('rollen').delete().eq('person_id',personId).eq('entity_id',entityId); }catch(e){}
+  openWorkspace(entityId,null);
+}
+
+// Chat send
 async function wsSendChat(entityId){
-  var inp=elQ('ws-chat-inp-'+entityId)||elQ('chat-inp-'+entityId);
-  if(!inp) return;
+  var inp=document.getElementById('ws-chat-inp-'+entityId); if(!inp) return;
   var text=inp.value.trim(); if(!text) return;
   var ts=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
   var msg={autor:curUser?curUser.name:'?',text:text,ts:ts,_sbid:'temp_'+Date.now()};
-  chatOf(entityId).push(msg);
-  inp.value='';
-  // Show immediately
-  var cb=elQ('chatbox-ws-'+entityId)||elQ('chatbox-'+entityId);
+  chatOf(entityId).push(msg); inp.value='';
+  var cb=document.getElementById('chatbox-ws-'+entityId);
   if(cb){
     var d=document.createElement('div'); d.style.cssText='margin-bottom:8px;text-align:right';
     d.innerHTML='<div style="display:inline-block;background:rgba(79,124,255,.25);border:1px solid var(--border);border-radius:8px;padding:6px 10px;max-width:75%"><div style="font-size:12px">'+text+'</div><div style="font-size:10px;color:var(--muted2);margin-top:2px">'+(curUser?curUser.name:'?')+' &middot; '+ts+'</div></div>';
     cb.appendChild(d); cb.scrollTop=cb.scrollHeight;
   }
-  // Sync to Supabase
-  try{
-    await getSB().from('chats').insert({entity_id:entityId,autor:msg.autor,text:text,ts:ts});
-    showSyncDot(true);
-  }catch(e){
-    console.warn('chat insert:',e);
-    // Show error in chat box
-    var ecb=elQ('chatbox-ws-'+entityId)||elQ('chatbox-'+entityId);
-    if(ecb){
-      var ed=document.createElement('div');
-      ed.style.cssText='margin-bottom:6px;text-align:center';
-      ed.innerHTML='<small style="color:#ef4444">&#9888; Nachricht nicht gesendet: '+e.message+'</small>';
-      ecb.appendChild(ed);
+  try{ await getSB().from('chats').insert({entity_id:entityId,autor:msg.autor,text:text,ts:ts}); syncDot(1); }
+  catch(e){ console.warn('chat:',e); }
+}
+
+// Sync hooks for V3 save functions
+var _origSaveAG2=saveAG, _origSaveUG2=saveUG, _origSaveTask2=saveTask, _origSaveMitgl2=saveMitglied, _origSaveKonz2=saveKonzept;
+saveAG=function(){ var id=(elQ('f-ag-id')||{value:''}).value.trim(); _origSaveAG2(); setTimeout(function(){ var a=db.ags.find(function(x){return x.id===id;}); if(a) sbUp('ags',a); },100); };
+saveUG=function(){ var id=(elQ('f-ug-id')||{value:''}).value.trim(); _origSaveUG2(); setTimeout(function(){ var u=db.ugs.find(function(x){return x.id===id;}); if(u) sbUp('ugs',u); },100); };
+saveTask=function(){ var id=(elQ('f-t-id')||{value:''}).value.trim(); _origSaveTask2(); setTimeout(function(){ var t=db.aufgaben.find(function(x){return x.id===id;}); if(t) sbUp('aufgaben',t); updateBadges(); },100); };
+saveKonzept=function(){
+  _origSaveKonz2();
+  setTimeout(function(){ var k=db.konzepte[db.konzepte.length-1]; if(k) sbUp('konzepte',k); },100);
+};
+saveMitglied=function(){
+  var id=(elQ('f-m-id')||{value:''}).value.trim();
+  var name=(elQ('f-m-name')||{value:''}).value.trim();
+  _origSaveMitgl2();
+  setTimeout(async function(){
+    var m=db.mitglieder.find(function(x){return x.id===id;});
+    if(m){ await sbUp('mitglieder',m); }
+    // Auto-create Nutzer if new
+    if(!editId&&name&&!db.nutzer.find(function(u){return u.name===name;})){
+      var pw=name.toLowerCase().replace(/\s+/g,'')+'2024';
+      var nu={id:'U-'+Date.now(),name:name,pw:pw,rolle:'intern',agIds:[],ugIds:[],aktiv:true,farbe:'#6b7199'};
+      db.nutzer.push(nu);
+      await sbUp('nutzer',nu);
+      toast('Login erstellt: '+name+' / PW: '+pw,'ok');
     }
+  },100);
+};
+var _origToggle2=toggleTask;
+toggleTask=function(id){ _origToggle2(id); setTimeout(function(){ var t=db.aufgaben.find(function(x){return x.id===id;}); if(t) sbUp('aufgaben',t); updateBadges(); },100); };
+
+// ── Konzept-Archiv ────────────────────────────────────────
+function renderKonzepte(){
+  var c=el('content'); if(!c) return;
+  if(!db.konzepte||!db.konzepte.length){
+    c.innerHTML='<div style="text-align:center;padding:60px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">&#128196;</div><h3>Keine Konzepte</h3><p style="font-size:12px;margin:8px 0 20px">Lade ein Konzept hoch oder erstelle eines mit dem KI-Assistenten.</p></div>';
+    var btn1=document.createElement('button'); btn1.className='btn btn-primary btn-sm'; btn1.textContent='KI-Assistent';
+    btn1.onclick=function(){ nav(document.querySelector('[data-view="wizard"]')); };
+    var btn2=document.createElement('button'); btn2.className='btn btn-ghost btn-sm'; btn2.textContent='Hochladen'; btn2.style.marginLeft='8px';
+    btn2.onclick=function(){ nav(document.querySelector('[data-view="upload"]')); };
+    var btnWrap=document.createElement('div'); btnWrap.style.textAlign='center';
+    btnWrap.appendChild(btn1); btnWrap.appendChild(btn2);
+    c.querySelector('div').appendChild(btnWrap);
+    return;
   }
+  var h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">';
+  db.konzepte.forEach(function(k){
+    var isAG=k.entityTyp==='AG';
+    var ent=isAG?db.ags.find(function(a){return a.id===k.entityId;}):db.ugs.find(function(u){return u.id===k.entityId;});
+    var col=isAG?'#4f7cff':'#a78bfa';
+    var stcol=k.status==='Freigegeben'?'#22c55e':k.status==='In Arbeit'?'#f59e0b':'#6b7199';
+    h+='<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer" data-kid="'+k.id+'" onclick="showKonzeptDetail(this.dataset.kid)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
+      +'<div style="font-size:22px;margin-right:10px">&#128196;</div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:3px">'+k.name+'</div>'
+      +'<div style="font-size:10px;color:var(--muted)">v'+k.version+(k.stand?' &middot; '+k.stand:'')+'</div></div>'
+      +'<span style="font-size:10px;background:rgba(0,0,0,.3);color:'+stcol+';border-radius:4px;padding:2px 7px">'+k.status+'</span></div>'
+      +(ent?'<div style="font-size:11px;color:'+col+';margin-bottom:8px">'+k.entityTyp+': '+ent.name+'</div>':'')
+      +(k.ziel?'<div style="font-size:11px;color:var(--muted2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">'+k.ziel+'</div>':'')
+      +'<div style="display:flex;gap:6px;margin-top:10px">'
+      +'<button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:10px" data-kid="'+k.id+'" onclick="event.stopPropagation();showKonzeptDetail(this.dataset.kid)">&#128065; Details</button>'
+      +(isAdmin()?'<button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:10px;color:#ef4444" data-kid="'+k.id+'" onclick="event.stopPropagation();delKonzept(this.dataset.kid)">&#128465; L&ouml;schen</button>':'')
+      +'</div></div>';
+  });
+  c.innerHTML=h+'</div>';
+}
+
+function showKonzeptDetail(id){
+  var k=db.konzepte.find(function(x){return x.id===id;}); if(!k) return;
+  var ent=(k.entityTyp==='AG'?db.ags:db.ugs).find(function(x){return x.id===k.entityId;});
+  var c=el('content');
+  c.innerHTML='<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="renderKonzepte()">&larr; Zur&uuml;ck</button>'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:700px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">'
+    +'<div><h2 style="font-size:16px;margin-bottom:4px">'+k.name+'</h2>'
+    +'<div style="font-size:11px;color:var(--muted)">v'+k.version+' &middot; '+(k.stand||'-')+' &middot; Verantw.: '+(k.verantw||'-')+'</div></div>'
+    +'<span style="font-size:11px;background:rgba(0,0,0,.3);color:#22c55e;border-radius:6px;padding:3px 9px">'+k.status+'</span></div>'
+    +(ent?'<div style="font-size:12px;color:var(--accent);margin-bottom:14px">'+k.entityTyp+': '+ent.name+'</div>':'')
+    +'<div style="background:var(--card2);border-radius:8px;padding:14px;font-size:13px;line-height:1.8;white-space:pre-wrap">'+konzeptToText(k)+'</div>'
+    +(isAdmin()?'<div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">'
+      +'<button class="btn btn-primary btn-sm" data-kid="'+id+'" onclick="openKonzeptModal(this.dataset.kid)">&#9999; Bearbeiten</button>'
+      +'<button class="btn btn-ghost btn-sm" style="color:#ef4444" data-kid="'+id+'" onclick="delKonzept(this.dataset.kid)">&#128465; L&ouml;schen</button>'
+      +'</div>':'')+'</div>';
+}
+
+async function delKonzept(id){
+  if(!isAdmin()) return;
+  if(!confirm('Konzept wirklich l\u00f6schen?')) return;
+  db.konzepte=db.konzepte.filter(function(k){return k.id!==id;});
+  await sbDel('konzepte',id);
+  toast('Gel\u00f6scht','ok'); renderKonzepte();
 }
 
 // ── Posteingang ───────────────────────────────────────────
 function renderPosteingang(){
-  var unread=db.nachrichten.filter(function(n){ return !n.gelesen; }).length;
+  var c=el('content'); if(!c) return;
+  var unread=db.nachrichten.filter(function(n){return !n.gelesen;}).length;
   var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
-      +'<span style="font-size:12px;color:var(--muted)">'+unread+' ungelesen</span>'
-      +'<button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="openNachModal()">+ Nachricht</button></div>';
-  db.nachrichten.slice().reverse().forEach(function(n){
-    h+='<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid '+(n.gelesen?'var(--border)':'#4f7cff')+';border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer" data-id="'+n.id+'" onclick="openNachDet(this.dataset.id)">'
-      +'<div style="display:flex;justify-content:space-between"><span style="font-size:13px'+(n.gelesen?'':';font-weight:700')+'">'+(n.gelesen?'&#128237;':'&#128236;')+' '+n.betreff+'</span>'
-      +(n.gelesen?'':'<span style="background:#4f7cff;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px">Neu</span>')+'</div>'
-      +'<div style="font-size:11px;color:var(--muted);margin-top:4px">Von: '+n.von+' &middot; '+n.ts+'</div>'
-      +'<div style="font-size:11px;color:var(--muted2);margin-top:3px">'+n.text.slice(0,60)+'&hellip;</div></div>';
-  });
-  if(!db.nachrichten.length) h+='<div style="text-align:center;padding:30px;color:var(--muted)"><div style="font-size:40px">&#128237;</div><h3>Keine Nachrichten</h3></div>';
-  
-  // Quick-PN buttons for each member
-  h += '<div style="margin-top:20px"><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">&#9889; Direkt-Nachricht senden</div>';
-  h += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
-  // Show all active nutzer (login accounts) except self
-  var recipients = db.nutzer.filter(function(u){ return u.aktiv!==false && u.name !== (curUser?curUser.name:''); });
-  // Also add mitglieder who are not nutzer
-  db.mitglieder.filter(function(m){
-    return m.aktiv!==false && !recipients.find(function(u){ return u.name===m.name; });
-  }).forEach(function(m){ recipients.push({name:m.name, rolle:'Mitglied'}); });
-  
-  if(!recipients.length){
-    h += '<span style="font-size:11px;color:var(--muted)">Keine anderen Mitglieder vorhanden.</span>';
-  }
+    +'<span style="font-size:12px;color:var(--muted)">'+unread+' ungelesen / '+db.nachrichten.length+' gesamt</span>'
+    +'<button class="btn btn-primary btn-sm" onclick="openNachModal()">+ Nachricht</button></div>'
+    +'<div id="nach-list">';
+  if(db.nachrichten.length){
+    db.nachrichten.slice().reverse().forEach(function(n){
+      h+='<div class="nach-item" style="background:var(--card);border:1px solid var(--border);border-left:3px solid '+(n.gelesen?'var(--border)':'#4f7cff')+';border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer" data-nid="'+n.id+'">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+        +'<span style="font-size:13px;font-weight:'+(n.gelesen?'400':'700')+'">'+(n.gelesen?'&#128237;':'&#128236;')+' '+n.betreff+'</span>'
+        +(n.gelesen?'':'<span style="background:#4f7cff;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;flex-shrink:0">Neu</span>')+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:4px">Von: '+n.von+' &middot; '+n.ts+'</div>'
+        +'<div style="font-size:11px;color:var(--muted2);margin-top:3px">'+n.text.slice(0,60)+'...</div></div>';
+    });
+  } else { h+='<div style="text-align:center;padding:50px;color:var(--muted)"><div style="font-size:40px">&#128237;</div><h3>Keine Nachrichten</h3></div>'; }
+  h+='</div>';
+
+  // Quick-PN buttons
+  h+='<div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border)">'
+    +'<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:10px">&#9889; Direkt-Nachricht</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px">';
+  var recipients=db.nutzer.filter(function(u){return u.aktiv!==false&&u.name!==(curUser?curUser.name:'');});
+  if(!recipients.length){ h+='<span style="font-size:11px;color:var(--muted)">Keine anderen Nutzer.</span>'; }
   recipients.forEach(function(u){
-    var initials = u.name.slice(0,2).toUpperCase();
-    var col = u.rolle==='SuperAdmin'?'#4f7cff':u.rolle==='Admin'?'#22c55e':u.rolle==='Editor'?'#a78bfa':'#6b7199';
-    h += '<button class="btn btn-ghost btn-sm" style="display:flex;align-items:center;gap:6px;padding:6px 12px" data-name="'+u.name+'" onclick="openNachModal(this.dataset.name)">'
-       + '<div style="width:24px;height:24px;border-radius:50%;background:'+col+';color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700">'+initials+'</div>'
-       + '<span>'+u.name+'</span></button>';
+    var col=u.rolle==='SuperAdmin'?'#4f7cff':u.rolle==='Admin'?'#22c55e':u.rolle==='Editor'?'#a78bfa':'#6b7199';
+    h+='<button class="btn btn-ghost btn-sm" style="display:flex;align-items:center;gap:6px;padding:5px 10px" data-to="'+u.name+'" onclick="openNachModal(this.dataset.to)">'
+      +'<div style="width:22px;height:22px;border-radius:50%;background:'+col+';color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700">'+u.name.slice(0,2).toUpperCase()+'</div>'+u.name+'</button>';
   });
-  h += '</div></div>';
-  
-  elQ('content').innerHTML=h;
+  h+='</div></div>';
+  c.innerHTML=h;
+
+  // Attach click handlers to message items (avoids inline quotes issue)
+  c.querySelectorAll('.nach-item').forEach(function(item){
+    item.addEventListener('click',function(){ openNachDet(this.getAttribute('data-nid')); });
+  });
 }
 
-function openQuickNach(name){
-  // Show inline compose form for this person
-  var existing = elQ('quick-nach-form');
-  if(existing) existing.remove();
-  var form = document.createElement('div');
-  form.id = 'quick-nach-form';
-  form.style.cssText = 'position:fixed;bottom:60px;right:14px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;width:320px;z-index:300;box-shadow:0 4px 24px rgba(0,0,0,.4)';
-  form.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-    + '<strong style="font-size:13px">&#9993; PN an '+name+'</strong>'
-    + '<button class="qn-close" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px">&#215;</button></div>'
-    + '<input id="qn-betr" placeholder="Betreff (optional)..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box;margin-bottom:8px">'
-    + '<textarea id="qn-txt" rows="3" placeholder="Nachricht..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;resize:none;box-sizing:border-box;margin-bottom:8px"></textarea>'
-    + '<div style="display:flex;gap:8px">'
-    + '<button class="btn btn-primary btn-sm" style="flex:1" data-name="'+name+'" onclick="sendQuickNach(this.dataset.name)">Senden &#10148;</button>'
-    + '<button class="btn btn-ghost btn-sm qn-close">Abbrechen</button>'
-    + '</div>';
-  document.body.appendChild(form);
-  // Attach close buttons via JS (no inline handlers needed)
-  form.querySelectorAll('.qn-close').forEach(function(btn){
-    btn.addEventListener('click', function(){ form.remove(); });
-  });
-  setTimeout(function(){ var t=document.getElementById('qn-txt'); if(t) t.focus(); }, 50);
-}
-
-async function sendQuickNach(toName){
-  var txt = (document.getElementById('qn-txt')||{value:''}).value.trim();
-  if(!txt){ toast('Bitte Text eingeben','error'); return; }
-  var betr = (document.getElementById('qn-betr')||{value:''}).value.trim() || '(Schnell-Nachricht)';
-  var n = {id:'MSG-'+Date.now(), von:curUser?curUser.name:'Admin', an:toName,
-           betreff:betr, text:txt, ts:nowTs(), gelesen:false, antworten:[]};
-  db.nachrichten.push(n);
-  await sbUpsert('nachrichten', n);
-  var form=document.getElementById('quick-nach-form'); if(form) form.remove();
-  updateBadges();
-  toast('Nachricht an '+toName+' gesendet &#10003;','ok');
-}
 function openNachDet(id){
-  console.log('openNachDet id=',id,'nachrichten=',db.nachrichten.map(function(n){return n.id;}));
-  var n=db.nachrichten.find(function(x){return x.id===id;}); if(!n){ toast('Nachricht nicht gefunden: '+id,'error'); return; }
-  n.gelesen=true; sbUpsert('nachrichten',n); updateBadges();
-  var h='<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="renderPosteingang()">&larr; Zur&uuml;ck</button>'
-      +'<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px">'
-      +'<div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>'+n.betreff+'</strong><span style="font-size:11px;color:var(--muted)">'+n.ts+'</span></div>'
-      +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Von: '+n.von+' &rarr; An: '+n.an+'</div>'
-      +'<div style="font-size:12px;line-height:1.7;white-space:pre-wrap">'+n.text+'</div></div>';
-  (n.antworten||[]).forEach(function(a){
-    h+='<div style="background:rgba(79,124,255,.1);border:1px solid rgba(79,124,255,.2);border-radius:6px;padding:8px 11px;margin-bottom:6px">'
-      +'<div style="display:flex;justify-content:space-between;margin-bottom:3px"><strong style="font-size:11px">'+a.autor+'</strong><span style="font-size:10px;color:var(--muted)">'+a.ts+'</span></div>'
-      +'<div style="font-size:12px">'+a.text+'</div></div>';
-  });
-  h+='<div style="font-size:11px;font-weight:600;color:var(--muted);margin:10px 0 6px">Antworten</div>'
-    +'<textarea id="nach-reply" rows="3" style="width:100%;margin-bottom:8px;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;resize:vertical;box-sizing:border-box" placeholder="Antwort&hellip;"></textarea>'
+  var n=db.nachrichten.find(function(x){return x.id===id;});
+  if(!n){ toast('Nachricht nicht gefunden','error'); return; }
+  n.gelesen=true; sbUp('nachrichten',n); updateBadges();
+  var c=el('content');
+  c.innerHTML='<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="renderPosteingang()">&larr; Zur&uuml;ck</button>'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:600px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'
+    +'<strong style="font-size:14px">'+n.betreff+'</strong>'
+    +'<span style="font-size:11px;color:var(--muted)">'+n.ts+'</span></div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Von: <strong>'+n.von+'</strong> &rarr; An: <strong>'+n.an+'</strong></div>'
+    +'<div style="font-size:13px;line-height:1.7;white-space:pre-wrap;background:var(--card2);border-radius:8px;padding:12px;margin-bottom:14px">'+n.text+'</div>'
+    +((n.antworten&&n.antworten.length)?'<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px">Antworten</div>'
+      +n.antworten.map(function(a){
+        return '<div style="background:rgba(79,124,255,.1);border:1px solid rgba(79,124,255,.2);border-radius:6px;padding:8px 11px;margin-bottom:6px">'
+          +'<div style="display:flex;justify-content:space-between;margin-bottom:3px"><strong style="font-size:11px">'+a.autor+'</strong><span style="font-size:10px;color:var(--muted)">'+a.ts+'</span></div>'
+          +'<div style="font-size:12px">'+a.text+'</div></div>';
+      }).join(''):'')
+    +'<textarea id="nach-reply" rows="3" placeholder="Antwort..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>'
     +'<div style="display:flex;gap:8px">'
-    +'<button class="btn btn-primary" style="padding:6px 12px;font-size:12px" data-id="'+id+'" onclick="sendAntwort(this.dataset.id)">Senden</button>'
-    +'<button class="btn btn-ghost btn-sm" data-id="'+id+'" onclick="delNach(this.dataset.id)">L&ouml;schen</button></div>';
-  elQ('content').innerHTML=h;
+    +'<button class="btn btn-primary btn-sm" data-nid="'+id+'" onclick="sendAntwort(this.dataset.nid)">Antworten</button>'
+    +(isAdmin()?'<button class="btn btn-ghost btn-sm" style="color:#ef4444" data-nid="'+id+'" onclick="delNachDet(this.dataset.nid)">L&ouml;schen</button>':'')
+    +'</div></div>';
 }
+
 function openNachModal(preRecipient){
-  preRecipient = preRecipient||'';
-  var h='<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="renderPosteingang()">&larr; Zur&uuml;ck</button>'
-      +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:480px">'
-      +'<h3 style="font-size:14px;margin-bottom:14px">&#9993; Neue Nachricht'+(preRecipient?' an '+preRecipient:'')+'</h3>'
-      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">An</label>'
-      +'<input id="nach-an" value="'+preRecipient+'" placeholder="Empf&auml;nger&hellip;" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
-      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Betreff</label>'
-      +'<input id="nach-betr" placeholder="Betreff&hellip;" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
-      +'<div style="margin-bottom:12px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Text</label>'
-      +'<textarea id="nach-txt" rows="4" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;resize:vertical;box-sizing:border-box" placeholder="Nachricht&hellip;"></textarea></div>'
-      +'<div style="display:flex;gap:8px"><button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="sendNach()">Senden</button>'
-      +'<button class="btn btn-ghost btn-sm" onclick="renderPosteingang()">Abbrechen</button></div></div>';
-  elQ('content').innerHTML=h;
+  preRecipient=preRecipient||'';
+  var c=el('content');
+  c.innerHTML='<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="renderPosteingang()">&larr; Zur&uuml;ck</button>'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:520px">'
+    +'<h3 style="font-size:14px;margin:0 0 14px">&#9993; Neue Nachricht'+(preRecipient?' an '+preRecipient:'')+'</h3>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">An</label>'
+    +'<input id="nach-an" value="'+preRecipient+'" placeholder="Empf&auml;nger..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Betreff</label>'
+    +'<input id="nach-betr" placeholder="Betreff..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:12px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Text</label>'
+    +'<textarea id="nach-txt" rows="4" placeholder="Nachricht..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;resize:vertical;box-sizing:border-box"></textarea></div>'
+    +'<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="sendNach()">Senden &#10148;</button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="renderPosteingang()">Abbrechen</button></div></div>';
+  var ai=document.getElementById('nach-an');
+  if(preRecipient){ var ti=document.getElementById('nach-betr'); if(ti) setTimeout(function(){ti.focus();},50); }
+  else if(ai) setTimeout(function(){ai.focus();},50);
 }
+
 async function sendNach(){
   var an=(elQ('nach-an')||{value:''}).value.trim(), txt=(elQ('nach-txt')||{value:''}).value.trim();
-  if(!an||!txt){ toast('Empf&auml;nger und Text Pflicht','error'); return; }
-  var n={id:'MSG-'+Date.now(),von:curUser?curUser.name:'Admin',an:an,betreff:(elQ('nach-betr')||{value:''}).value||'(kein Betreff)',text:txt,ts:nowTs(),gelesen:false,antworten:[]};
-  db.nachrichten.push(n);
-  await sbUpsert('nachrichten',n);
-  updateBadges(); toast('Nachricht gesendet','ok'); renderPosteingang();
+  if(!an||!txt){toast('Empf&auml;nger und Text Pflicht','error');return;}
+  var n={id:'MSG-'+Date.now(),von:curUser?curUser.name:'?',an:an,betreff:(elQ('nach-betr')||{value:'(kein Betreff)'}).value||'(kein Betreff)',text:txt,ts:nowTs(),gelesen:false,antworten:[]};
+  db.nachrichten.push(n); await sbUp('nachrichten',n);
+  updateBadges(); toast('Nachricht gesendet &#10003;','ok'); renderPosteingang();
 }
 async function sendAntwort(msgId){
   var n=db.nachrichten.find(function(x){return x.id===msgId;}); if(!n) return;
   var txt=(elQ('nach-reply')||{value:''}).value.trim(); if(!txt){toast('Text Pflicht','error');return;}
   if(!n.antworten) n.antworten=[];
-  n.antworten.push({autor:curUser?curUser.name:'Admin',text:txt,ts:nowTs()});
-  await sbUpsert('nachrichten',n);
-  toast('Antwort gesendet','ok'); openNachDet(msgId);
+  n.antworten.push({autor:curUser?curUser.name:'?',text:txt,ts:nowTs()});
+  await sbUp('nachrichten',n); toast('Gesendet','ok'); openNachDet(msgId);
 }
-async function delNach(id){
+async function delNachDet(id){
   db.nachrichten=db.nachrichten.filter(function(n){return n.id!==id;});
   await sbDel('nachrichten',id); updateBadges(); renderPosteingang();
 }
 
 // ── Freigaben ─────────────────────────────────────────────
 function renderFreigaben(){
-  if(!isAdmin()){ elQ('content').innerHTML='<div style="text-align:center;padding:60px;color:var(--muted)"><div style="font-size:40px">&#128274;</div><h3>Kein Zugriff</h3></div>'; return; }
-  var pending=db.aufgaben.filter(function(t){ return t.freigabe&&t.status!=='Erledigt'&&t.status!=='Freigegeben'&&t.status!=='Archiviert'; });
-  var h='<h3 style="font-size:14px;margin-bottom:14px">&#128274; Ausstehende Freigaben ('+pending.length+')</h3>';
-  if(pending.length){
-    pending.forEach(function(t){
-      h+='<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid #f59e0b;border-radius:8px;padding:12px;margin-bottom:8px">'
-        +'<div style="font-size:13px;font-weight:600;margin-bottom:4px">'+t.titel+'</div>'
-        +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+t.entityId+' &middot; F&auml;llig: '+(t.faellig||'?')+'</div>'
-        +'<div style="display:flex;gap:6px">'
-        +'<button class="btn btn-primary btn-sm" data-id="'+t.id+'" onclick="freigebenTask(this.dataset.id)">&#10003; Freigeben</button>'
-        +'<button class="btn btn-ghost btn-sm" data-id="'+t.id+'" onclick="ablehnenTask(this.dataset.id)">&#10007; Ablehnen</button></div></div>';
-    });
-  } else { h+='<div style="text-align:center;padding:50px;color:var(--muted)"><div style="font-size:40px">&#128275;</div><h3>Keine ausstehenden Freigaben</h3></div>'; }
-  elQ('content').innerHTML=h;
+  var c=el('content'); if(!c) return;
+  if(!isAdmin()){ c.innerHTML='<div style="text-align:center;padding:60px;color:var(--muted)">&#128274;<h3>Kein Zugriff</h3></div>'; return; }
+  var pending=db.aufgaben.filter(function(t){return t.freigabe&&t.status!=='Erledigt'&&t.status!=='Freigegeben'&&t.status!=='Archiviert';});
+  var h='<h3 style="font-size:14px;margin:0 0 14px">&#128274; Freigaben ('+pending.length+')</h3>';
+  if(pending.length) pending.forEach(function(t){
+    h+='<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid #f59e0b;border-radius:8px;padding:12px;margin-bottom:8px">'
+      +'<div style="font-size:13px;font-weight:600;margin-bottom:4px">'+t.titel+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+t.entityId+' &middot; F&auml;llig: '+(t.faellig||'?')+'</div>'
+      +'<div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" data-tid="'+t.id+'" onclick="freigebenT(this.dataset.tid)">&#10003; Freigeben</button>'
+      +'<button class="btn btn-ghost btn-sm" data-tid="'+t.id+'" onclick="ablehnenT(this.dataset.tid)">&#10007; Ablehnen</button></div></div>';
+  }); else h+='<div style="text-align:center;padding:50px;color:var(--muted)"><div style="font-size:40px">&#128275;</div><h3>Keine ausstehenden Freigaben</h3></div>';
+  c.innerHTML=h;
 }
-function freigebenTask(id){ var t=db.aufgaben.find(function(x){return x.id===id;}); if(t){t.status='Freigegeben';sbUpsert('aufgaben',t);} updateBadges(); toast('Freigegeben &#10003;','ok'); renderFreigaben(); }
-function ablehnenTask(id){ var t=db.aufgaben.find(function(x){return x.id===id;}); if(t){t.status='Blockiert';sbUpsert('aufgaben',t);} toast('Abgelehnt','error'); renderFreigaben(); }
+async function freigebenT(id){ var t=db.aufgaben.find(function(x){return x.id===id;}); if(t){t.status='Freigegeben';await sbUp('aufgaben',t);} updateBadges(); toast('Freigegeben','ok'); renderFreigaben(); }
+async function ablehnenT(id){ var t=db.aufgaben.find(function(x){return x.id===id;}); if(t){t.status='Blockiert';await sbUp('aufgaben',t);} toast('Abgelehnt','error'); renderFreigaben(); }
 
-// ── Notizen ───────────────────────────────────────────────
+// ── Notizen (global) ─────────────────────────────────────
 function renderNotizen(){
+  var c=el('content'); if(!c) return;
   var notes=db.notizen.slice().reverse();
   var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
-      +'<span style="font-size:12px;color:var(--muted)">'+db.notizen.length+' Notizen</span>'
-      +'<button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="openNotizForm()">+ Notiz</button></div>';
+    +'<span style="font-size:12px;color:var(--muted)">'+db.notizen.length+' Notizen</span>'
+    +'<button class="btn btn-primary btn-sm" onclick="openNotizFormGlobal()">+ Notiz</button></div>';
   notes.forEach(function(n){
     var col=n.prio==='Dringend'?'#ef4444':n.prio==='Wichtig'?'#f59e0b':'var(--border)';
     h+='<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid '+col+';border-radius:8px;padding:12px;margin-bottom:8px">'
       +'<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
       +'<span style="font-size:11px;color:var(--muted)">'+(n.kat||'Allgemein')+(n.targetId?' &middot; '+n.targetId:'')+'</span>'
-      +'<button style="background:none;border:none;color:var(--muted);cursor:pointer" data-id="'+n.id+'" onclick="delNotiz(this.dataset.id)">&#215;</button></div>'
+      +(isAdmin()?'<button style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px" data-nid="'+n.id+'" onclick="delNotizGlobal(this.dataset.nid)">&#215;</button>':'')+'</div>'
       +'<div style="font-size:12px;line-height:1.6">'+n.text+'</div>'
       +'<div style="font-size:10px;color:var(--muted2);margin-top:6px">'+n.autor+' &middot; '+n.ts+'</div></div>';
   });
   if(!notes.length) h+='<div style="text-align:center;padding:50px;color:var(--muted)"><div style="font-size:40px">&#128221;</div><h3>Keine Notizen</h3></div>';
-  elQ('content').innerHTML=h;
+  c.innerHTML=h;
 }
-function openNotizForm(preTarget){
-  preTarget=preTarget||'';
+function openNotizFormGlobal(){
   var tOpts='<option value="">Allgemein</option>';
-  db.ags.forEach(function(a){ tOpts+='<option value="'+a.id+'"'+(preTarget===a.id?' selected':'')+'>[AG] '+a.id+' &ndash; '+a.name+'</option>'; });
-  db.ugs.forEach(function(u){ tOpts+='<option value="'+u.id+'"'+(preTarget===u.id?' selected':'')+'>[UG] '+u.id+' &ndash; '+u.name+'</option>'; });
-  var h='<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:480px">'
-      +'<h3 style="font-size:14px;margin-bottom:14px">Neue Notiz</h3>'
-      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Zuordnung</label>'
-      +'<select id="nz-tgt" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px">'+tOpts+'</select></div>'
-      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Kategorie</label>'
-      +'<input id="nz-kat" value="Allgemein" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
-      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Priorit&auml;t</label>'
-      +'<select id="nz-prio" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px"><option>Normal</option><option>Wichtig</option><option>Dringend</option></select></div>'
-      +'<div style="margin-bottom:12px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Text</label>'
-      +'<textarea id="nz-txt" rows="4" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;resize:vertical;box-sizing:border-box" placeholder="Notiz&hellip;"></textarea></div>'
-      +'<div style="display:flex;gap:8px"><button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="saveNotiz()">Speichern</button>'
-      +'<button class="btn btn-ghost btn-sm" onclick="renderNotizen()">Abbrechen</button></div></div>';
-  elQ('content').innerHTML=h;
-  setTimeout(function(){ var t=elQ('nz-txt'); if(t) t.focus(); },60);
+  db.ags.forEach(function(a){tOpts+='<option value="'+a.id+'">[AG] '+a.name+'</option>';});
+  db.ugs.forEach(function(u){tOpts+='<option value="'+u.id+'">[UG] '+u.name+'</option>';});
+  var c=el('content');
+  c.innerHTML='<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="renderNotizen()">&larr; Zur&uuml;ck</button>'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:480px">'
+    +'<h3 style="font-size:14px;margin:0 0 14px">Neue Notiz</h3>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Zuordnung</label>'
+    +'<select id="nz-tgt" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px">'+tOpts+'</select></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Priorit&auml;t</label>'
+    +'<select id="nz-prio" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px"><option>Normal</option><option>Wichtig</option><option>Dringend</option></select></div>'
+    +'<textarea id="nz-txt" rows="4" placeholder="Notiz..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:12px"></textarea>'
+    +'<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="saveNotizGlobal()">Speichern</button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="renderNotizen()">Abbrechen</button></div></div>';
+  setTimeout(function(){ var t=elQ('nz-txt'); if(t) t.focus(); },50);
 }
-async function saveNotiz(){
+async function saveNotizGlobal(){
   var txt=(elQ('nz-txt')||{value:''}).value.trim(); if(!txt){toast('Text Pflicht','error');return;}
-  var n={id:'N-'+Date.now(),targetId:(elQ('nz-tgt')||{value:''}).value,kat:(elQ('nz-kat')||{value:'Allgemein'}).value,prio:(elQ('nz-prio')||{value:'Normal'}).value,autor:curUser?curUser.name:'?',text:txt,ts:nowTs()};
-  db.notizen.push(n); await sbUpsert('notizen',n);
-  toast('Notiz gespeichert &#10003;','ok'); renderNotizen();
+  var n={id:'N-'+Date.now(),targetId:(elQ('nz-tgt')||{value:''}).value,kat:'Allgemein',prio:(elQ('nz-prio')||{value:'Normal'}).value,autor:curUser?curUser.name:'?',text:txt,ts:nowTs()};
+  db.notizen.push(n); await sbUp('notizen',n); toast('Gespeichert','ok'); renderNotizen();
 }
-async function delNotiz(id){ db.notizen=db.notizen.filter(function(n){return n.id!==id;}); await sbDel('notizen',id); renderNotizen(); }
+async function delNotizGlobal(id){ db.notizen=db.notizen.filter(function(n){return n.id!==id;}); await sbDel('notizen',id); renderNotizen(); }
 
 // ── Alle Chats ────────────────────────────────────────────
 function renderAllchats(){
-  var all=[...db.ags.map(function(a){return {id:a.id,name:a.name,typ:'AG',farbe:a.farbe||'#4f7cff'};}),
-           ...db.ugs.map(function(u){return {id:u.id,name:u.name,typ:'UG',farbe:'#a78bfa'};})];
+  var c=el('content'); if(!c) return;
+  var all=[].concat(
+    db.ags.map(function(a){return{id:a.id,name:a.name,typ:'AG',col:a.farbe||'#4f7cff'};}),
+    db.ugs.map(function(u){return{id:u.id,name:u.name,typ:'UG',col:'#a78bfa'};})
+  );
   var h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">';
   all.forEach(function(e){
     var msgs=chatOf(e.id), last=msgs.length?msgs[msgs.length-1]:null;
-    h+='<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer" data-id="'+e.id+'" onclick="openChatView(this.dataset.id)">'
-      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
-      +'<div style="width:8px;height:8px;border-radius:50%;background:'+e.farbe+'"></div>'
-      +'<strong style="font-size:12px;flex:1">'+e.name+'</strong>'
-      +'<span style="font-size:10px;color:var(--muted)">'+e.typ+'</span></div>'
+    h+='<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer" data-eid="'+e.id+'" onclick="openChatView(this.dataset.eid)">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><div style="width:8px;height:8px;border-radius:50%;background:'+e.col+'"></div>'
+      +'<strong style="font-size:12px;flex:1">'+e.name+'</strong><span style="font-size:10px;color:var(--muted)">'+e.typ+'</span></div>'
       +'<div style="font-size:11px;color:var(--muted)">'+msgs.length+' Nachrichten</div>'
-      +(last?'<div style="font-size:11px;color:var(--muted2);margin-top:3px">'+last.text.slice(0,40)+'&hellip;</div>':'')
+      +(last?'<div style="font-size:11px;color:var(--muted2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+last.text.slice(0,40)+'</div>':'')
       +'</div>';
   });
-  elQ('content').innerHTML=h+'</div>';
+  c.innerHTML=h+'</div>';
+  c.querySelectorAll('[data-eid]').forEach(function(item){
+    item.addEventListener('click',function(){ openChatView(this.getAttribute('data-eid')); });
+  });
 }
 async function openChatView(entityId){
   try{
     var {data}=await getSB().from('chats').select('*').eq('entity_id',entityId).order('created_at',{ascending:true});
-    db.chats[entityId]=(data||[]).map(function(r){return {autor:r.autor,text:r.text,ts:r.ts,_sbid:r.id};});
+    db.chats[entityId]=(data||[]).map(function(r){return{autor:r.autor,text:r.text,ts:r.ts,_sbid:r.id};});
     _lastPoll[entityId]=new Date().toISOString();
   }catch(e){}
   var ent=db.ags.find(function(a){return a.id===entityId;})||db.ugs.find(function(u){return u.id===entityId;});
   var msgs=chatOf(entityId);
-  var h='<button class="btn btn-ghost btn-sm" style="margin-bottom:12px" onclick="renderAllchats()">&larr; Alle Chats</button>'
-      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><strong>'+(ent?ent.name:entityId)+'</strong></div>'
-      +'<div id="chatbox-ws-'+entityId+'" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;height:320px;overflow-y:auto;margin-bottom:8px">';
-  msgs.forEach(function(m){
-    var mine=m.autor===(curUser?curUser.name:'');
-    h+='<div style="margin-bottom:8px;text-align:'+(mine?'right':'left')+'"><div style="display:inline-block;background:'+(mine?'rgba(79,124,255,.25)':'var(--card)')+';border:1px solid var(--border);border-radius:8px;padding:6px 10px;max-width:75%"><div style="font-size:12px">'+m.text+'</div><div style="font-size:10px;color:var(--muted2);margin-top:2px">'+m.autor+' &middot; '+m.ts+'</div></div></div>';
-  });
-  if(!msgs.length) h+='<p style="text-align:center;padding:30px;color:var(--muted);font-size:12px">Noch keine Nachrichten.</p>';
-  h+='</div><div style="display:flex;gap:8px">'
-    +'<input type="text" id="ws-chat-inp-'+entityId+'" placeholder="Nachricht&hellip;" style="flex:1;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px" data-eid="'+entityId+'" onkeydown="if(event.keyCode===13)wsSendChat(this.dataset.eid)">'
-    +'<button class="btn btn-primary" style="padding:6px 12px;font-size:12px" data-eid="'+entityId+'" onclick="wsSendChat(this.dataset.eid)">Senden</button></div>';
-  elQ('content').innerHTML=h;
-  setTimeout(function(){ var b=elQ('chatbox-ws-'+entityId); if(b) b.scrollTop=b.scrollHeight; },60);
+  var c=el('content');
+  c.innerHTML='<button class="btn btn-ghost btn-sm" style="margin-bottom:12px" onclick="renderAllchats()">&larr; Alle Chats</button>'
+    +'<h3 style="font-size:14px;margin:0 0 12px">'+(ent?ent.name:entityId)+'</h3>'
+    +'<div id="chatbox-ws-'+entityId+'" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;height:360px;overflow-y:auto;margin-bottom:8px">'
+    +(msgs.length?msgs.map(function(m){
+      var mine=m.autor===(curUser?curUser.name:'');
+      return '<div style="margin-bottom:8px;text-align:'+(mine?'right':'left')+'">'
+        +'<div style="display:inline-block;background:'+(mine?'rgba(79,124,255,.25)':'var(--card)')+';border:1px solid var(--border);border-radius:8px;padding:6px 10px;max-width:75%">'
+        +'<div style="font-size:12px">'+m.text+'</div><div style="font-size:10px;color:var(--muted2);margin-top:2px">'+m.autor+' &middot; '+m.ts+'</div></div></div>';
+    }).join(''):'<p style="text-align:center;padding:40px;color:var(--muted);font-size:12px">Noch keine Nachrichten.</p>')
+    +'</div>'
+    +'<div style="display:flex;gap:8px"><input type="text" id="ws-chat-inp-'+entityId+'" placeholder="Nachricht..." style="flex:1;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px" data-eid="'+entityId+'" onkeydown="if(event.keyCode===13)wsSendChat(this.dataset.eid)">'
+    +'<button class="btn btn-primary btn-sm" data-eid="'+entityId+'" onclick="wsSendChat(this.dataset.eid)">Senden</button></div>';
+  setTimeout(function(){ var b=document.getElementById('chatbox-ws-'+entityId); if(b) b.scrollTop=b.scrollHeight; },60);
 }
 
 // ── Einstellungen ─────────────────────────────────────────
 function renderEinst(){
-  var nutzerTab='';
+  var c=el('content'); if(!c) return;
+  var h='';
   if(isSA()){
-    nutzerTab='<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">'
+    h+='<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
       +'<h3 style="font-size:13px;margin:0">&#128101; Nutzerverwaltung</h3>'
       +'<button class="btn btn-primary btn-sm" onclick="openNutzerForm()">+ Nutzer</button></div>'
       +'<table style="width:100%;font-size:12px;border-collapse:collapse"><thead><tr style="color:var(--muted);border-bottom:1px solid var(--border)">'
-      +'<th style="padding:6px;text-align:left">Name</th><th style="padding:6px;text-align:left">Rolle</th><th style="padding:6px;text-align:left">AGs</th><th style="padding:6px">Status</th><th style="padding:6px"></th></tr></thead><tbody>';
+      +'<th style="padding:6px;text-align:left">Name</th><th style="padding:6px;text-align:left">Rolle</th><th style="padding:6px;text-align:left">Zugriff</th><th style="padding:6px">Status</th><th></th></tr></thead><tbody>';
     db.nutzer.forEach(function(u){
       var rc=u.rolle==='SuperAdmin'?'#ef4444':u.rolle==='Admin'?'#f59e0b':'#4f7cff';
-      nutzerTab+='<tr style="border-bottom:1px solid rgba(42,51,80,.4)">'
-        +'<td style="padding:6px"><strong>'+u.name+'</strong></td>'
+      h+='<tr style="border-bottom:1px solid rgba(42,51,80,.4)"><td style="padding:6px"><strong>'+u.name+'</strong></td>'
         +'<td style="padding:6px"><span style="background:rgba(0,0,0,.3);color:'+rc+';border-radius:4px;padding:2px 6px;font-size:10px">'+u.rolle+'</span></td>'
-        +'<td style="padding:6px;color:var(--muted)">'+(u.agIds.includes('*')?'Alle':u.agIds.join(', '))+'</td>'
+        +'<td style="padding:6px;color:var(--muted);font-size:11px">'+(u.agIds.includes('*')?'Alle AGs':u.agIds.join(', ')||'-')+'</td>'
         +'<td style="padding:6px;text-align:center"><span style="color:'+(u.aktiv!==false?'#22c55e':'#ef4444')+'">'+(u.aktiv!==false?'&#10003;':'&#10007;')+'</span></td>'
         +'<td style="padding:6px;white-space:nowrap">'
-        +(u.rolle!=='SuperAdmin'?'<button class="btn btn-ghost btn-sm" style="padding:3px 8px" data-id="'+u.id+'" onclick="editNutzer(this.dataset.id)">&#9999;</button> '
-          +'<button class="btn btn-ghost btn-sm" style="padding:3px 8px" data-id="'+u.id+'" onclick="toggleNutzerAktiv(this.dataset.id)">'+(u.aktiv!==false?'Sperren':'Freisch.')+'</button>':'')
+        +(u.rolle!=='SuperAdmin'?'<button class="btn btn-ghost btn-sm" style="padding:2px 7px;font-size:11px" data-uid="'+u.id+'" onclick="editNutzer(this.dataset.uid)">&#9999;</button> '
+          +'<button class="btn btn-ghost btn-sm" style="padding:2px 7px;font-size:11px;color:'+(u.aktiv!==false?'#ef4444':'#22c55e')+'" data-uid="'+u.id+'" onclick="toggleNutzerAktiv(this.dataset.uid)">'+(u.aktiv!==false?'Sperren':'Aktiv.')+'</button>':'')
         +'</td></tr>';
     });
-    nutzerTab+='</tbody></table></div>';
+    h+='</tbody></table></div>';
   }
-  var h=nutzerTab
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
     +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px">'
-    +'<h3 style="font-size:13px;margin:0 0 8px">&#129302; KI-Assistent</h3>'
+    +'<h3 style="font-size:13px;margin:0 0 10px">&#129302; KI-Assistent</h3>'
     +'<div style="display:flex;gap:6px;margin-bottom:10px">'
-    +'<button class="btn '+(aiProvider==='gemini'?'btn-primary':'btn-ghost')+' btn-sm" style="flex:1" data-p="gemini" onclick="setAiProvider(this)">&#127381; Gemini</button>'
-    +'<button class="btn '+(aiProvider==='claude'?'btn-primary':'btn-ghost')+' btn-sm" style="flex:1" data-p="claude" onclick="setAiProvider(this)">&#129302; Claude</button>'
-    +'</div>'
-    +(aiProvider==='gemini'?'<p style="font-size:11px;color:var(--muted);margin:0 0 8px"><a href="https://aistudio.google.com" target="_blank" style="color:#4f7cff">aistudio.google.com</a> &rarr; &quot;Get API Key&quot;</p>':'<p style="font-size:11px;color:var(--muted);margin:0 0 8px"><a href="https://console.anthropic.com" target="_blank" style="color:#4f7cff">console.anthropic.com</a> &rarr; API Keys</p>')
-    +'<input id="set-key" type="password" placeholder="'+(aiProvider==='gemini'?'AIzaSy&hellip;':'sk-ant-&hellip;')+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;font-family:monospace;box-sizing:border-box;margin-bottom:8px">'
-    +'<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="saveApiKey()">Speichern</button><button class="btn btn-ghost btn-sm" onclick="testApiKey()">Testen</button></div>'
-    +'<div id="key-status" style="margin-top:8px;font-size:11px">'+(geminiKey||apiKey?'<span style="color:#22c55e">&#10003; Key gespeichert</span>':'<span style="color:#f59e0b">&#9888; Kein Key</span>')+'</div></div>'
+    +'<button class="btn '+(aiProvider==='gemini'?'btn-primary':'btn-ghost')+' btn-sm" style="flex:1" data-p="gemini" onclick="setAiProvider(this)">Gemini</button>'
+    +'<button class="btn '+(aiProvider==='claude'?'btn-primary':'btn-ghost')+' btn-sm" style="flex:1" data-p="claude" onclick="setAiProvider(this)">Claude</button></div>'
+    +'<input id="set-key" type="password" placeholder="API-Key..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;font-family:monospace;box-sizing:border-box;margin-bottom:8px">'
+    +'<div style="display:flex;gap:8px;margin-bottom:8px"><button class="btn btn-primary btn-sm" onclick="saveApiKey()">Speichern</button><button class="btn btn-ghost btn-sm" onclick="testApiKey()">Testen</button></div>'
+    +'<div id="key-status" style="font-size:11px">'+(geminiKey||apiKey?'<span style="color:#22c55e">&#10003; Key gespeichert</span>':'<span style="color:#f59e0b">&#9888; Kein Key</span>')+'</div></div>'
     +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px">'
     +'<h3 style="font-size:13px;margin:0 0 10px">&#128100; Profil</h3>'
-    +'<div style="font-size:12px;margin-bottom:6px"><span style="color:var(--muted)">Angemeldet:</span> <strong>'+(curUser?curUser.name:'')+'</strong></div>'
+    +'<div style="font-size:12px;margin-bottom:4px"><span style="color:var(--muted)">Name:</span> <strong>'+(curUser?curUser.name:'')+'</strong></div>'
     +'<div style="font-size:12px;margin-bottom:14px"><span style="color:var(--muted)">Rolle:</span> '+(curUser?curUser.rolle:'')+'</div>'
     +'<button class="btn btn-ghost btn-sm" onclick="L_logout()">&#9211; Abmelden</button></div>'
     +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px">'
-    +'<h3 style="font-size:13px;margin:0 0 10px">&#127864; Live-Pr&auml;senz</h3>'
-    +'<div id="live-users-list"></div>'
-    +'<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="renderLiveUsers()">Aktualisieren</button></div>'
+    +'<h3 style="font-size:13px;margin:0 0 10px">Live-Pr&auml;senz</h3>'
+    +'<div id="live-users-list" style="margin-bottom:8px"></div>'
+    +'<button class="btn btn-ghost btn-sm" onclick="renderLiveUsers()">Aktualisieren</button></div>'
     +'</div>';
-  elQ('content').innerHTML=h;
+  c.innerHTML=h;
   var sk=elQ('set-key'); if(sk) sk.value=(aiProvider==='gemini'?geminiKey:apiKey)||'';
+  renderLiveUsers();
 }
-
 function setAiProvider(btn){ aiProvider=btn.getAttribute('data-p'); renderEinst(); }
-
 async function saveApiKey(){
   var k=(elQ('set-key')||{value:''}).value.trim();
   if(!k){ toast('Bitte Key eingeben','error'); return; }
-  if(aiProvider==='gemini'){ geminiKey=k; } else { apiKey=k; }
-  // Save to Supabase for all users
-  // Save to Supabase (best effort - don't block if table missing)
+  if(aiProvider==='gemini') geminiKey=k; else apiKey=k;
   try{
-    var sb=getSB();
-    await sb.from('einstellungen').upsert([
-      {key:aiProvider==='gemini'?'gemini_key':'claude_key', value:k},
-      {key:'ai_provider', value:aiProvider}
+    await getSB().from('einstellungen').upsert([
+      {key:aiProvider==='gemini'?'gemini_key':'claude_key',value:k},
+      {key:'ai_provider',value:aiProvider}
     ],{onConflict:'key'});
-  }catch(e){ console.warn('settings sync:', e.message); }
-  toast((aiProvider==='gemini'?'Gemini':'Claude')+'-Key gespeichert &#10003;','ok');
-  renderEinst();
+  }catch(e){ console.warn('settings save:',e.message); }
+  toast('Key gespeichert &#10003;','ok'); renderEinst();
 }
-
 async function testApiKey(){
   var st=elQ('key-status');
   var k=(elQ('set-key')||{value:''}).value.trim();
-  if(!k){ if(st) st.innerHTML='<span style="color:#ef4444">Kein Key eingetragen.</span>'; return; }
+  if(!k){ if(st) st.innerHTML='<span style="color:#ef4444">Kein Key.</span>'; return; }
   if(aiProvider==='gemini') geminiKey=k; else apiKey=k;
-  if(st) st.innerHTML='<span style="color:var(--muted)">Teste&hellip;</span>';
+  if(st) st.innerHTML='<span style="color:var(--muted)">Teste...</span>';
   try{
     var r=await aiCall('Antworte nur mit: OK',50);
-    if(st) st.innerHTML='<span style="color:#22c55e">&#10003; Verbindung OK! ('+r.trim().slice(0,20)+')</span>';
+    if(st) st.innerHTML='<span style="color:#22c55e">&#10003; OK: '+r.trim().slice(0,30)+'</span>';
   }catch(e){
-    var msg = e.message||'Unbekannter Fehler';
-    if(st) st.innerHTML='<span style="color:#ef4444">Fehler: '+msg+'</span>';
-    console.error('testApiKey:', e);
+    if(st) st.innerHTML='<span style="color:#ef4444">Fehler: '+e.message+'</span>';
   }
 }
-
 function openNutzerForm(){
-  var h='<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:400px">'
-      +'<h3 style="font-size:14px;margin-bottom:14px">Neuer Nutzer</h3>'
-      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name</label>'
-      +'<input id="nu-name" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
-      +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Passwort</label>'
-      +'<input id="nu-pw" type="password" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
-      +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Rolle</label>'
-      +'<select id="nu-rolle" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px"><option>Admin</option><option>Editor</option><option>intern</option></select></div>'
-      +'<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="saveNewNutzer()">Erstellen</button>'
-      +'<button class="btn btn-ghost btn-sm" onclick="renderEinst()">Abbrechen</button></div></div>';
-  elQ('content').innerHTML=h;
+  var c=el('content');
+  c.innerHTML='<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="renderEinst()">&larr; Zur&uuml;ck</button>'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:400px">'
+    +'<h3 style="font-size:14px;margin:0 0 14px">Neuer Nutzer</h3>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name</label>'
+    +'<input id="nu-name" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Passwort</label>'
+    +'<input id="nu-pw" type="password" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Rolle</label>'
+    +'<select id="nu-rolle" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px"><option>Admin</option><option>Editor</option><option selected>intern</option></select></div>'
+    +'<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="saveNewNutzer()">Erstellen</button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="renderEinst()">Abbrechen</button></div></div>';
+  setTimeout(function(){ var n=elQ('nu-name'); if(n) n.focus(); },50);
 }
 async function saveNewNutzer(){
   var name=(elQ('nu-name')||{value:''}).value.trim(), pw=(elQ('nu-pw')||{value:''}).value;
   if(!name||!pw){ toast('Name und Passwort Pflicht','error'); return; }
-  // Create login account
-  var uid='U-'+String(db.nutzer.length+1).padStart(3,'0');
-  var u={id:uid,name:name,pw:pw,rolle:(elQ('nu-rolle')||{value:'intern'}).value,agIds:[],ugIds:[],aktiv:true,farbe:'#4f7cff'};
-  db.nutzer.push(u);
-  await sbUpsert('nutzer',u);
-  // Also create a Mitglied entry so they appear in PN buttons and member lists
-  if(!db.mitglieder.find(function(m){ return m.name===name; })){
-    var mid='P-'+Date.now();
-    var m={id:mid,name:name,kontakt:'',region:'',kompetenzen:'',verfueg:'mittel',aktiv:true,start:new Date().toISOString().slice(0,10),notizen:''};
-    db.mitglieder.push(m);
-    await sbUpsert('mitglieder',m);
+  var u={id:'U-'+Date.now(),name:name,pw:pw,rolle:(elQ('nu-rolle')||{value:'intern'}).value,agIds:[],ugIds:[],aktiv:true,farbe:'#4f7cff'};
+  db.nutzer.push(u); await sbUp('nutzer',u);
+  if(!db.mitglieder.find(function(m){return m.name===name;})){
+    var m={id:'P-'+Date.now(),name:name,kontakt:'',region:'',kompetenzen:'',verfueg:'mittel',aktiv:true,start:new Date().toISOString().slice(0,10),notizen:''};
+    db.mitglieder.push(m); await sbUp('mitglieder',m);
   }
-  toast('Nutzer & Mitglied erstellt &#10003;','ok'); renderEinst();
+  toast('Nutzer erstellt &#10003;','ok'); renderEinst();
 }
 function editNutzer(id){
   var u=db.nutzer.find(function(x){return x.id===id;}); if(!u) return;
-  var agO=db.ags.map(function(a){
-    return '<option value="'+a.id+'"'+(u.agIds.includes(a.id)||u.agIds.includes('*')?' selected':'')+'>'+a.id+' - '+a.name+'</option>';
-  }).join('');
-  var ugO=db.ugs.map(function(g){
-    return '<option value="'+g.id+'"'+(u.ugIds.includes(g.id)||u.ugIds.includes('*')?' selected':'')+'>'+g.id+' - '+g.name+'</option>';
-  }).join('');
-  var h='<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:480px">'
-    +'<h3 style="font-size:14px;margin-bottom:14px">Nutzer bearbeiten: '+u.name+'</h3>'
+  var agO=db.ags.map(function(a){return '<option value="'+a.id+'"'+(u.agIds.includes(a.id)||u.agIds.includes('*')?' selected':'')+'>'+a.id+' - '+a.name+'</option>';}).join('');
+  var ugO=db.ugs.map(function(g){return '<option value="'+g.id+'"'+(u.ugIds.includes(g.id)||u.ugIds.includes('*')?' selected':'')+'>'+g.id+' - '+g.name+'</option>';}).join('');
+  var c=el('content');
+  c.innerHTML='<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="renderEinst()">&larr; Zur&uuml;ck</button>'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:480px">'
+    +'<h3 style="font-size:14px;margin:0 0 14px">Nutzer: '+u.name+'</h3>'
     +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name</label>'
     +'<input id="eu-name" value="'+u.name+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
-    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Neues Passwort (leer = unveraendert)</label>'
-    +'<input id="eu-pw" type="password" placeholder="Neues PW..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Neues PW (leer = unver&auml;ndert)</label>'
+    +'<input id="eu-pw" type="password" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
     +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Rolle</label>'
     +'<select id="eu-rolle" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px">'
-    +['SuperAdmin','Admin','Editor','intern'].map(function(r){return '<option'+(u.rolle===r?' selected':'')+'>'+r+'</option>';}).join('')
-    +'</select></div>'
-    +'<div style="margin-bottom:6px"><label style="font-size:11px;color:var(--muted);cursor:pointer">'
-    +'<input type="checkbox" id="eu-ag-all"'+(u.agIds.includes('*')?' checked':'')+'> Alle AGs</label></div>'
-    +'<select id="eu-ags" multiple style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:6px;font-size:11px;min-height:60px;margin-bottom:10px">'
-    +agO+'</select>'
-    +'<div style="margin-bottom:6px"><label style="font-size:11px;color:var(--muted);cursor:pointer">'
-    +'<input type="checkbox" id="eu-ug-all"'+(u.ugIds.includes('*')?' checked':'')+'> Alle UGs</label></div>'
-    +'<select id="eu-ugs" multiple style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:6px;font-size:11px;min-height:60px;margin-bottom:14px">'
-    +ugO+'</select>'
-    +'<div style="display:flex;gap:8px">'
-    +'<button class="btn btn-primary btn-sm" data-id="'+id+'" onclick="saveEditNutzer(this.dataset.id)">Speichern</button>'
+    +['SuperAdmin','Admin','Editor','intern'].map(function(r){return '<option'+(u.rolle===r?' selected':'')+'>'+r+'</option>';}).join('')+'</select></div>'
+    +'<div style="margin-bottom:6px"><label style="font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox" id="eu-ag-all"'+(u.agIds.includes('*')?' checked':'')+' style="margin-right:5px"> Alle AGs</label></div>'
+    +'<select id="eu-ags" multiple style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:6px;font-size:11px;min-height:60px;margin-bottom:10px">'+agO+'</select>'
+    +'<div style="margin-bottom:6px"><label style="font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox" id="eu-ug-all"'+(u.ugIds.includes('*')?' checked':'')+' style="margin-right:5px"> Alle UGs</label></div>'
+    +'<select id="eu-ugs" multiple style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:6px;font-size:11px;min-height:60px;margin-bottom:14px">'+ugO+'</select>'
+    +'<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" data-uid="'+id+'" onclick="saveEditNutzer(this.dataset.uid)">Speichern</button>'
     +'<button class="btn btn-ghost btn-sm" onclick="renderEinst()">Abbrechen</button></div></div>';
-  elQ('content').innerHTML=h;
-  // Set initial opacity
-  var eas=elQ('eu-ags'),eal=elQ('eu-ag-all');
-  if(eas&&eal){ eas.style.opacity=eal.checked?'.4':'1'; eal.onchange=function(){eas.style.opacity=this.checked?'.4':'1';}; }
-  var eus=elQ('eu-ugs'),eul=elQ('eu-ug-all');
-  if(eus&&eul){ eus.style.opacity=eul.checked?'.4':'1'; eul.onchange=function(){eus.style.opacity=this.checked?'.4':'1';}; }
 }
 async function saveEditNutzer(id){
   var u=db.nutzer.find(function(x){return x.id===id;}); if(!u) return;
@@ -3058,24 +3415,20 @@ async function saveEditNutzer(id){
   var ugAll=elQ('eu-ug-all')&&elQ('eu-ug-all').checked;
   u.agIds=agAll?['*']:Array.from((elQ('eu-ags')||{selectedOptions:[]}).selectedOptions).map(function(o){return o.value;});
   u.ugIds=ugAll?['*']:Array.from((elQ('eu-ugs')||{selectedOptions:[]}).selectedOptions).map(function(o){return o.value;});
-  await sbUpsert('nutzer',u); toast('Gespeichert &#10003;','ok'); renderEinst();
+  await sbUp('nutzer',u); toast('Gespeichert &#10003;','ok'); renderEinst();
 }
 async function toggleNutzerAktiv(id){
   var u=db.nutzer.find(function(x){return x.id===id;}); if(!u||u.rolle==='SuperAdmin') return;
-  u.aktiv=u.aktiv===false?true:false; await sbUpsert('nutzer',u);
-  toast(u.aktiv?'Freigeschaltet':'Gesperrt','ok'); renderEinst();
+  u.aktiv=u.aktiv===false; await sbUp('nutzer',u); toast(u.aktiv?'Freigeschaltet':'Gesperrt','ok'); renderEinst();
 }
 
 // ── KI ────────────────────────────────────────────────────
 async function aiCall(prompt, maxTokens){
   maxTokens=maxTokens||1500;
-  // Auto-detect: use whichever key is available
   if(aiProvider==='claude'&&apiKey) return aiCallClaude(prompt,maxTokens);
-  if(aiProvider==='gemini'&&geminiKey) return aiCallGemini(prompt,maxTokens);
-  // Fallback: try any available key
   if(geminiKey) return aiCallGemini(prompt,maxTokens);
   if(apiKey) return aiCallClaude(prompt,maxTokens);
-  throw new Error('Kein API-Key eingetragen. Bitte unter Einstellungen eintragen.');
+  throw new Error('Kein API-Key. Bitte in Einstellungen eintragen.');
 }
 async function aiCallClaude(prompt,maxTokens){
   var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true','x-api-key':apiKey},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})});
@@ -3083,133 +3436,93 @@ async function aiCallClaude(prompt,maxTokens){
   var d=await r.json(); return d.content.map(function(b){return b.text||'';}).join('');
 }
 async function aiCallGemini(prompt,maxTokens){
-  var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:Math.max(100,maxTokens),temperature:0.3}})});
-  if(!r.ok){ var e=await r.json().catch(function(){return {};}); throw new Error('Gemini: '+(e.error&&e.error.message||'HTTP '+r.status)); }
+  // Use /v1/ (stable) instead of /v1beta/
+  var r=await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:Math.max(100,maxTokens),temperature:0.3}})});
+  if(!r.ok){ var e=await r.json().catch(function(){return {};}); throw new Error('Gemini: '+((e.error&&e.error.message)||'HTTP '+r.status)); }
   var d=await r.json(); return (d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||'';
 }
 
 // ── Konzept Upload ────────────────────────────────────────
 function renderKonzeptUpload(){
+  var c=el('content'); if(!c) return;
   var tOpts='<option value="">-- Kein Bezug --</option>'
-    +db.ags.map(function(a){return '<option value="'+a.id+'">[AG] '+a.id+' - '+a.name+'</option>';}).join('')
-    +db.ugs.map(function(u){return '<option value="'+u.id+'">[UG] '+u.id+' - '+u.name+'</option>';}).join('');
-  
-  // Build HTML using DOM to avoid quoting issues
-  var div = document.createElement('div');
-  div.style.maxWidth = '640px';
-  div.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px">'
-    +'<h3 style="font-size:14px;margin-bottom:14px">&#128204; Konzept hochladen &amp; analysieren</h3>'
-    +'<div style="margin-bottom:12px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Zuordnung</label>'
-    +'<select id="up-tgt" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px">'+tOpts+'</select></div>'
-    +'<div id="up-zone" style="border:2px dashed var(--border);border-radius:10px;padding:36px;text-align:center;cursor:pointer">'
-    +'<div style="font-size:32px;margin-bottom:8px">&#128196;</div>'
-    +'<p style="font-size:13px;font-weight:600;margin-bottom:4px">Datei hier ablegen</p>'
-    +'<p style="font-size:11px;color:var(--muted)">oder klicken &middot; TXT, MD &middot; max 2MB</p></div>'
+    +db.ags.map(function(a){return '<option value="'+a.id+'">[AG] '+a.name+'</option>';}).join('')
+    +db.ugs.map(function(u){return '<option value="'+u.id+'">[UG] '+u.name+'</option>';}).join('');
+  var wrap=document.createElement('div'); wrap.style.maxWidth='640px';
+  wrap.innerHTML='<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px">'
+    +'<h3 style="font-size:14px;margin:0 0 14px">&#128204; Konzept hochladen</h3>'
+    +'<select id="up-tgt" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;margin-bottom:12px">'+tOpts+'</select>'
+    +'<div id="up-zone" style="border:2px dashed var(--border);border-radius:10px;padding:36px;text-align:center;cursor:pointer"><div style="font-size:32px;margin-bottom:8px">&#128196;</div><p style="font-size:13px;font-weight:600;margin-bottom:4px">Datei ablegen oder klicken</p><p style="font-size:11px;color:var(--muted)">TXT, MD &middot; max 2MB</p></div>'
     +'<input type="file" id="up-file" accept=".txt,.md" style="display:none"></div>'
     +'<div id="up-preview" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">'
     +'<div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong id="up-fname"></strong><span id="up-fsize" style="color:var(--muted);font-size:11px"></span></div>'
     +'<div id="up-text-pre" style="background:var(--card2);border-radius:6px;padding:10px;font-size:11px;color:var(--muted2);max-height:100px;overflow-y:auto;white-space:pre-wrap;margin-bottom:12px"></div>'
-    +'<div style="display:flex;gap:8px">'
-    +'<button class="btn btn-primary btn-sm" onclick="analyzeKonzept()">&#10024; KI analysieren</button>'
-    +'<button class="btn btn-ghost btn-sm" onclick="manualKonzept()">&#128203; Manuell</button></div></div>'
+    +'<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="analyzeKonzept()">&#10024; KI analysieren</button></div></div>'
     +'<div id="up-result"></div>';
-  
-  elQ('content').innerHTML = '';
-  elQ('content').appendChild(div);
-  window._uploadText = '';
-  
-  // Attach events properly (no inline handlers with quotes)
-  var zone = elQ('up-zone');
-  var fileInp = elQ('up-file');
-  if(zone && fileInp){
-    zone.onclick = function(){ fileInp.click(); };
-    zone.ondragover = function(e){ e.preventDefault(); zone.style.borderColor='#4f7cff'; };
-    zone.ondragleave = function(){ zone.style.borderColor='var(--border)'; };
-    zone.ondrop = function(e){ e.preventDefault(); zone.style.borderColor='var(--border)'; handleUpDrop(e); };
-    fileInp.onchange = function(){ handleUpFile(this); };
+  c.innerHTML=''; c.appendChild(wrap);
+  window._uploadText='';
+  var zone=document.getElementById('up-zone'), finp=document.getElementById('up-file');
+  if(zone&&finp){
+    zone.onclick=function(){ finp.click(); };
+    zone.ondragover=function(e){ e.preventDefault(); zone.style.borderColor='#4f7cff'; };
+    zone.ondragleave=function(){ zone.style.borderColor='var(--border)'; };
+    zone.ondrop=function(e){ e.preventDefault(); zone.style.borderColor='var(--border)'; if(e.dataTransfer.files[0]) processUpFile(e.dataTransfer.files[0]); };
+    finp.onchange=function(){ if(this.files[0]) processUpFile(this.files[0]); };
   }
 }
-function handleUpDrop(e){ var f=e.dataTransfer.files[0]; if(f) processUpFile(f); }
-function handleUpFile(inp){ var f=inp.files[0]; if(f) processUpFile(f); }
 function processUpFile(file){
-  if(file.size>2*1024*1024){ toast('Datei zu gro&szlig; (max 2MB)','error'); return; }
+  if(file.size>2*1024*1024){ toast('Zu gro&szlig; (max 2MB)','error'); return; }
   var r=new FileReader();
   r.onload=function(e){
     window._uploadText=e.target.result;
-    elQ('up-fname').textContent=file.name;
-    elQ('up-fsize').textContent=(file.size/1024).toFixed(1)+'KB';
-    elQ('up-text-pre').textContent=window._uploadText.slice(0,400)+(window._uploadText.length>400?'…':'');
-    elQ('up-preview').style.display='';
+    document.getElementById('up-fname').textContent=file.name;
+    document.getElementById('up-fsize').textContent=(file.size/1024).toFixed(1)+'KB';
+    document.getElementById('up-text-pre').textContent=window._uploadText.slice(0,400)+(window._uploadText.length>400?'...':'');
+    document.getElementById('up-preview').style.display='';
   };
   r.readAsText(file,'UTF-8');
 }
 async function analyzeKonzept(){
-  if(!geminiKey&&!apiKey){ toast('Bitte zuerst API-Key in Einstellungen eintragen','error'); return; }
+  if(!geminiKey&&!apiKey){ toast('Bitte API-Key in Einstellungen eintragen','error'); return; }
   var text=window._uploadText||''; if(!text){ toast('Keine Datei geladen','error'); return; }
-  elQ('up-result').innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:8px"><div style="display:flex;gap:5px"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div><span style="font-size:12px;color:var(--muted)">KI analysiert&hellip;</span></div>';
-  var p='Analysiere dieses Konzeptdokument. Antworte NUR mit JSON (keine Backticks):\n{"name":"Titel","ziel":"Hauptziel","struktur":"Struktur","aufgaben":[{"titel":"Task","verantw":"Person","prio":"Hoch"}],"mitglieder":[{"name":"Name","rolle":"Rolle"}]}\n\nDokument:\n'+text.slice(0,4000);
+  var res=document.getElementById('up-result');
+  res.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:8px"><div style="width:16px;height:16px;border:2px solid #4f7cff;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite"></div><span style="font-size:12px;color:var(--muted)">KI analysiert...</span></div>';
+  var p='Analysiere dieses Dokument. JSON-Antwort (keine Backticks):\n{"name":"Titel","ziel":"Ziel","struktur":"Struktur","aufgaben":[{"titel":"T","verantw":"P","prio":"Hoch"}],"mitglieder":[{"name":"N","rolle":"R"}]}\n\nDokument:\n'+text.slice(0,4000);
   try{
     var raw=await aiCall(p,2000);
     var json=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    var tid=(elQ('up-tgt')||{value:''}).value, isAGe=db.ags.some(function(a){return a.id===tid;});
-    var k={id:'KON-'+Date.now(),entityId:tid,entityTyp:isAGe?'AG':'UG',name:json.name||'Konzept',version:'1.0',status:'Entwurf',ziel:json.ziel||'',struktur:json.struktur||'',aw:'',ns:'',op:'',stand:new Date().toISOString().slice(0,10),verantw:'KI'};
-    db.konzepte.push(k); await sbUpsert('konzepte',k);
-    var tc=0;
-    if(json.aufgaben&&Array.isArray(json.aufgaben)){
-      for(var i=0;i<json.aufgaben.length;i++){
-        var ta=json.aufgaben[i]; if(!ta.titel) continue;
-        var tobj={id:'T-'+Date.now()+'-'+i,entityTyp:isAGe?'AG':'UG',entityId:tid,titel:ta.titel,verantw:ta.verantw||'',faellig:'',prio:ta.prio||'Mittel',status:'Offen',freigabe:false,sensibel:'Nein',naechster:'',notizen:''};
-        db.aufgaben.push(tobj); await sbUpsert('aufgaben',tobj); tc++;
+    var tid=(document.getElementById('up-tgt')||{value:''}).value;
+    var isAGe=db.ags.some(function(a){return a.id===tid;});
+    var k={id:'KON-'+Date.now(),entityId:tid,entityTyp:isAGe?'AG':'UG',name:json.name||'Konzept',version:'1.0',status:'Entwurf',ziel:json.ziel||'',struktur:json.struktur||'',aw:'',ns:'',op:'',stand:new Date().toISOString().slice(0,10),verantw:curUser?curUser.name:''};
+    db.konzepte.push(k); await sbUp('konzepte',k);
+    var tc=0,mc=0;
+    if(json.aufgaben) for(var i=0;i<json.aufgaben.length;i++){
+      var ta=json.aufgaben[i]; if(!ta.titel) continue;
+      var tobj={id:'T-'+Date.now()+'-'+i,entityTyp:isAGe?'AG':'UG',entityId:tid,titel:ta.titel,verantw:ta.verantw||'',faellig:'',prio:ta.prio||'Mittel',status:'Offen',freigabe:false,sensibel:'Nein',naechster:'',notizen:''};
+      db.aufgaben.push(tobj); await sbUp('aufgaben',tobj); tc++;
+    }
+    if(json.mitglieder) for(var j=0;j<json.mitglieder.length;j++){
+      var mj=json.mitglieder[j]; if(!mj.name) continue;
+      if(!db.mitglieder.find(function(x){return x.name.toLowerCase()===mj.name.toLowerCase();})){
+        var mobj={id:'P-'+Date.now()+'-'+j,name:mj.name,kontakt:'',region:'',kompetenzen:mj.rolle||'',verfueg:'mittel',aktiv:true,start:new Date().toISOString().slice(0,10),notizen:''};
+        db.mitglieder.push(mobj); await sbUp('mitglieder',mobj); mc++;
       }
     }
-    var mc=0;
-    if(json.mitglieder&&Array.isArray(json.mitglieder)){
-      for(var j=0;j<json.mitglieder.length;j++){
-        var mj=json.mitglieder[j]; if(!mj.name) continue;
-        if(!db.mitglieder.find(function(x){return x.name.toLowerCase()===mj.name.toLowerCase();})){
-          var mid='P-'+Date.now()+'-'+j;
-          var mobj={id:mid,name:mj.name,kontakt:'',region:'',kompetenzen:mj.rolle||'',verfueg:'mittel',aktiv:true,start:new Date().toISOString().slice(0,10),notizen:''};
-          db.mitglieder.push(mobj); await sbUpsert('mitglieder',mobj); mc++;
-        }
-      }
-    }
-    elQ('up-result').innerHTML='<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:14px">'
-      +'<div style="font-size:16px;margin-bottom:8px">&#10003; Erfolgreich eingetragen!</div>'
-      +'<div style="font-size:12px;line-height:1.8">&#128196; Konzept: <strong>'+json.name+'</strong><br>&#128203; Aufgaben: <strong>'+tc+'</strong><br>&#128100; Mitglieder: <strong>'+mc+'</strong></div>'
-      +'<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary btn-sm" data-nav="konzepte" onclick="navToView(this.dataset.nav)">Zum Archiv</button><button class="btn btn-ghost btn-sm" onclick="renderKonzeptUpload()">Weiteres hochladen</button></div></div>';
+    res.innerHTML='<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:14px">'
+      +'<div style="font-size:16px;margin-bottom:8px">&#10003; Fertig!</div>'
+      +'<div style="font-size:12px;line-height:1.8">Konzept: <strong>'+json.name+'</strong><br>Aufgaben: <strong>'+tc+'</strong><br>Mitglieder: <strong>'+mc+'</strong></div>'
+      +'<div style="display:flex;gap:8px;margin-top:12px">'
+      +'<button class="btn btn-primary btn-sm" onclick="renderKonzepte()">Zum Archiv</button>'
+      +'<button class="btn btn-ghost btn-sm" onclick="renderKonzeptUpload()">Weitere hochladen</button></div></div>';
     updateBadges();
-  }catch(e){ elQ('up-result').innerHTML='<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:14px"><strong style="color:#ef4444">Fehler:</strong> <span style="font-size:12px">'+e.message+'</span><br><button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="manualKonzept()">Manuell eingeben</button></div>'; }
-}
-function manualKonzept(){ nav(document.querySelector('[data-view="konzepte"]')); }
-
-// ── setMode: show UGs in workspace nav ───────────────────
-var _origSetMode=setMode;
-setMode=function(m,btn){
-  _origSetMode(m,btn);
-  if(m==='ag'){
-    var list=el('ag-nav-list');
-    var html='';
-    db.ags.filter(function(a){ return isSA()||canSee(a.id); }).forEach(function(a){
-      html+='<div class="nav-item" data-ag="'+a.id+'" onclick="openAgWorkspace(this.dataset.ag,this)" style="padding-left:20px;display:flex;align-items:center;gap:7px"><span style="width:8px;height:8px;border-radius:50%;background:'+(a.farbe||'var(--accent)')+';flex-shrink:0"></span>'+a.name+'</div>';
-      db.agUgLinks.filter(function(l){return l.agId===a.id;}).forEach(function(l){
-        var u=db.ugs.find(function(x){return x.id===l.ugId;});
-        if(!u||((!isSA())&&!canSee(u.id))) return;
-        html+='<div class="nav-item" data-ag="'+u.id+'" onclick="openAgWorkspace(this.dataset.ag,this)" style="padding-left:34px;font-size:11px;display:flex;align-items:center;gap:7px"><span style="color:var(--purple)">\u29C1</span>'+u.name+'</div>';
-      });
-    });
-    list.innerHTML=html;
-    var first=list.querySelector('.nav-item');
-    if(first) openAgWorkspace(first.getAttribute('data-ag'),first);
+  }catch(e){
+    res.innerHTML='<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:14px"><strong style="color:#ef4444">Fehler:</strong> <span style="font-size:12px">'+e.message+'</span></div>';
   }
-};
+}
 
-
-function navToView(view){ nav(document.querySelector('[data-view="'+view+'"]')); }
 // ── Boot ──────────────────────────────────────────────────
-// Show login on start (data loads on login click)
-window.addEventListener('load', function(){
-  elQ('login-overlay').style.display='flex';
-  // Pre-populate with local data for quick buttons before Supabase loads
+window.addEventListener('load',function(){
+  document.getElementById('login-overlay').style.display='flex';
   L_init();
 });
 
