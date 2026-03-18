@@ -2560,12 +2560,24 @@ function renderPosteingang(){
   if(!db.nachrichten.length) h+='<div style="text-align:center;padding:30px;color:var(--muted)"><div style="font-size:40px">&#128237;</div><h3>Keine Nachrichten</h3></div>';
   
   // Quick-PN buttons for each member
-  h += '<div style="margin-top:20px"><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">&#9889; Schnell-Nachricht senden</div>';
+  h += '<div style="margin-top:20px"><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">&#9889; Direkt-Nachricht senden</div>';
   h += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
-  db.mitglieder.filter(function(m){ return m.aktiv!==false && m.id!==curUser.id; }).forEach(function(m){
-    h += '<button class="btn btn-ghost btn-sm" style="display:flex;align-items:center;gap:6px;padding:6px 12px" data-name="'+m.name+'" onclick="openQuickNach(this.dataset.name)">'
-       + '<div style="width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+m.name.slice(0,2).toUpperCase()+'</div>'
-       + m.name+'</button>';
+  // Show all active nutzer (login accounts) except self
+  var recipients = db.nutzer.filter(function(u){ return u.aktiv!==false && u.name !== (curUser?curUser.name:''); });
+  // Also add mitglieder who are not nutzer
+  db.mitglieder.filter(function(m){
+    return m.aktiv!==false && !recipients.find(function(u){ return u.name===m.name; });
+  }).forEach(function(m){ recipients.push({name:m.name, rolle:'Mitglied'}); });
+  
+  if(!recipients.length){
+    h += '<span style="font-size:11px;color:var(--muted)">Keine anderen Mitglieder vorhanden.</span>';
+  }
+  recipients.forEach(function(u){
+    var initials = u.name.slice(0,2).toUpperCase();
+    var col = u.rolle==='SuperAdmin'?'#4f7cff':u.rolle==='Admin'?'#22c55e':u.rolle==='Editor'?'#a78bfa':'#6b7199';
+    h += '<button class="btn btn-ghost btn-sm" style="display:flex;align-items:center;gap:6px;padding:6px 12px" data-name="'+u.name+'" onclick="openNachModal(this.dataset.name)">'
+       + '<div style="width:24px;height:24px;border-radius:50%;background:'+col+';color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700">'+initials+'</div>'
+       + '<span>'+u.name+'</span></button>';
   });
   h += '</div></div>';
   
@@ -2628,12 +2640,13 @@ function openNachDet(id){
     +'<button class="btn btn-ghost btn-sm" data-id="'+id+'" onclick="delNach(this.dataset.id)">L&ouml;schen</button></div>';
   elQ('content').innerHTML=h;
 }
-function openNachModal(){
+function openNachModal(preRecipient){
+  preRecipient = preRecipient||'';
   var h='<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="renderPosteingang()">&larr; Zur&uuml;ck</button>'
       +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:480px">'
-      +'<h3 style="font-size:14px;margin-bottom:14px">Neue Nachricht</h3>'
+      +'<h3 style="font-size:14px;margin-bottom:14px">&#9993; Neue Nachricht'+(preRecipient?' an '+preRecipient:'')+'</h3>'
       +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">An</label>'
-      +'<input id="nach-an" placeholder="Empf&auml;nger&hellip;" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+      +'<input id="nach-an" value="'+preRecipient+'" placeholder="Empf&auml;nger&hellip;" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
       +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Betreff</label>'
       +'<input id="nach-betr" placeholder="Betreff&hellip;" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
       +'<div style="margin-bottom:12px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Text</label>'
@@ -2871,9 +2884,19 @@ function openNutzerForm(){
 async function saveNewNutzer(){
   var name=(elQ('nu-name')||{value:''}).value.trim(), pw=(elQ('nu-pw')||{value:''}).value;
   if(!name||!pw){ toast('Name und Passwort Pflicht','error'); return; }
-  var u={id:'U-'+String(db.nutzer.length+1).padStart(3,'0'),name:name,pw:pw,rolle:(elQ('nu-rolle')||{value:'intern'}).value,agIds:[],ugIds:[],aktiv:true,farbe:'#4f7cff'};
-  db.nutzer.push(u); await sbUpsert('nutzer',u);
-  toast('Nutzer erstellt','ok'); renderEinst();
+  // Create login account
+  var uid='U-'+String(db.nutzer.length+1).padStart(3,'0');
+  var u={id:uid,name:name,pw:pw,rolle:(elQ('nu-rolle')||{value:'intern'}).value,agIds:[],ugIds:[],aktiv:true,farbe:'#4f7cff'};
+  db.nutzer.push(u);
+  await sbUpsert('nutzer',u);
+  // Also create a Mitglied entry so they appear in PN buttons and member lists
+  if(!db.mitglieder.find(function(m){ return m.name===name; })){
+    var mid='P-'+Date.now();
+    var m={id:mid,name:name,kontakt:'',region:'',kompetenzen:'',verfueg:'mittel',aktiv:true,start:new Date().toISOString().slice(0,10),notizen:''};
+    db.mitglieder.push(m);
+    await sbUpsert('mitglieder',m);
+  }
+  toast('Nutzer & Mitglied erstellt &#10003;','ok'); renderEinst();
 }
 function editNutzer(id){
   var u=db.nutzer.find(function(x){return x.id===id;}); if(!u) return;
@@ -2945,7 +2968,7 @@ async function aiCallClaude(prompt,maxTokens){
   var d=await r.json(); return d.content.map(function(b){return b.text||'';}).join('');
 }
 async function aiCallGemini(prompt,maxTokens){
-  var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:Math.max(100,maxTokens),temperature:0.3}})});
+  var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:Math.max(100,maxTokens),temperature:0.3}})});
   if(!r.ok){ var e=await r.json().catch(function(){return {};}); throw new Error('Gemini: '+(e.error&&e.error.message||'HTTP '+r.status)); }
   var d=await r.json(); return (d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||'';
 }
