@@ -990,6 +990,10 @@ function konzeptToText(k){
     k.ziel&&`Zielsetzung:\n${k.ziel}`,
     k.zielgruppe&&`\nZielgruppen:\n${k.zielgruppe}`,
     k.schwerpunkte&&`\nInhaltliche Schwerpunkte:\n${k.schwerpunkte}`,
+    k.struktur&&`\nStruktur:\n${k.struktur}`,
+    k.aw&&`\nArbeitsweise:\n${k.aw}`,
+    k.ns&&`\nN\u00e4chste Schritte:\n${k.ns}`,
+    k.op&&`\nOffene Punkte:\n${k.op}`,
     k.struktur&&`\nStruktur / Rollen:\n${k.struktur}`,
     k.sollgroesse&&`\nSollgröße: ${k.sollgroesse} Personen`,
     k.arbeitsweise&&`\nArbeitsweise:\n${k.arbeitsweise}`,
@@ -1900,7 +1904,8 @@ function openAgWorkspace(agId,navEl2){
   document.querySelectorAll('[data-ag]').forEach(n=>n.classList.remove('active'));
   navEl2?.classList.add('active');
   curView='ws_'+agId;
-  const ag=db.ags.find(a=>a.id===agId);if(!ag)return;
+  const ag=db.ags.find(a=>a.id===agId);
+  if(!ag){ openUGWorkspace(agId,navEl2); return; }
   el('tb-title').textContent=ag.name+' – Workspace';
   el('tb-btn').style.display='none';
 
@@ -1979,6 +1984,115 @@ function openAgWorkspace(agId,navEl2){
   <div class="tab-content" id="ws-konz">
     ${renderWsKonzept(agId)}
   </div>`;
+}
+
+function openUGWorkspace(ugId, navEl2){
+  document.querySelectorAll('[data-ag]').forEach(function(n){ n.classList.remove('active'); });
+  if(navEl2) navEl2.classList.add('active');
+  curView='ws_'+ugId;
+  var ug=db.ugs.find(function(u){ return u.id===ugId; }); if(!ug) return;
+  el('tb-title').textContent=ug.name+' \u2013 Workspace';
+  el('tb-btn').style.display='none';
+
+  var ws=wsOf(ugId);
+  var members=db.rollen.filter(function(r){ return r.entityId===ugId&&r.aktiv; })
+    .map(function(r){ return db.mitglieder.find(function(m){ return m.id===r.personId; }); }).filter(Boolean);
+  var tasks=db.aufgaben.filter(function(t){ return t.entityId===ugId; });
+  var done=tasks.filter(function(t){ return t.status==='Erledigt'; }).length;
+  var pct=tasks.length?Math.round(done/tasks.length*100):0;
+  var konzept=db.konzepte.find(function(k){ return k.entityId===ugId; });
+  var notizen=db.notizen.filter(function(n){ return n.targetId===ugId; });
+  var msgs=chatOf(ugId);
+
+  el('content').innerHTML=
+    '<div class="ws-header">'
+    +'<div class="fbet mb12"><div><h2>\u29C1 '+ug.name+'</h2><p style="color:var(--muted2);font-size:12px">'+(ug.fokus||ug.typ||'Untergruppe')+'</p></div>'
+    +'<div class="frow">'+sbadge(ug.status)+pbadge(ug.prio||'Mittel')+'</div></div>'
+    +'<div class="fbet"><span style="font-size:11px;color:var(--muted2)">Fortschritt: '+done+'/'+tasks.length+'</span>'
+    +'<span style="font-size:11px;color:var(--accent)">'+pct+'%</span></div>'
+    +'<div class="prog-bar mt12"><div class="prog-fill" style="width:'+pct+'%"></div></div></div>'
+
+    +'<div class="tabs" id="ws-tabs">'
+    +'<div class="tab active" data-tab="ws-aufg" onclick="switchTab(this,this.dataset.tab)">\ud83d\udccb Aufgaben ('+tasks.filter(function(t){return t.status!=='Erledigt';}).length+')</div>'
+    +'<div class="tab" data-tab="ws-team" onclick="switchTab(this,this.dataset.tab)">\ud83d\udc65 Team ('+members.length+')</div>'
+    +'<div class="tab" data-tab="ws-docs" onclick="switchTab(this,this.dataset.tab)">\ud83d\udcc1 Dokumente</div>'
+    +'<div class="tab" data-tab="ws-proto" onclick="switchTab(this,this.dataset.tab)">\ud83d\udcdd Protokolle</div>'
+    +'<div class="tab" data-tab="ws-konz" onclick="switchTab(this,this.dataset.tab)">\ud83d\udcc4 Konzept</div>'
+    +'<div class="tab" data-tab="ws-chat" onclick="switchTab(this,this.dataset.tab)">\ud83d\udcac Chat ('+msgs.length+')</div>'
+    +'<div class="tab" data-tab="ws-notes" onclick="switchTab(this,this.dataset.tab)">\ud83d\udccc Notizen ('+notizen.length+')</div>'
+    +'</div>'
+
+    +'<div class="tab-content active" id="ws-aufg">'
+    +'<div class="fbet mb12"><span style="font-size:13px;font-weight:600">Aufgaben</span>'
+    +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="openTaskModal(null,this.dataset.eid)">+ Aufgabe</button></div>'
+    +'<div id="ws-ug-tasks"></div></div>'
+
+    +'<div class="tab-content" id="ws-team"><div id="ws-ug-team"></div></div>'
+
+    +'<div class="tab-content" id="ws-docs">'
+    +'<div class="fbet mb12"><span>Dokumente</span>'
+    +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="wsAddDoc(this.dataset.eid)">+ Dokument</button></div>'
+    +'<div id="ws-ug-docs"></div></div>'
+
+    +'<div class="tab-content" id="ws-proto">'
+    +'<div class="fbet mb12"><span>Protokolle</span>'
+    +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="wsAddProto(this.dataset.eid)">+ Protokoll</button></div>'
+    +'<div id="ws-ug-protos"></div></div>'
+
+    +'<div class="tab-content" id="ws-konz"><div id="ws-ug-konz"></div></div>'
+
+    +'<div class="tab-content" id="ws-chat">'
+    +'<div id="chatbox-ws-'+ugId+'" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;height:300px;overflow-y:auto;margin-bottom:8px"></div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<input type="text" id="ws-chat-inp-'+ugId+'" placeholder="Nachricht\u2026" style="flex:1;background:var(--bg);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px" data-eid="'+ugId+'" onkeydown="if(event.keyCode===13)wsSendChat(this.dataset.eid)">'
+    +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="wsSendChat(this.dataset.eid)">Senden</button>'
+    +'</div></div>'
+
+    +'<div class="tab-content" id="ws-notes">'
+    +'<div class="fbet mb12"><span>Notizen</span>'
+    +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="openNotizForm(this.dataset.eid)">+ Notiz</button></div>'
+    +'<div id="ws-ug-notes"></div></div>';
+
+  // Populate
+  var tl=el('ws-ug-tasks');
+  if(tl) tl.innerHTML=tasks.length?tasks.map(function(t){return taskRowHtml(t);}).join(''):'<p style="color:var(--muted);font-size:12px">Keine Aufgaben.</p>';
+
+  var ml=el('ws-ug-team');
+  if(ml) ml.innerHTML=members.length?members.map(function(m){
+    var rol=db.rollen.find(function(r){return r.personId===m.id&&r.entityId===ugId;});
+    return '<div class="mitem">'+avatar(m.name,28,10)+'<div class="minfo"><div class="mname">'+m.name+'</div><div class="mrole">'+(rol?rol.rolle:'')+'</div></div></div>';
+  }).join(''):'<p style="color:var(--muted);font-size:12px">Keine Mitglieder.</p>';
+
+  renderWsDocs(ugId);
+  renderWsProtos(ugId);
+
+  var kl=el('ws-ug-konz');
+  if(kl){
+    if(konzept) kl.innerHTML='<div class="fbet mb12"><strong>'+konzept.name+'</strong>'+sbadge(konzept.status)+'</div>'
+      +'<div class="concept-box">'+konzeptToText(konzept).replace(/\n/g,'<br>')+'</div>';
+    else kl.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)"><div style="font-size:32px">&#128196;</div><h3>Kein Konzept</h3>'
+      +'<button class="btn btn-primary btn-sm" data-eid="'+ugId+'" onclick="openKonzeptModal(this.dataset.eid)" style="margin-top:8px">+ Konzept erstellen</button></div>';
+  }
+
+  var cb=el('chatbox-ws-'+ugId);
+  if(cb){
+    cb.innerHTML=msgs.length?msgs.map(function(m){
+      var mine=m.autor===(curUser?curUser.name:'');
+      return '<div style="margin-bottom:8px;text-align:'+(mine?'right':'left')+'">'
+        +'<div style="display:inline-block;background:'+(mine?'rgba(79,124,255,.25)':'var(--card2)')+';border:1px solid var(--border);border-radius:8px;padding:6px 10px;max-width:75%">'
+        +'<div style="font-size:12px">'+m.text+'</div>'
+        +'<div style="font-size:10px;color:var(--muted2);margin-top:2px">'+m.autor+' &middot; '+m.ts+'</div></div></div>';
+    }).join(''):'<p style="text-align:center;padding:20px;color:var(--muted);font-size:12px">Noch keine Nachrichten.</p>';
+    setTimeout(function(){ cb.scrollTop=cb.scrollHeight; },60);
+  }
+
+  var nl=el('ws-ug-notes');
+  if(nl) nl.innerHTML=notizen.length?notizen.map(function(n){
+    var col=n.prio==='Dringend'?'#ef4444':n.prio==='Wichtig'?'#f59e0b':'var(--border)';
+    return '<div style="background:var(--card2);border:1px solid var(--border);border-left:3px solid '+col+';border-radius:8px;padding:10px;margin-bottom:6px">'
+      +'<div style="font-size:12px">'+n.text+'</div>'
+      +'<div style="font-size:10px;color:var(--muted2);margin-top:4px">'+n.autor+' &middot; '+n.ts+'</div></div>';
+  }).join(''):'<p style="color:var(--muted);font-size:12px">Keine Notizen.</p>';
 }
 
 function renderWsDocs(agId){
@@ -2621,7 +2735,8 @@ async function sendQuickNach(toName){
   toast('Nachricht an '+toName+' gesendet &#10003;','ok');
 }
 function openNachDet(id){
-  var n=db.nachrichten.find(function(x){return x.id===id;}); if(!n) return;
+  console.log('openNachDet id=',id,'nachrichten=',db.nachrichten.map(function(n){return n.id;}));
+  var n=db.nachrichten.find(function(x){return x.id===id;}); if(!n){ toast('Nachricht nicht gefunden: '+id,'error'); return; }
   n.gelesen=true; sbUpsert('nachrichten',n); updateBadges();
   var h='<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="renderPosteingang()">&larr; Zur&uuml;ck</button>'
       +'<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px">'
@@ -2968,7 +3083,7 @@ async function aiCallClaude(prompt,maxTokens){
   var d=await r.json(); return d.content.map(function(b){return b.text||'';}).join('');
 }
 async function aiCallGemini(prompt,maxTokens){
-  var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:Math.max(100,maxTokens),temperature:0.3}})});
+  var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:Math.max(100,maxTokens),temperature:0.3}})});
   if(!r.ok){ var e=await r.json().catch(function(){return {};}); throw new Error('Gemini: '+(e.error&&e.error.message||'HTTP '+r.status)); }
   var d=await r.json(); return (d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||'';
 }
