@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana AG-Verwaltung V3</title>
+<title>Mariana CSC - AG-Verwaltung V15</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -333,7 +333,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V14</div>
+    <div class="login-sub">AG-Verwaltung V15</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -398,7 +398,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V14</p>
+    <p>AG-Verwaltung V15</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -1485,9 +1485,13 @@ let netTransform={x:0,y:0,scale:1}, netHighlightId='';
 
 function renderNet(){
   const canvas=el('net-canvas');if(!canvas)return;
-  const W=canvas.offsetWidth,H=Math.max(480,window.innerHeight-220);
-  canvas.height=H;
+  const dpr=window.devicePixelRatio||1;
+  const W=Math.max(canvas.offsetWidth||canvas.parentElement?.offsetWidth||800, 600);
+  const H=Math.max(520,window.innerHeight-230);
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
   const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
 
   // Build nodes
   netNodes=[];netEdges=[];
@@ -2043,14 +2047,10 @@ document.addEventListener('click',function(e){
 
 // ── PATCH renderView ──
 var _origRV=renderView;
-renderView=function(view){
-  if(view==='posteingang'){ renderPosteingang(); return; }
-  if(view==='freigaben'){   renderFreigaben();   return; }
-  if(view==='notizen'){     renderNotizen();     return; }
-  if(view==='allchats'){    renderAllchats();    return; }
-  if(view==='einst'){       renderEinst();       return; }
-  _origRV(view);
-};
+// V9 renderView - will be overridden by V15
+var _origRV=renderView;
+window._origRV=_origRV;
+renderView=function(view){ _origRV(view); };
 
 // ── PATCH nav to update badges ──
 var _origNav=nav;
@@ -2644,11 +2644,15 @@ function toggleLivePanel(){ var p=G('livepanel');if(!p) return; p.style.display=
 setInterval(function(){if(bc&&curUser) bc.postMessage({type:'presence',name:curUser.name,view:curView||'',farbe:curUser.farbe});},10000);
 
 // renderView / nav overrides
-var _RV=renderView;
+// Final renderView - overrides any previous versions
+var _RV=window._origRV||renderView;
 renderView=function(view){
   var m={posteingang:renderPosteingang,freigaben:renderFreigaben,notizen:renderNotizen,allchats:renderAllchats,einst:renderEinst,upload:renderKonzeptUpload,konzepte:renderKonzepte};
-  if(m[view]){m[view]();return;} _RV(view);
+  if(m[view]){m[view]();return;}
+  // V3/V9 views
+  _RV(view);
 };
+window._origRV=_RV;
 var _nav=nav;
 nav=function(el2){
   _nav(el2); updateBadges();
@@ -3287,7 +3291,7 @@ async function aiCallClaude(p,maxT){
   var d=await r.json(); return d.content.map(function(b){return b.text||'';}).join('');
 }
 async function aiCallGemini(p,maxT){
-  var r=await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:p}]}],generationConfig:{maxOutputTokens:Math.max(100,maxT),temperature:0.3}})});
+  var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:p}]}],generationConfig:{maxOutputTokens:Math.max(100,maxT),temperature:0.3}})});
   if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error('Gemini: '+((e.error&&e.error.message)||'HTTP '+r.status));}
   var d=await r.json(); return (d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||'';
 }
