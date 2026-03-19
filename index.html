@@ -2576,7 +2576,7 @@ function renderTaskCards(tasks,entityId){
       +(t.verantw?'<span style="margin-right:8px">&#128100; '+t.verantw+'</span>':'')
       +(t.faellig?'<span style="color:'+(ov?'#ef4444':'var(--muted)')+'">&#128197; '+t.faellig+(ov?' &#9888;':'')+'</span>':'')
       +'</div></div>'
-      +'<select style="background:rgba(0,0,0,.25);color:'+tc+';border:1px solid '+tc+';border-radius:5px;font-size:10px;padding:2px 5px;cursor:pointer;flex-shrink:0" data-tid="'+t.id+'" onclick="event.stopPropagation()" onchange="wsChangeStatus(this.dataset.tid,this.value)">'+sopts+'</select>'
+      +'<select style="background:rgba(0,0,0,.25);color:'+tc+';border:1px solid '+tc+';border-radius:5px;font-size:10px;padding:2px 4px;cursor:pointer;flex-shrink:0;max-width:110px" data-tid="'+t.id+'" onclick="event.stopPropagation()" onchange="wsChangeStatus(this.dataset.tid,this.value)">'+sopts+'</select>'
       +(isAdmin()?'<button style="background:none;border:none;color:#ef4444;cursor:pointer;padding:1px 6px;font-size:16px;line-height:1;flex-shrink:0" data-tid="'+t.id+'" onclick="event.stopPropagation();delTaskWS(this.dataset.tid)">&#215;</button>':'')
       +'</div></div>';
   }).join('')+'</div>';
