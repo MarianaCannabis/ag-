@@ -730,9 +730,7 @@ function setMode(m,btn){
   el('admin-nav').style.display=m==='admin'?'':'none';
   el('ag-nav').style.display=m==='ag'?'':'none';
   if(m==='ag'){
-    // populate ag nav list
-    el('ag-nav-list').innerHTML=db.ags.map(a=>`<div class="nav-item" data-ag="${a.id}" onclick="openAgWorkspace('${a.id}',this)"style="padding-left:20px"><span style="width:8px;height:8px;border-radius:50%;background:${a.farbe||'var(--accent)'}"></span>${a.name}</div>`).join('');
-    if(db.ags.length)openAgWorkspace(db.ags[0].id,el('ag-nav-list').querySelector('.nav-item'));
+    // AG-nav wird vom _SM-Override befüllt
   }else{
     el('tb-title').textContent='Dashboard';el('tb-btn').style.display='';el('tb-btn').textContent='+ Neue AG';
     renderView('dashboard');
@@ -2341,21 +2339,35 @@ setMode=function(m,btn){
   _SM(m,btn);
   if(m==='ag'){
     var list=el('ag-nav-list'); if(!list) return;
-    var html='';
-    db.ags.filter(function(a){return isSA()||canSee(a.id);}).forEach(function(a){
-      html+='<div class="nav-item ws-nav-item" data-eid="'+a.id+'" style="padding-left:18px;display:flex;align-items:center;gap:7px"><span style="width:8px;height:8px;border-radius:50%;background:'+(a.farbe||'#4f7cff')+';flex-shrink:0"></span>'+a.name+'</div>';
+    var visAGs=db.ags.filter(function(a){return isSA()||canSee(a.id);});
+    if(!visAGs.length){
+      list.innerHTML='<div style="padding:12px;font-size:11px;color:var(--muted)">Keine AGs vorhanden</div>';
+      el('content').innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:var(--muted)"><div style="font-size:36px;margin-bottom:12px">&#127963;&#65039;</div><p>Keine Arbeitsgruppen vorhanden.<br>Wechsle zu Admin-Ansicht um AGs anzulegen.</p></div>';
+      return;
+    }
+    var h='';
+    visAGs.forEach(function(a){
+      h+='<div class="nav-item ws-nav-item" data-eid="'+a.id+'" style="padding-left:18px;display:flex;align-items:center;gap:7px">'
+        +'<span style="width:8px;height:8px;border-radius:50%;background:'+(a.farbe||'#4f7cff')+';flex-shrink:0;display:inline-block"></span>'
+        +a.name+'</div>';
       db.agUgLinks.filter(function(l){return l.agId===a.id;}).forEach(function(l){
         var u=db.ugs.find(function(x){return x.id===l.ugId;}); if(!u||(!isSA()&&!canSee(u.id))) return;
-        html+='<div class="nav-item ws-nav-item" data-eid="'+u.id+'" style="padding-left:32px;font-size:11px;display:flex;align-items:center;gap:6px"><span style="color:#a78bfa;font-size:10px">&#11053;</span>'+u.name+'</div>';
+        h+='<div class="nav-item ws-nav-item" data-eid="'+u.id+'" style="padding-left:32px;font-size:11px;display:flex;align-items:center;gap:6px">'
+          +'<span style="color:#a78bfa;font-size:10px">&#11053;</span>'+u.name+'</div>';
       });
     });
-    list.innerHTML=html;
+    list.innerHTML=h;
     list.querySelectorAll('.ws-nav-item').forEach(function(item){
-      item.addEventListener('click',function(){openWorkspace(this.getAttribute('data-eid'),this);});
+      item.addEventListener('click',function(){
+        list.querySelectorAll('.ws-nav-item').forEach(function(n){n.classList.remove('active');});
+        this.classList.add('active');
+        openWorkspace(this.getAttribute('data-eid'),this);
+      });
     });
-    var first=list.querySelector('.ws-nav-item'); if(first) openWorkspace(first.getAttribute('data-eid'),first);
+    var first=list.querySelector('.ws-nav-item');
+    if(first){first.classList.add('active'); openWorkspace(first.getAttribute('data-eid'),first);}
   }
-};
+}
 
 // Sync hooks for V3 functions
 var _sAG=saveAG,_sUG=saveUG,_sT=saveTask,_sM=saveMitglied,_sK=saveKonzept;
