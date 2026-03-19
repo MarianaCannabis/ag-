@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V19</title>
+<title>Mariana CSC - AG-Verwaltung V20</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -331,7 +331,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V19</div>
+    <div class="login-sub">AG-Verwaltung V20</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -364,7 +364,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V19</p>
+    <p>AG-Verwaltung V20</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -683,15 +683,23 @@ function switchTab(btn,tid){
 function sbadge(s){const m={'Aktiv':'b-green','In Planung':'b-blue','Idee':'b-gray','Pausiert':'b-amber','Abgeschlossen':'b-gray','Testphase':'b-teal','Offen':'b-blue','In Arbeit':'b-amber','Erledigt':'b-green','Blockiert':'b-red','Archiviert':'b-gray','Wartet auf Freigabe':'b-amber','Entwurf':'b-gray','Freigegeben':'b-green'};return`<span class="badge ${m[s]||'b-gray'}">${s||'–'}</span>`}
 function pbadge(p){const m={'Kritisch':'b-red','Hoch':'b-amber','Mittel':'b-blue','Niedrig':'b-green'};return`<span class="badge ${m[p]||'b-gray'}">${p||'–'}</span>`}
 function ampel(entity,tasks){
-  const today=new Date();
-  const ts=tasks||db.aufgaben.filter(t=>t.entityId===entity.id&&t.status!=='Erledigt'&&t.status!=='Archiviert');
-  const ov=ts.filter(t=>new Date(t.faellig)<today).length;
-  const hi=ts.filter(t=>t.prio==='Hoch'||t.prio==='Kritisch').length;
-  if(ov>0||entity.status==='Pausiert')return{cls:'amp-r',txt:'Handlungsbedarf'};
-  if(hi>1)return{cls:'amp-y',txt:'Beobachten'};
-  return{cls:'amp-g',txt:'In Ordnung'};
+  var today=new Date();
+  var ts=tasks||db.aufgaben.filter(function(t){return t.entityId===entity.id&&t.status!=='Erledigt'&&t.status!=='Archiviert';});
+  var ov=ts.filter(function(t){return t.faellig&&new Date(t.faellig)<today;});
+  var hi=ts.filter(function(t){return t.prio==='Hoch'||t.prio==='Kritisch';});
+  var reasons=[];
+  if(entity.status==='Pausiert') reasons.push('Status: Pausiert');
+  if(ov.length>0) reasons.push(ov.length+' überfällig'+(ov[0]?' ('+ov[0].titel.slice(0,20)+'...)':''));
+  if(hi.length>1) reasons.push(hi.length+' Aufgaben mit hoher Prio');
+  if(ov.length>0||entity.status==='Pausiert') return{cls:'amp-r',txt:'Handlungsbedarf',grund:reasons.join(' · ')};
+  if(hi.length>1) return{cls:'amp-y',txt:'Beobachten',grund:reasons.join(' · ')};
+  var grund=ts.length?ts.length+' offene Aufgabe(n), keine überfällig':'Keine offenen Aufgaben';
+  return{cls:'amp-g',txt:'In Ordnung',grund:grund};
 }
-function ampelEl(a){return`<div class="amp ${a.cls}"><div class="amp-dot"></div><span style="color:var(--muted2)">${a.txt}</span></div>`}
+function ampelEl(a){
+  var grund=a.grund?(' title="'+a.grund.replace(/"/g,"'")+'"'):'';
+  return '<div class="amp '+a.cls+'"'+grund+' style="cursor:'+(a.grund?'help':'default')+'"><div class="amp-dot"></div><span style="color:var(--muted2)">'+a.txt+'</span>'+(a.grund?'<span style="font-size:9px;color:var(--muted);margin-left:4px">&#9432;</span>':'')+'</div>';
+}
 
 // badge count update
 function updateBadges(){
@@ -910,32 +918,67 @@ function renderMitglieder(filter=''){
 // ════════════════════════════════════════════════════════
 let taskFilter='alle';
 function renderAufgaben(){
-  const c=el('content');
-  const today=new Date();
-  c.innerHTML=`
-  <div class="frow mb12">
-    ${['alle','offen','hoch','ueberfaellig','erledigt'].map(f=>`<button class="btn btn-ghost btn-sm" onclick="setTaskFilter('${f}',this)" id="tf-${f}" ${taskFilter===f?'style="border-color:var(--accent);color:var(--text)"':''}>${{alle:'Alle',offen:'Offen',hoch:'Hohe Prio',ueberfaellig:'Überfällig',erledigt:'Erledigt'}[f]}</button>`).join('')}
-  </div>
-  <div id="tasks-wrap"></div>`;
+  var c=el('content');if(!c)return;
+  var flabels={'alle':'Alle','offen':'Offen','hoch':'Hohe Prio','ueberfaellig':'Überfällig','erledigt':'Erledigt','archiviert':'Archiviert'};
+  var fkeys=Object.keys(flabels);
+  var btns='';
+  for(var fi=0;fi<fkeys.length;fi++){
+    var fk=fkeys[fi],act=taskFilter===fk;
+    btns+='<button class="btn btn-ghost btn-sm" data-f="'+fk+'" id="tf-'+fk+'" style="'+(act?'border-color:var(--accent);color:var(--text)':'')+'" onclick="tfClick(this)">'+flabels[fk]+'</button>';
+  }
+  c.innerHTML='<div class="frow mb12">'+btns+'</div><div id="tasks-wrap"></div>';
   applyTaskFilter();
 }
+function tfClick(btn){setTaskFilter(btn.getAttribute('data-f'),btn);}
 function setTaskFilter(f,btn){
   taskFilter=f;
-  document.querySelectorAll('[id^="tf-"]').forEach(b=>{b.style.borderColor='';b.style.color='';});
+  document.querySelectorAll('[id^="tf-"]').forEach(function(b){b.style.borderColor='';b.style.color='';});
   btn.style.borderColor='var(--accent)';btn.style.color='var(--text)';
   applyTaskFilter();
 }
 function applyTaskFilter(){
-  const today=new Date();
-  let list=[...db.aufgaben];
-  if(taskFilter==='offen')list=list.filter(t=>t.status!=='Erledigt'&&t.status!=='Archiviert');
-  if(taskFilter==='hoch')list=list.filter(t=>t.prio==='Hoch'||t.prio==='Kritisch');
-  if(taskFilter==='ueberfaellig')list=list.filter(t=>t.status!=='Erledigt'&&new Date(t.faellig)<today);
-  if(taskFilter==='erledigt')list=list.filter(t=>t.status==='Erledigt');
-  list.sort((a,b)=>new Date(a.faellig)-new Date(b.faellig));
-  const d=el('tasks-wrap');
-  if(!d)return;
-  d.innerHTML=list.length?list.map(t=>taskRowHtml(t,true)).join(''):`<div class="empty"><div class="empty-ico">✅</div><h3>Keine Aufgaben</h3></div>`;
+  var today=new Date();
+  var list=db.aufgaben.slice();
+  if(taskFilter==='offen')list=list.filter(function(t){return t.status!=='Erledigt'&&t.status!=='Archiviert';});
+  else if(taskFilter==='hoch')list=list.filter(function(t){return (t.prio==='Hoch'||t.prio==='Kritisch')&&t.status!=='Archiviert';});
+  else if(taskFilter==='ueberfaellig')list=list.filter(function(t){return t.faellig&&t.status!=='Erledigt'&&t.status!=='Archiviert'&&new Date(t.faellig)<today;});
+  else if(taskFilter==='erledigt')list=list.filter(function(t){return t.status==='Erledigt';});
+  else if(taskFilter==='archiviert')list=list.filter(function(t){return t.status==='Archiviert';});
+  else list=list.filter(function(t){return t.status!=='Archiviert';});  // 'alle' = ohne Archiviert
+  list.sort(function(a,b){return new Date(a.faellig||0)-new Date(b.faellig||0);});
+  var d=el('tasks-wrap'); if(!d)return;
+  if(!list.length){d.innerHTML='<div class="empty"><div class="empty-ico">&#10003;</div><h3>Keine Aufgaben</h3></div>';return;}
+  var html2=list.map(function(t){return taskRowHtmlEx(t);}).join('');
+  if(taskFilter==='erledigt'&&isAdmin()){
+    html2='<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-danger btn-sm" onclick="delAllErledigt()">&#128465; Alle erledigten löschen</button></div>'+html2;
+  }
+  d.innerHTML=html2;
+}
+
+async function delAllErledigt(){
+  if(!confirm('Alle erledigten Aufgaben dauerhaft löschen?'))return;
+  var ids=db.aufgaben.filter(function(t){return t.status==='Erledigt';}).map(function(t){return t.id;});
+  db.aufgaben=db.aufgaben.filter(function(t){return t.status!=='Erledigt';});
+  for(var i=0;i<ids.length;i++) await sbDel('aufgaben',ids[i]);
+  updateBadges(); applyTaskFilter(); toast(ids.length+' Aufgaben gelöscht','ok');
+}
+
+function taskRowHtmlEx(t){
+  var today=new Date(), ov=t.faellig&&new Date(t.faellig)<today&&t.status!=='Erledigt', done=t.status==='Erledigt', arch=t.status==='Archiviert';
+  var col=done?'var(--green)':arch?'var(--muted)':ov?'var(--red)':'inherit';
+  return '<div class="trow" style="'+(arch?'opacity:.5':'')+'" data-tid="'+t.id+'" onclick="openTaskDetail(this.dataset.tid)">'
+    +'<div class="tcheck '+(done?'done':'')+'" data-tid="'+t.id+'" onclick="event.stopPropagation();toggleTask(this.dataset.tid)">'+(done?'&#10003;':'')+'</div>'
+    +'<div class="tbody">'
+    +'<div class="ttitle '+(done?'done-text':'')+'">'+(ov?'&#9888; ':'')+t.titel+'</div>'
+    +'<div class="tmeta">'
+    +'<span>&#128100; '+t.verantw+'</span>'
+    +(t.faellig?'<span style="color:'+col+'">&#128197; '+t.faellig+(ov?' ⚠':'')+'</span>':'')
+    +'<span>'+t.entityTyp+': '+t.entityId+'</span>'
+    +(t.freigabe?'<span style="color:var(--amber)">&#128274; Freigabe</span>':'')
+    +'</div></div>'
+    +'<div class="frow" style="gap:5px">'+pbadge(t.prio)+sbadge(t.status)+'</div>'
+    +(isAdmin()&&done?'<button class="btn btn-danger btn-xs" style="margin-left:4px" data-tid="'+t.id+'" onclick="event.stopPropagation();permDelTask(this.dataset.tid)">&#128465;</button>':'')
+    +'</div>';
 }
 
 // ════════════════════════════════════════════════════════
@@ -1187,32 +1230,80 @@ function openDetail(type,id){
 // TASK DETAIL
 // ════════════════════════════════════════════════════════
 function openTaskDetail(id){
-  const t=db.aufgaben.find(x=>x.id===id);if(!t)return;
+  var t=db.aufgaben.find(function(x){return x.id===id;});if(!t)return;
   el('m-td-title').textContent=t.titel;
-  const today=new Date();
-  const ov=new Date(t.faellig)<today&&t.status!=='Erledigt';
-  el('m-td-body').innerHTML=`
-  <div class="dgrid mb16">
-    <div class="di"><label>ID</label><p><code>${t.id}</code></p></div>
-    <div class="di"><label>Entität</label><p>${t.entityTyp}: ${t.entityId}</p></div>
-    <div class="di"><label>Status</label><p>${sbadge(t.status)}</p></div>
-    <div class="di"><label>Priorität</label><p>${pbadge(t.prio)}</p></div>
-    <div class="di"><label>Verantwortlich</label><p>${t.verantw}</p></div>
-    <div class="di"><label>Fällig am</label><p style="color:${ov?'var(--red)':'inherit'}">${t.faellig}${ov?' ⚠️ Überfällig':''}</p></div>
-    <div class="di"><label>Freigabepflicht</label><p>${t.freigabe?'<span class="badge b-amber">Ja</span>':'Nein'}</p></div>
-    <div class="di"><label>Sensibel</label><p>${t.sensibel||'–'}</p></div>
-    ${t.naechster?`<div class="di full"><label>Nächster Schritt</label><p>${t.naechster}</p></div>`:''}
-    ${t.notizen?`<div class="di full"><label>Notizen</label><p>${t.notizen}</p></div>`:''}
-  </div>
-  <div class="sep">Status ändern</div>
-  <div class="frow">
-    ${['Offen','In Arbeit','Wartet auf Freigabe','Blockiert','Erledigt','Archiviert'].map(s=>`<button class="btn btn-ghost btn-sm ${t.status===s?'active':''}" style="${t.status===s?'border-color:var(--accent);color:var(--text)':''}" onclick="setTaskStatus('${id}','${s}')">${s}</button>`).join('')}
-  </div>`;
-  el('m-td-footer').innerHTML=`
-    <button class="btn btn-ghost" onclick="cm('m-task-detail')">Schließen</button>
-    <button class="btn btn-primary" onclick="cm('m-task-detail');openTaskModal('${id}')">Bearbeiten</button>
-    <button class="btn ${t.status==='Erledigt'?'btn-ghost':'btn-success'}" onclick="toggleTask('${id}');cm('m-task-detail')">${t.status==='Erledigt'?'↩ Wiedereröffnen':'✓ Als erledigt'}</button>`;
+  var today=new Date(), ov=t.faellig&&new Date(t.faellig)<today&&t.status!=='Erledigt';
+  var statusList=['Offen','In Arbeit','Wartet auf Freigabe','Blockiert','Erledigt','Archiviert'];
+  var statusBtns=statusList.map(function(s){
+    var active=t.status===s;
+    var col=s==='Erledigt'?'#22c55e':s==='Offen'?'#6b7199':s==='In Arbeit'?'#4f7cff':s==='Blockiert'?'#ef4444':s==='Wartet auf Freigabe'?'#f59e0b':'#6b7199';
+    return '<button class="btn btn-ghost btn-sm" style="'+(active?'border-color:'+col+';color:'+col+';background:rgba(0,0,0,.2);':'')+'" data-tid="'+id+'" data-status="'+s+'" onclick="liveSetStatus(this)">'+s+'</button>';
+  }).join('');
+  el('m-td-body').innerHTML=
+    '<div class="dgrid mb16">'
+    +'<div class="di"><label>Entität</label><p>'+t.entityTyp+': '+t.entityId+'</p></div>'
+    +'<div class="di"><label>Priorität</label><p>'+pbadge(t.prio)+'</p></div>'
+    +'<div class="di"><label>Verantwortlich</label><p>'+(t.verantw||'–')+'</p></div>'
+    +'<div class="di"><label>Fällig am</label><p style="color:'+(ov?'var(--red)':'inherit')+'">'+(t.faellig||'–')+(ov?' ⚠️ Überfällig':'')+'</p></div>'
+    +'<div class="di"><label>Freigabepflicht</label><p>'+(t.freigabe?'<span class="badge b-amber">Ja</span>':'Nein')+'</p></div>'
+    +'<div class="di"><label>Sensibel</label><p>'+(t.sensibel||'–')+'</p></div>'
+    +(t.naechster?'<div class="di full"><label>Nächster Schritt</label><p>'+t.naechster+'</p></div>':'')
+    +(t.notizen?'<div class="di full"><label>Notizen</label><p>'+t.notizen+'</p></div>':'')
+    +'</div>'
+    +'<div class="sep" id="td-status-label">Status: '+sbadge(t.status)+'</div>'
+    +'<div class="frow" style="flex-wrap:wrap;gap:6px" id="td-status-btns">'+statusBtns+'</div>'
+    +'<div id="td-archive-hint" style="'+(t.status==='Erledigt'?'':'display:none')+';margin-top:10px;padding:10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;font-size:12px">'
+    +'&#10003; Aufgabe erledigt. '+(isAdmin()?'<button class="btn btn-danger btn-sm" style="margin-left:8px" data-tid="'+id+'" onclick="permDelTask(this.dataset.tid)">&#128465; Dauerhaft löschen</button>':'')
+    +'<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-tid="'+id+'" onclick="archiveTask(this.dataset.tid)">&#128203; In Archiv verschieben</button></div>';
+  (function(){
+  var tdF=el('m-td-footer'); tdF.innerHTML='';
+  function mkBtn(lbl,cls,fn){var b=document.createElement('button');b.className='btn '+cls;b.innerHTML=lbl;b.addEventListener('click',fn);tdF.appendChild(b);}
+  mkBtn('Schließen','btn-ghost',function(){cm('m-task-detail');});
+  mkBtn('Bearbeiten','btn-primary',function(){cm('m-task-detail');openTaskModal(id);});
+  mkBtn(t.status==='Erledigt'?'↩ Wiederöffnen':'✓ Als erledigt',t.status==='Erledigt'?'btn-ghost':'btn-success',function(){toggleTask(id);cm('m-task-detail');});
+})();
   om('m-task-detail');
+}
+
+function liveSetStatus(btn){
+  var id=btn.getAttribute('data-tid'), s=btn.getAttribute('data-status');
+  var t=db.aufgaben.find(function(x){return x.id===id;});if(!t)return;
+  t.status=s;
+  // Update badge in header
+  var lbl=document.getElementById('td-status-label');
+  if(lbl) lbl.innerHTML='Status: '+sbadge(s);
+  // Update button styles
+  var btns=document.querySelectorAll('#td-status-btns button');
+  var colMap={'Erledigt':'#22c55e','Offen':'#6b7199','In Arbeit':'#4f7cff','Blockiert':'#ef4444','Wartet auf Freigabe':'#f59e0b','Archiviert':'#6b7199'};
+  btns.forEach(function(b){
+    var bs=b.getAttribute('data-status');
+    if(bs===s){ b.style.borderColor=colMap[s]||'#6b7199';b.style.color=colMap[s]||'#6b7199';b.style.background='rgba(0,0,0,.2)'; }
+    else { b.style.borderColor='';b.style.color='';b.style.background=''; }
+  });
+  // Show/hide erledigt hint
+  var hint=document.getElementById('td-archive-hint');
+  if(hint) hint.style.display=(s==='Erledigt'?'':'none');
+  // Sync
+  sbUp('aufgaben',t); updateBadges();
+  if(curView==='aufgaben') applyTaskFilter();
+  else if(curView==='dashboard') renderDash();
+  toast('Status → '+s,'ok');
+}
+
+async function archiveTask(id){
+  var t=db.aufgaben.find(function(x){return x.id===id;});if(!t)return;
+  t.status='Archiviert'; await sbUp('aufgaben',t);
+  cm('m-task-detail'); updateBadges(); renderView(curView);
+  toast('Aufgabe archiviert','ok');
+}
+
+async function permDelTask(id){
+  if(!isAdmin())return;
+  if(!confirm('Aufgabe dauerhaft löschen?'))return;
+  db.aufgaben=db.aufgaben.filter(function(x){return x.id!==id;});
+  await sbDel('aufgaben',id);
+  cm('m-task-detail'); updateBadges(); renderView(curView);
+  toast('Aufgabe gelöscht','ok');
 }
 function setTaskStatus(id,status){
   const t=db.aufgaben.find(x=>x.id===id);if(t){t.status=status;}
@@ -1433,7 +1524,20 @@ function saveMitglied(){
   else{db.mitglieder.push(data);db.ids.m++;}
   cm('m-mitgl');renderView(curView);toast(editId?'Mitglied aktualisiert':'Mitglied erstellt','ok');
 }
-function delMitglied(id){if(!confirm('Mitglied löschen?'))return;db.mitglieder=db.mitglieder.filter(m=>m.id!==id);renderView('mitglieder');toast('Mitglied gelöscht','ok');}
+async function delMitglied(id){
+  var m=db.mitglieder.find(function(x){return x.id===id;});
+  if(!m)return;
+  if(!confirm('Mitglied "'+m.name+'" löschen? Zugehöriger Login-Account wird ebenfalls entfernt.'))return;
+  db.mitglieder=db.mitglieder.filter(function(x){return x.id!==id;});
+  await sbDel('mitglieder',id);
+  var roleIds=db.rollen.filter(function(r){return r.personId===id;}).map(function(r){return r.id;});
+  db.rollen=db.rollen.filter(function(r){return r.personId!==id;});
+  for(var ri=0;ri<roleIds.length;ri++) await sbDel('rollen',roleIds[ri]);
+  var u=db.nutzer.find(function(x){return x.name===m.name;});
+  if(u){db.nutzer=db.nutzer.filter(function(x){return x.id!==u.id;});await sbDel('nutzer',u.id);}
+  renderView('mitglieder');
+  toast('Mitglied'+(u?' + Login':'')+" "+m.name+' gelöscht','ok');
+}
 
 // ════════════════════════════════════════════════════════
 // AUFGABE FORM
@@ -2885,20 +2989,39 @@ function renderEinst(){
   var h='';
   if(isSA()){
     h+='<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="font-size:13px;margin:0">&#128101; Nutzerverwaltung</h3><button class="btn btn-primary btn-sm" onclick="openNutzerForm()">+ Nutzer</button></div>'
-      +'<table style="width:100%;font-size:12px;border-collapse:collapse"><thead><tr style="color:var(--muted);border-bottom:1px solid var(--border)"><th style="padding:6px;text-align:left">Name</th><th style="padding:6px;text-align:left">Rolle</th><th style="padding:6px;text-align:left">Zugriff</th><th style="padding:6px">Status</th><th></th></tr></thead><tbody>';
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
+      +'<h3 style="font-size:13px;margin:0">&#128101; Nutzerverwaltung</h3>'
+      +'<button class="btn btn-primary btn-sm" onclick="openNutzerForm()">+ Nutzer</button></div>'
+      +'<div style="display:flex;flex-direction:column;gap:8px">';
     db.nutzer.forEach(function(u){
       var rc=u.rolle==='SuperAdmin'?'#ef4444':u.rolle==='Admin'?'#f59e0b':'#4f7cff';
-      h+='<tr style="border-bottom:1px solid rgba(42,51,80,.4)"><td style="padding:6px"><strong>'+u.name+'</strong></td>'
-        +'<td style="padding:6px"><span style="background:rgba(0,0,0,.3);color:'+rc+';border-radius:4px;padding:2px 6px;font-size:10px">'+u.rolle+'</span></td>'
-        +'<td style="padding:6px;color:var(--muted);font-size:11px">'+(u.agIds.includes('*')?'Alle':u.agIds.join(', ')||'-')+'</td>'
-        +'<td style="padding:6px;text-align:center"><span style="color:'+(u.aktiv!==false?'#22c55e':'#ef4444')+'">'+(u.aktiv!==false?'&#10003;':'&#10007;')+'</span></td>'
-        +'<td style="padding:6px;white-space:nowrap">'
-        +(u.rolle!=='SuperAdmin'?'<button class="btn btn-ghost btn-sm" style="padding:2px 7px;font-size:11px" data-uid="'+u.id+'" onclick="editNutzer(this.dataset.uid)">&#9999;</button> '
-          +'<button class="btn btn-ghost btn-sm" style="padding:2px 7px;font-size:11px;color:'+(u.aktiv!==false?'#ef4444':'#22c55e')+'" data-uid="'+u.id+'" onclick="toggleNutzerAktiv(this.dataset.uid)">'+(u.aktiv!==false?'Sperren':'Aktiv.')+'</button>':'')
-        +'</td></tr>';
+      var rollen=db.rollen.filter(function(r){return r.personId===u.id||db.mitglieder.some(function(m){return m.name===u.name&&r.personId===m.id;});});
+      var agList=u.agIds.includes('*')?'Alle AGs':u.agIds.filter(Boolean).map(function(id){var a=db.ags.find(function(a){return a.id===id;});return a?a.name:id;}).join(', ')||'–';
+      var ugList=u.ugIds.includes('*')?'Alle UGs':u.ugIds.filter(Boolean).map(function(id){var u2=db.ugs.find(function(u){return u.id===id;});return u2?u2.name:id;}).join(', ')||'–';
+      h+='<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer" data-uid="'+u.id+'" onclick="editNutzer(this.dataset.uid)">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+        +'<div style="width:36px;height:36px;border-radius:50%;background:'+rc+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">'+u.name.slice(0,2).toUpperCase()+'</div>'
+        +'<div style="flex:1">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<strong style="font-size:13px">'+u.name+'</strong>'
+        +'<span style="background:rgba(0,0,0,.3);color:'+rc+';border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600">'+u.rolle+'</span>'
+        +(u.aktiv===false?'<span style="background:rgba(239,68,68,.15);color:#f87171;border-radius:4px;padding:2px 7px;font-size:10px">Gesperrt</span>':'<span style="background:rgba(34,197,94,.12);color:#4ade80;border-radius:4px;padding:2px 6px;font-size:10px">Aktiv</span>')
+        +'</div>'
+        +'<div style="font-size:11px;color:var(--muted2);margin-top:2px">Login-ID: '+u.id+'</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:6px" onclick="event.stopPropagation()">'
+        +(u.rolle!=='SuperAdmin'
+          ?'<button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:11px" data-uid="'+u.id+'" onclick="toggleNutzerAktiv(this.dataset.uid)">'+(u.aktiv!==false?'Sperren':'Aktiv.')+'</button>'
+          +'<button class="btn btn-danger btn-sm" style="padding:3px 8px;font-size:11px" data-uid="'+u.id+'" onclick="delNutzer(this.dataset.uid)">&#128465; Löschen</button>'
+          :'')
+        +'</div></div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px;border-top:1px solid var(--border);padding-top:8px">'
+        +'<div><span style="color:var(--muted)">AGs:</span> <span style="color:var(--text)">'+agList+'</span></div>'
+        +'<div><span style="color:var(--muted)">UGs:</span> <span style="color:var(--text)">'+ugList+'</span></div>'
+        +'<div><span style="color:var(--muted)">Rollen:</span> <span style="color:var(--text)">'+rollen.length+' Zuordnung(en)</span></div>'
+        +'</div></div>';
     });
-    h+='</tbody></table></div>';
+    h+='</div></div>';
   }
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
     +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px">'
@@ -3122,11 +3245,17 @@ async function runKonzeptAnalyse(konzeptId){
   var doT  =(document.getElementById('ka-tasks')||{checked:true}).checked;
   var doM  =(document.getElementById('ka-members')||{checked:true}).checked;
   var text=konzeptToText(k)||(k.ziel||k.name);
-  var prompt='Analysiere dieses Konzept und erstelle einen Umsetzungsplan.\nAntworte NUR mit validem JSON (keine Backticks):\n'
-    +'{"ags":[{"name":"AG-Name","kat":"Kategorie","ziel":"Ziel"}],'
-    +'"ugs":[{"name":"UG-Name","typ":"Team","agName":"Zugeh. AG","lead":"Person","fokus":"Fokus"}],'
-    +'"aufgaben":[{"titel":"Titel","verantw":"Person","prio":"Hoch","faellig":"2026-05-01","entityName":"AG/UG Name"}],'
-    +'"mitglieder":[{"name":"Name","rolle":"Rolle","kompetenzen":"Skills"}]}\n\nKonzept:\n'+text.slice(0,5000);
+  var heute=new Date().toISOString().slice(0,10);
+  var prompt='Du bist Experte für Vereinsstrukturen bei einem Cannabis Social Club. Analysiere dieses Konzept vollständig.\n'
+    +'Antworte NUR mit validem JSON ohne Backticks oder Kommentare.\n'
+    +'JSON-Schema:\n'
+    +'{"ags":[{"name":"string","kat":"string","ziel":"string","status":"In Planung","prio":"Mittel","koo":"Person","rhythmus":"string"}],'
+    +'"ugs":[{"name":"string","typ":"Team|Kernteam|Redaktion|Community","agName":"zugeh. AG-Name","lead":"string","fokus":"string","kanal":"string","status":"In Planung"}],'
+    +'"aufgaben":[{"titel":"string","verantw":"string","prio":"Hoch|Mittel|Niedrig","faellig":"YYYY-MM-DD","entityName":"AG oder UG Name","freigabe":false,"sensibel":"Nein","naechster":"string","notizen":"string"}],'
+    +'"mitglieder":[{"name":"string","rolle":"string","kompetenzen":"string","verfueg":"hoch|mittel|gering","region":"string"}],'
+    +'"konzept_update":{"ziel":"string","struktur":"string","aw":"string","ns":"string","op":"string","rhythmus":"string","kanaele":"string","sicherheit":"string"}'
+    +'}\n'
+    +'Wichtig: Extrahiere ALLE genannten Personen, Rollen, Aufgaben und Strukturen. Fälligkeitsdaten ab heute ('+heute+'). EntityName muss exakt dem AG/UG-Namen entsprechen.\n\nKonzept:\n'+text.slice(0,6000);
   try{
     var raw=await aiCall(prompt,3000);
     var json=JSON.parse(raw.replace(/```json|```/g,'').trim());
@@ -3184,14 +3313,35 @@ async function runKonzeptAnalyse(konzeptId){
       }
     }
     updateBadges();
-    if(res) res.innerHTML='<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:14px">'
-      +'<div style="font-size:15px;font-weight:600;margin-bottom:10px">&#10003; Analyse abgeschlossen!</div>'
-      +'<div style="font-size:12px;line-height:1.9;color:var(--muted2)">'+log.map(function(l){return l;}).join('<br>')+'</div>'
-      +'<div style="display:flex;gap:8px;margin-top:12px">'
-      +'<button class="btn btn-primary btn-sm" onclick="navTo(\"ags\")">AGs ansehen</button>'
-      +'<button class="btn btn-ghost btn-sm" onclick="navTo(\"aufgaben\")">Aufgaben</button>'
-      +'<button class="btn btn-ghost btn-sm" onclick="navTo(\"konzepte\")">Archiv</button>'
-      +'</div></div>';
+    // Update konzept fields if returned
+    if(json.konzept_update){
+      var ku=json.konzept_update, ki2=db.konzepte.findIndex(function(x){return x.id===konzeptId;});
+      if(ki2>=0){var kk2=db.konzepte[ki2];['ziel','struktur','aw','ns','op','rhythmus','kanaele','sicherheit'].forEach(function(f2){if(ku[f2]&&!kk2[f2])kk2[f2]=ku[f2];});await sbUp('konzepte',kk2);log.push('&#128196; Konzept-Felder aktualisiert');}
+    }
+    var nAG=(json.ags||[]).length,nUG=(json.ugs||[]).length,nM=(json.mitglieder||[]).length,nT=(json.aufgaben||[]).length;
+    var summ='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+      +'<div style="background:rgba(79,124,255,.1);border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#4f7cff">'+nAG+'</div><div style="font-size:10px;color:var(--muted)">AGs</div></div>'
+      +'<div style="background:rgba(167,139,250,.1);border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#a78bfa">'+nUG+'</div><div style="font-size:10px;color:var(--muted)">UGs</div></div>'
+      +'<div style="background:rgba(34,197,94,.1);border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#22c55e">'+nM+'</div><div style="font-size:10px;color:var(--muted)">Mitglieder</div></div>'
+      +'<div style="background:rgba(245,158,11,.1);border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#f59e0b">'+nT+'</div><div style="font-size:10px;color:var(--muted)">Aufgaben</div></div>'
+      +'</div>';
+    if(res){
+      res.innerHTML='';
+      var rv=document.createElement('div');rv.style.cssText='background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:16px';
+      rv.innerHTML='<div style="font-size:15px;font-weight:600;margin-bottom:12px">&#10003; Analyse abgeschlossen!</div>'+summ
+        +'<div style="font-size:12px;line-height:1.8;color:var(--muted2);max-height:180px;overflow-y:auto;background:var(--bg);border-radius:6px;padding:10px;margin-bottom:12px">'+log.join('<br>')+'</div>';
+      var rbDiv=document.createElement('div');rbDiv.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+      [['AGs','ags'],['Aufgaben','aufgaben'],['Mitglieder','mitglieder'],['Archiv','konzepte']].forEach(function(pair){
+        var rb=document.createElement('button');rb.className='btn btn-ghost btn-sm';rb.textContent=pair[0];
+        rb.setAttribute('data-v',pair[1]);rb.addEventListener('click',function(){navTo(this.getAttribute('data-v'));});
+        rbDiv.appendChild(rb);
+      });
+      var rb0=document.createElement('button');rb0.className='btn btn-primary btn-sm';rb0.textContent='AGs ansehen';
+      rb0.addEventListener('click',function(){navTo('ags');});
+      rbDiv.insertBefore(rb0,rbDiv.firstChild);
+      rv.appendChild(rbDiv);
+      res.appendChild(rv);
+    }
     if(btn){btn.disabled=false;btn.textContent='&#10024; Erneut analysieren';}
   }catch(e){
     if(res) res.innerHTML='<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:14px"><strong style="color:#ef4444">Fehler:</strong> <span style="font-size:12px">'+e.message+'</span></div>';
@@ -3200,6 +3350,30 @@ async function runKonzeptAnalyse(konzeptId){
 }
 
 function navTo(view){ var q=document.querySelector('[data-view="'+view+'"]'); if(q) nav(q); }
+
+async function delNutzer(id){
+  var u=db.nutzer.find(function(x){return x.id===id;});
+  if(!u)return;
+  if(u.rolle==='SuperAdmin'){toast('SuperAdmin kann nicht gelöscht werden','error');return;}
+  if(!confirm('Nutzer "'+u.name+'" wirklich löschen? Zugehöriges Mitglied wird ebenfalls entfernt.'))return;
+  // Remove from nutzer
+  db.nutzer=db.nutzer.filter(function(x){return x.id!==id;});
+  await sbDel('nutzer',id);
+  // Remove matching mitglied
+  var m=db.mitglieder.find(function(x){return x.name===u.name;});
+  if(m){
+    db.mitglieder=db.mitglieder.filter(function(x){return x.id!==m.id;});
+    await sbDel('mitglieder',m.id);
+    // Remove roles
+    var roleIds=db.rollen.filter(function(r){return r.personId===m.id;}).map(function(r){return r.id;});
+    db.rollen=db.rollen.filter(function(r){return r.personId!==m.id;});
+    for(var i=0;i<roleIds.length;i++) await sbDel('rollen',roleIds[i]);
+    toast('Nutzer + Mitglied "'+u.name+'" gelöscht','ok');
+  } else {
+    toast('Nutzer "'+u.name+'" gelöscht','ok');
+  }
+  renderEinst();
+}
 window.addEventListener('load', function(){
   G('login-overlay').style.display='flex';
   L_init();
