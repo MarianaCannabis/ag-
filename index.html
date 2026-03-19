@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V23</title>
+<title>Mariana CSC - AG-Verwaltung V24</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V23</div>
+    <div class="login-sub">AG-Verwaltung V24</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -365,7 +365,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V23</p>
+    <p>AG-Verwaltung V24</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -1951,35 +1951,58 @@ async function docSave(entityId){
   var cat=(document.getElementById('doc-ct')||{value:'Sonstiges'}).value;
   if(!nm){toast('Bitte Namen eingeben','error');return;}
   var mode='file';
-  document.querySelectorAll('.doc-m-btn').forEach(function(b){if(b.style.color==='var(--text)')mode=b.getAttribute('data-m');});
-  var doc={id:'DOC-'+Date.now(),entityId:entityId,name:nm,kat:cat,erstellt:new Date().toISOString().slice(0,10),von:curUser?curUser.name:'',typ:mode,url:'',text:'',dateiname:'',groesse:0};
+  document.querySelectorAll('.doc-m-btn').forEach(function(b){
+    if(b.style.color==='var(--text)'||b.style.borderColor==='var(--accent)')mode=b.getAttribute('data-m');
+  });
+  var doc={id:'DOC-'+Date.now(),entityId:entityId,name:nm,kat:cat,
+    erstellt:new Date().toISOString().slice(0,10),von:curUser?curUser.name:'',
+    typ:mode,url:'',text:'',dateiname:'',groesse:0,storagePath:''};
+
   if(mode==='file'){
-    var f=window._docFile;if(!f){toast('Datei auswaehlen','error');return;}
+    var f=window._docFile;
+    if(!f){toast('Bitte Datei auswählen','error');return;}
     if(f.size>20*1024*1024){toast('Max 20MB','error');return;}
-    doc.dateiname=f.name;doc.groesse=f.size;
+    doc.dateiname=f.name; doc.groesse=f.size;
+    toast('Wird hochgeladen...','ok');
     try{
-      var ab=await new Promise(function(res,rej){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.onerror=rej;r.readAsArrayBuffer(f);});
+      var ab=await new Promise(function(res2,rej2){var rdr=new FileReader();rdr.onload=function(e){res2(e.target.result);};rdr.onerror=function(){rej2(new Error('Lesefehler'));};rdr.readAsArrayBuffer(f);});
       var path='docs/'+entityId+'/'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-      var up=await getSB().storage.from('mariana-docs').upload(path,new Uint8Array(ab),{contentType:f.type||'application/octet-stream'});
-      if(!up.error){var pu=getSB().storage.from('mariana-docs').getPublicUrl(path);doc.url=pu.data.publicUrl;doc.storagePath=path;}
-      else if(f.size<500*1024){doc.url=await new Promise(function(res){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.readAsDataURL(f);});}
-      else{
-        console.error('Storage error:',up.error);
-        toast('Storage-Fehler: '+up.error.message+'. Bitte Bucket "mariana-docs" in Supabase anlegen.','error');
-        return;
+      var up=await getSB().storage.from('mariana-docs').upload(path,new Uint8Array(ab),{contentType:f.type||'application/octet-stream',upsert:true});
+      if(!up.error){
+        var pu=getSB().storage.from('mariana-docs').getPublicUrl(path);
+        doc.url=pu.data.publicUrl; doc.storagePath=path;
+      } else {
+        console.warn('Storage error:',up.error.message);
+        if(f.size<800*1024){
+          doc.url=await new Promise(function(res3){var rdr2=new FileReader();rdr2.onload=function(e){res3(e.target.result);};rdr2.readAsDataURL(f);});
+        } else {
+          toast('Storage-Fehler: '+up.error.message,'error');return;
+        }
       }
-    }catch(e){toast('Fehler: '+e.message,'error');return;}
-  }else if(mode==='link'){
-    var url=(document.getElementById('doc-url')||{value:''}).value.trim();
-    if(!url){toast('URL eingeben','error');return;}doc.url=url;
-  }else{
+    }catch(e2){toast('Upload-Fehler: '+e2.message,'error');return;}
+  } else if(mode==='link'){
+    var url2=(document.getElementById('doc-url')||{value:''}).value.trim();
+    if(!url2){toast('URL eingeben','error');return;}
+    doc.url=url2;
+  } else {
     var txt=(document.getElementById('doc-txt')||{value:''}).value.trim();
-    if(!txt){toast('Text eingeben','error');return;}doc.text=txt;
+    if(!txt){toast('Text eingeben','error');return;}
+    doc.text=txt;
   }
+
   if(!db.dokumente)db.dokumente=[];
-  db.dokumente.push(doc);await sbUp('dokumente',doc);
+  db.dokumente.push(doc);
+
+  // Direkt in Supabase einfuegen (snake_case Spaltennamen)
+  var sbRow={id:doc.id,entity_id:doc.entityId,name:doc.name,kat:doc.kat,typ:doc.typ,
+    url:doc.url,dateiname:doc.dateiname,groesse:doc.groesse,von:doc.von,
+    erstellt:doc.erstellt||null,text:doc.text,storage_path:doc.storagePath||''};
+  var res4=await getSB().from('dokumente').upsert(sbRow,{onConflict:'id'});
+  if(res4.error){console.error('dokumente DB Fehler:',res4.error);toast('Datei gespeichert, DB-Fehler: '+res4.error.message,'error');}
+  else{toast('Dokument "'+nm+'" gespeichert ✓','ok');}
+
   var dov=document.getElementById('doc-ov');if(dov)dov.remove();
-  renderWsDocs(entityId);toast('Dokument "'+nm+'" gespeichert','ok');
+  renderWsDocs(entityId);
 }
 
 function previewDocText(docId){
@@ -2093,6 +2116,7 @@ function toSB(t,o){
   if(t==='notizen') return {id:o.id,target_id:o.targetId,kat:o.kat,prio:o.prio,autor:o.autor,text:o.text,ts:o.ts};
   if(t==='nutzer') return {id:o.id,name:o.name,pw:o.pw,rolle:o.rolle,ag_ids:o.agIds||[],ug_ids:o.ugIds||[],aktiv:o.aktiv!==false,farbe:o.farbe};
   if(t==='plaene') return {id:o.id,entity_id:o.entityId,typ:o.typ,name:o.name,inhalt:o.inhalt,erstellt:o.erstellt,autor:o.autor};
+  if(t==='dokumente') return {id:o.id,entity_id:o.entityId,name:o.name,kat:o.kat||'Sonstiges',typ:o.typ||'file',url:o.url||'',dateiname:o.dateiname||'',groesse:o.groesse||0,von:o.von||'',erstellt:o.erstellt||'',text:o.text||'',storage_path:o.storagePath||''};
   return o;
 }
 async function sbUp(t,o){ if(!o||!o.id) return; var mapped=toSB(t,o); var {error}=await getSB().from(t).upsert(mapped,{onConflict:'id'}); if(error){console.error('sbUp error:',t,error.message,mapped);}else syncDot(1); }
