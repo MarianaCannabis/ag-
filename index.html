@@ -1963,7 +1963,11 @@ async function docSave(entityId){
       var up=await getSB().storage.from('mariana-docs').upload(path,new Uint8Array(ab),{contentType:f.type||'application/octet-stream'});
       if(!up.error){var pu=getSB().storage.from('mariana-docs').getPublicUrl(path);doc.url=pu.data.publicUrl;doc.storagePath=path;}
       else if(f.size<500*1024){doc.url=await new Promise(function(res){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.readAsDataURL(f);});}
-      else{toast('Storage nicht eingerichtet. Max 500KB fuer lokale Speicherung.','error');return;}
+      else{
+        console.error('Storage error:',up.error);
+        toast('Storage-Fehler: '+up.error.message+'. Bitte Bucket "mariana-docs" in Supabase anlegen.','error');
+        return;
+      }
     }catch(e){toast('Fehler: '+e.message,'error');return;}
   }else if(mode==='link'){
     var url=(document.getElementById('doc-url')||{value:''}).value.trim();
@@ -2074,6 +2078,7 @@ function fromSB(t,r){
   if(t==='notizen') return {id:r.id,targetId:r.target_id||'',kat:r.kat||'Allgemein',prio:r.prio||'Normal',autor:r.autor||'',text:r.text||'',ts:r.ts||''};
   if(t==='nutzer') return {id:r.id,name:r.name,pw:r.pw||'',rolle:r.rolle||'intern',agIds:Array.isArray(r.ag_ids)?r.ag_ids:[],ugIds:Array.isArray(r.ug_ids)?r.ug_ids:[],aktiv:r.aktiv!==false,farbe:r.farbe||'#4f7cff'};
   if(t==='plaene') return {id:r.id,entityId:r.entity_id,typ:r.typ||'aufgaben',name:r.name||'',inhalt:r.inhalt||'{}',erstellt:r.erstellt||'',autor:r.autor||''};
+  if(t==='dokumente') return {id:r.id,entityId:r.entity_id,name:r.name||'',kat:r.kat||'Sonstiges',typ:r.typ||'file',url:r.url||'',dateiname:r.dateiname||'',groesse:r.groesse||0,von:r.von||'',erstellt:r.erstellt||'',text:r.text||'',storagePath:r.storage_path||''};
   return r;
 }
 function toSB(t,o){
@@ -2090,7 +2095,7 @@ function toSB(t,o){
   if(t==='plaene') return {id:o.id,entity_id:o.entityId,typ:o.typ,name:o.name,inhalt:o.inhalt,erstellt:o.erstellt,autor:o.autor};
   return o;
 }
-async function sbUp(t,o){ if(!o||!o.id) return; var {error}=await getSB().from(t).upsert(toSB(t,o),{onConflict:'id'}); if(error) console.warn('sbUp',t,error.message); else syncDot(1); }
+async function sbUp(t,o){ if(!o||!o.id) return; var mapped=toSB(t,o); var {error}=await getSB().from(t).upsert(mapped,{onConflict:'id'}); if(error){console.error('sbUp error:',t,error.message,mapped);}else syncDot(1); }
 async function sbDel(t,id){ var {error}=await getSB().from(t).delete().eq('id',id); if(error) console.warn('sbDel',t,error.message); else syncDot(1); }
 
 // Load all
