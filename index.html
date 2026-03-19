@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V21</title>
+<title>Mariana CSC - AG-Verwaltung V22</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V21</div>
+    <div class="login-sub">AG-Verwaltung V22</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -365,7 +365,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V21</p>
+    <p>AG-Verwaltung V22</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -373,22 +373,22 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   </div>
   <div id="admin-nav">
     <div class="nav-section">
-      <div class="nav-label">Übersicht</div>
-      <div class="nav-item active" data-view="dashboard" onclick="nav(this)"><span class="ico">📊</span>Dashboard</div>
-      <div class="nav-item" data-view="netzwerk" onclick="nav(this)"><span class="ico">🕸️</span>Netzwerk</div>
+      <div class="nav-label">&#220;bersicht</div>
+      <div class="nav-item active" data-view="dashboard" onclick="nav(this)"><span class="ico">&#128202;</span>Dashboard</div>
+      <div class="nav-item" data-view="netzwerk" onclick="nav(this)"><span class="ico">&#128375;&#65039;</span>Netzwerk</div>
     </div>
     <div class="nav-section">
       <div class="nav-label">Verwaltung</div>
-      <div class="nav-item" data-view="ags" onclick="nav(this)"><span class="ico">🏛️</span>Arbeitsgruppen</div>
-      <div class="nav-item" data-view="ugs" onclick="nav(this)"><span class="ico">🔗</span>Untergruppen</div>
-      <div class="nav-item" data-view="mitglieder" onclick="nav(this)"><span class="ico">👥</span>Mitglieder</div>
-      <div class="nav-item" data-view="aufgaben" onclick="nav(this)"><span class="ico">✅</span>Aufgaben <span class="nav-badge" id="nb-aufgaben"></span></div>
+      <div class="nav-item" data-view="ags" onclick="nav(this)"><span class="ico">&#127963;&#65039;</span>Arbeitsgruppen</div>
+      <div class="nav-item" data-view="ugs" onclick="nav(this)"><span class="ico">&#128279;</span>Untergruppen</div>
+      <div class="nav-item" data-view="mitglieder" onclick="nav(this)"><span class="ico">&#128101;</span>Mitglieder</div>
+      <div class="nav-item" data-view="aufgaben" onclick="nav(this)"><span class="ico">&#9989;</span>Aufgaben <span class="nav-badge" id="nb-aufgaben"></span></div>
     </div>
     <div class="nav-section">
       <div class="nav-label">Konzepte &amp; KI</div>
       <div class="nav-item" data-view="konzepte" onclick="nav(this)"><span class="ico">&#128196;</span>Konzept-Archiv</div>
       <div class="nav-item" data-view="wizard" onclick="nav(this)"><span class="ico">&#10024;</span>KI-Assistent</div>
-      <div class="nav-item" data-view="upload" onclick="nav(this)"><span class="ico">&#128204;</span>Konzept hochladen</div>
+      <div class="nav-item" data-view="upload" onclick="nav(this)"><span class="ico">&#128204;</span>Hochladen</div>
     </div>
     <div class="nav-section">
       <div class="nav-label">Kommunikation</div>
@@ -397,13 +397,11 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
     </div>
     <div class="nav-section">
       <div class="nav-label">Tools</div>
-      
       <div class="nav-item" data-view="freigaben" onclick="nav(this)"><span class="ico">&#128274;</span>Freigaben<span id="nb-frg" style="margin-left:auto;background:#f59e0b;color:#000;border-radius:10px;padding:1px 6px;font-size:10px;display:none"></span></div>
       <div class="nav-item" data-view="notizen" onclick="nav(this)"><span class="ico">&#128221;</span>Notizen</div>
       <div class="nav-item" data-view="einst" onclick="nav(this)"><span class="ico">&#9881;</span>Einstellungen</div>
     </div>
     </div>
-  </div>
   <div id="ag-nav" style="display:none">
     <div class="nav-section">
       <div class="nav-label">Wähle deine AG</div>
@@ -924,10 +922,9 @@ function renderAufgaben(){
   c.innerHTML='<div class="frow mb12">'+btns+'</div><div id="tasks-wrap"></div>';
   applyTaskFilter();
 }
-function tfClick(btn){setTaskFilter(btn.getAttribute('data-f'),btn);}
 function setTaskFilter(f,btn){
   taskFilter=f;
-  document.querySelectorAll('[id^="tf-"]').forEach(function(b){b.style.borderColor='';b.style.color='';});
+  document.querySelectorAll('[id^="tf-"]').forEach(b=>{b.style.borderColor='';b.style.color='';});
   btn.style.borderColor='var(--accent)';btn.style.color='var(--text)';
   applyTaskFilter();
 }
@@ -949,36 +946,6 @@ function applyTaskFilter(){
   }
   d.innerHTML=html2;
 }
-
-async function delAllErledigt(){
-  if(!confirm('Alle erledigten Aufgaben dauerhaft löschen?'))return;
-  var ids=db.aufgaben.filter(function(t){return t.status==='Erledigt';}).map(function(t){return t.id;});
-  db.aufgaben=db.aufgaben.filter(function(t){return t.status!=='Erledigt';});
-  for(var i=0;i<ids.length;i++) await sbDel('aufgaben',ids[i]);
-  updateBadges(); applyTaskFilter(); toast(ids.length+' Aufgaben gelöscht','ok');
-}
-
-function taskRowHtmlEx(t){
-  var today=new Date(), ov=t.faellig&&new Date(t.faellig)<today&&t.status!=='Erledigt', done=t.status==='Erledigt', arch=t.status==='Archiviert';
-  var col=done?'var(--green)':arch?'var(--muted)':ov?'var(--red)':'inherit';
-  return '<div class="trow" style="'+(arch?'opacity:.5':'')+'" data-tid="'+t.id+'" onclick="openTaskDetail(this.dataset.tid)">'
-    +'<div class="tcheck '+(done?'done':'')+'" data-tid="'+t.id+'" onclick="event.stopPropagation();toggleTask(this.dataset.tid)">'+(done?'&#10003;':'')+'</div>'
-    +'<div class="tbody">'
-    +'<div class="ttitle '+(done?'done-text':'')+'">'+(ov?'&#9888; ':'')+t.titel+'</div>'
-    +'<div class="tmeta">'
-    +'<span>&#128100; '+t.verantw+'</span>'
-    +(t.faellig?'<span style="color:'+col+'">&#128197; '+t.faellig+(ov?' ⚠':'')+'</span>':'')
-    +'<span>'+t.entityTyp+': '+t.entityId+'</span>'
-    +(t.freigabe?'<span style="color:var(--amber)">&#128274; Freigabe</span>':'')
-    +'</div></div>'
-    +'<div class="frow" style="gap:5px">'+pbadge(t.prio)+sbadge(t.status)+'</div>'
-    +(isAdmin()&&done?'<button class="btn btn-danger btn-xs" style="margin-left:4px" data-tid="'+t.id+'" onclick="event.stopPropagation();permDelTask(this.dataset.tid)">&#128465;</button>':'')
-    +'</div>';
-}
-
-// ════════════════════════════════════════════════════════
-// KONZEPTE
-// ════════════════════════════════════════════════════════
 function renderKonzepte(){
   const c=el('content');
   c.innerHTML=`<div class="g2">${db.konzepte.map(k=>{
@@ -1259,47 +1226,6 @@ function openTaskDetail(id){
 })();
   om('m-task-detail');
 }
-
-function liveSetStatus(btn){
-  var id=btn.getAttribute('data-tid'), s=btn.getAttribute('data-status');
-  var t=db.aufgaben.find(function(x){return x.id===id;});if(!t)return;
-  t.status=s;
-  // Update badge in header
-  var lbl=document.getElementById('td-status-label');
-  if(lbl) lbl.innerHTML='Status: '+sbadge(s);
-  // Update button styles
-  var btns=document.querySelectorAll('#td-status-btns button');
-  var colMap={'Erledigt':'#22c55e','Offen':'#6b7199','In Arbeit':'#4f7cff','Blockiert':'#ef4444','Wartet auf Freigabe':'#f59e0b','Archiviert':'#6b7199'};
-  btns.forEach(function(b){
-    var bs=b.getAttribute('data-status');
-    if(bs===s){ b.style.borderColor=colMap[s]||'#6b7199';b.style.color=colMap[s]||'#6b7199';b.style.background='rgba(0,0,0,.2)'; }
-    else { b.style.borderColor='';b.style.color='';b.style.background=''; }
-  });
-  // Show/hide erledigt hint
-  var hint=document.getElementById('td-archive-hint');
-  if(hint) hint.style.display=(s==='Erledigt'?'':'none');
-  // Sync
-  sbUp('aufgaben',t); updateBadges();
-  if(curView==='aufgaben') applyTaskFilter();
-  else if(curView==='dashboard') renderDash();
-  toast('Status → '+s,'ok');
-}
-
-async function archiveTask(id){
-  var t=db.aufgaben.find(function(x){return x.id===id;});if(!t)return;
-  t.status='Archiviert'; await sbUp('aufgaben',t);
-  cm('m-task-detail'); updateBadges(); renderView(curView);
-  toast('Aufgabe archiviert','ok');
-}
-
-async function permDelTask(id){
-  if(!isAdmin())return;
-  if(!confirm('Aufgabe dauerhaft löschen?'))return;
-  db.aufgaben=db.aufgaben.filter(function(x){return x.id!==id;});
-  await sbDel('aufgaben',id);
-  cm('m-task-detail'); updateBadges(); renderView(curView);
-  toast('Aufgabe gelöscht','ok');
-}
 function setTaskStatus(id,status){
   const t=db.aufgaben.find(x=>x.id===id);if(t){t.status=status;}
   cm('m-task-detail');renderView(curView);toast(`Status → ${status}`,'ok');
@@ -1519,20 +1445,7 @@ function saveMitglied(){
   else{db.mitglieder.push(data);db.ids.m++;}
   cm('m-mitgl');renderView(curView);toast(editId?'Mitglied aktualisiert':'Mitglied erstellt','ok');
 }
-async function delMitglied(id){
-  var m=db.mitglieder.find(function(x){return x.id===id;});
-  if(!m)return;
-  if(!confirm('Mitglied "'+m.name+'" löschen? Zugehöriger Login-Account wird ebenfalls entfernt.'))return;
-  db.mitglieder=db.mitglieder.filter(function(x){return x.id!==id;});
-  await sbDel('mitglieder',id);
-  var roleIds=db.rollen.filter(function(r){return r.personId===id;}).map(function(r){return r.id;});
-  db.rollen=db.rollen.filter(function(r){return r.personId!==id;});
-  for(var ri=0;ri<roleIds.length;ri++) await sbDel('rollen',roleIds[ri]);
-  var u=db.nutzer.find(function(x){return x.name===m.name;});
-  if(u){db.nutzer=db.nutzer.filter(function(x){return x.id!==u.id;});await sbDel('nutzer',u.id);}
-  renderView('mitglieder');
-  toast('Mitglied'+(u?' + Login':'')+" "+m.name+' gelöscht','ok');
-}
+function delMitglied(id){if(!confirm('Mitglied löschen?'))return;db.mitglieder=db.mitglieder.filter(m=>m.id!==id);renderView('mitglieder');toast('Mitglied gelöscht','ok');}
 
 // ════════════════════════════════════════════════════════
 // AUFGABE FORM
@@ -3493,17 +3406,11 @@ async function runKonzeptAnalyse(konzeptId){
   var doT  =(document.getElementById('ka-tasks')||{checked:true}).checked;
   var doM  =(document.getElementById('ka-members')||{checked:true}).checked;
   var text=konzeptToText(k)||(k.ziel||k.name);
-  var heute=new Date().toISOString().slice(0,10);
-  var prompt='Du bist Experte für Vereinsstrukturen bei einem Cannabis Social Club. Analysiere dieses Konzept vollständig.\n'
-    +'Antworte NUR mit validem JSON ohne Backticks oder Kommentare.\n'
-    +'JSON-Schema:\n'
-    +'{"ags":[{"name":"string","kat":"string","ziel":"string","status":"In Planung","prio":"Mittel","koo":"Person","rhythmus":"string"}],'
-    +'"ugs":[{"name":"string","typ":"Team|Kernteam|Redaktion|Community","agName":"zugeh. AG-Name","lead":"string","fokus":"string","kanal":"string","status":"In Planung"}],'
-    +'"aufgaben":[{"titel":"string","verantw":"string","prio":"Hoch|Mittel|Niedrig","faellig":"YYYY-MM-DD","entityName":"AG oder UG Name","freigabe":false,"sensibel":"Nein","naechster":"string","notizen":"string"}],'
-    +'"mitglieder":[{"name":"string","rolle":"string","kompetenzen":"string","verfueg":"hoch|mittel|gering","region":"string"}],'
-    +'"konzept_update":{"ziel":"string","struktur":"string","aw":"string","ns":"string","op":"string","rhythmus":"string","kanaele":"string","sicherheit":"string"}'
-    +'}\n'
-    +'Wichtig: Extrahiere ALLE genannten Personen, Rollen, Aufgaben und Strukturen. Fälligkeitsdaten ab heute ('+heute+'). EntityName muss exakt dem AG/UG-Namen entsprechen.\n\nKonzept:\n'+text.slice(0,6000);
+  var prompt='Analysiere dieses Konzept und erstelle einen Umsetzungsplan.\nAntworte NUR mit validem JSON (keine Backticks):\n'
+    +'{"ags":[{"name":"AG-Name","kat":"Kategorie","ziel":"Ziel"}],'
+    +'"ugs":[{"name":"UG-Name","typ":"Team","agName":"Zugeh. AG","lead":"Person","fokus":"Fokus"}],'
+    +'"aufgaben":[{"titel":"Titel","verantw":"Person","prio":"Hoch","faellig":"2026-05-01","entityName":"AG/UG Name"}],'
+    +'"mitglieder":[{"name":"Name","rolle":"Rolle","kompetenzen":"Skills"}]}\n\nKonzept:\n'+text.slice(0,5000);
   try{
     var raw=await aiCall(prompt,3000);
     var json=JSON.parse(raw.replace(/```json|```/g,'').trim());
@@ -3561,35 +3468,14 @@ async function runKonzeptAnalyse(konzeptId){
       }
     }
     updateBadges();
-    // Update konzept fields if returned
-    if(json.konzept_update){
-      var ku=json.konzept_update, ki2=db.konzepte.findIndex(function(x){return x.id===konzeptId;});
-      if(ki2>=0){var kk2=db.konzepte[ki2];['ziel','struktur','aw','ns','op','rhythmus','kanaele','sicherheit'].forEach(function(f2){if(ku[f2]&&!kk2[f2])kk2[f2]=ku[f2];});await sbUp('konzepte',kk2);log.push('&#128196; Konzept-Felder aktualisiert');}
-    }
-    var nAG=(json.ags||[]).length,nUG=(json.ugs||[]).length,nM=(json.mitglieder||[]).length,nT=(json.aufgaben||[]).length;
-    var summ='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
-      +'<div style="background:rgba(79,124,255,.1);border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#4f7cff">'+nAG+'</div><div style="font-size:10px;color:var(--muted)">AGs</div></div>'
-      +'<div style="background:rgba(167,139,250,.1);border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#a78bfa">'+nUG+'</div><div style="font-size:10px;color:var(--muted)">UGs</div></div>'
-      +'<div style="background:rgba(34,197,94,.1);border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#22c55e">'+nM+'</div><div style="font-size:10px;color:var(--muted)">Mitglieder</div></div>'
-      +'<div style="background:rgba(245,158,11,.1);border-radius:6px;padding:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#f59e0b">'+nT+'</div><div style="font-size:10px;color:var(--muted)">Aufgaben</div></div>'
-      +'</div>';
-    if(res){
-      res.innerHTML='';
-      var rv=document.createElement('div');rv.style.cssText='background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:16px';
-      rv.innerHTML='<div style="font-size:15px;font-weight:600;margin-bottom:12px">&#10003; Analyse abgeschlossen!</div>'+summ
-        +'<div style="font-size:12px;line-height:1.8;color:var(--muted2);max-height:180px;overflow-y:auto;background:var(--bg);border-radius:6px;padding:10px;margin-bottom:12px">'+log.join('<br>')+'</div>';
-      var rbDiv=document.createElement('div');rbDiv.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
-      [['AGs','ags'],['Aufgaben','aufgaben'],['Mitglieder','mitglieder'],['Archiv','konzepte']].forEach(function(pair){
-        var rb=document.createElement('button');rb.className='btn btn-ghost btn-sm';rb.textContent=pair[0];
-        rb.setAttribute('data-v',pair[1]);rb.addEventListener('click',function(){navTo(this.getAttribute('data-v'));});
-        rbDiv.appendChild(rb);
-      });
-      var rb0=document.createElement('button');rb0.className='btn btn-primary btn-sm';rb0.textContent='AGs ansehen';
-      rb0.addEventListener('click',function(){navTo('ags');});
-      rbDiv.insertBefore(rb0,rbDiv.firstChild);
-      rv.appendChild(rbDiv);
-      res.appendChild(rv);
-    }
+    if(res) res.innerHTML='<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:14px">'
+      +'<div style="font-size:15px;font-weight:600;margin-bottom:10px">&#10003; Analyse abgeschlossen!</div>'
+      +'<div style="font-size:12px;line-height:1.9;color:var(--muted2)">'+log.map(function(l){return l;}).join('<br>')+'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:12px">'
+      +'<button class="btn btn-primary btn-sm" onclick="navTo(\"ags\")">AGs ansehen</button>'
+      +'<button class="btn btn-ghost btn-sm" onclick="navTo(\"aufgaben\")">Aufgaben</button>'
+      +'<button class="btn btn-ghost btn-sm" onclick="navTo(\"konzepte\")">Archiv</button>'
+      +'</div></div>';
     if(btn){btn.disabled=false;btn.textContent='&#10024; Erneut analysieren';}
   }catch(e){
     if(res) res.innerHTML='<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:14px"><strong style="color:#ef4444">Fehler:</strong> <span style="font-size:12px">'+e.message+'</span></div>';
@@ -3598,6 +3484,80 @@ async function runKonzeptAnalyse(konzeptId){
 }
 
 function navTo(view){ var q=document.querySelector('[data-view="'+view+'"]'); if(q) nav(q); }
+
+
+function liveSetStatus(btn){
+  var id=btn.getAttribute('data-tid'), s=btn.getAttribute('data-status');
+  var t=db.aufgaben.find(function(x){return x.id===id;});if(!t)return;
+  t.status=s;
+  // Update badge in header
+  var lbl=document.getElementById('td-status-label');
+  if(lbl) lbl.innerHTML='Status: '+sbadge(s);
+  // Update button styles
+  var btns=document.querySelectorAll('#td-status-btns button');
+  var colMap={'Erledigt':'#22c55e','Offen':'#6b7199','In Arbeit':'#4f7cff','Blockiert':'#ef4444','Wartet auf Freigabe':'#f59e0b','Archiviert':'#6b7199'};
+  btns.forEach(function(b){
+    var bs=b.getAttribute('data-status');
+    if(bs===s){ b.style.borderColor=colMap[s]||'#6b7199';b.style.color=colMap[s]||'#6b7199';b.style.background='rgba(0,0,0,.2)'; }
+    else { b.style.borderColor='';b.style.color='';b.style.background=''; }
+  });
+  // Show/hide erledigt hint
+  var hint=document.getElementById('td-archive-hint');
+  if(hint) hint.style.display=(s==='Erledigt'?'':'none');
+  // Sync
+  sbUp('aufgaben',t); updateBadges();
+  if(curView==='aufgaben') applyTaskFilter();
+  else if(curView==='dashboard') renderDash();
+  toast('Status → '+s,'ok');
+}
+
+async function archiveTask(id){
+  var t=db.aufgaben.find(function(x){return x.id===id;});if(!t)return;
+  t.status='Archiviert'; await sbUp('aufgaben',t);
+  cm('m-task-detail'); updateBadges(); renderView(curView);
+  toast('Aufgabe archiviert','ok');
+}
+
+async function permDelTask(id){
+  if(!isAdmin())return;
+  if(!confirm('Aufgabe dauerhaft löschen?'))return;
+  db.aufgaben=db.aufgaben.filter(function(x){return x.id!==id;});
+  await sbDel('aufgaben',id);
+  cm('m-task-detail'); updateBadges(); renderView(curView);
+  toast('Aufgabe gelöscht','ok');
+}
+
+async function delAllErledigt(){
+  if(!confirm('Alle erledigten Aufgaben dauerhaft löschen?'))return;
+  var ids=db.aufgaben.filter(function(t){return t.status==='Erledigt';}).map(function(t){return t.id;});
+  db.aufgaben=db.aufgaben.filter(function(t){return t.status!=='Erledigt';});
+  for(var i=0;i<ids.length;i++) await sbDel('aufgaben',ids[i]);
+  updateBadges(); applyTaskFilter(); toast(ids.length+' Aufgaben gelöscht','ok');
+}
+
+function taskRowHtmlEx(t){
+  var today=new Date(), ov=t.faellig&&new Date(t.faellig)<today&&t.status!=='Erledigt', done=t.status==='Erledigt', arch=t.status==='Archiviert';
+  var col=done?'var(--green)':arch?'var(--muted)':ov?'var(--red)':'inherit';
+  return '<div class="trow" style="'+(arch?'opacity:.5':'')+'" data-tid="'+t.id+'" onclick="openTaskDetail(this.dataset.tid)">'
+    +'<div class="tcheck '+(done?'done':'')+'" data-tid="'+t.id+'" onclick="event.stopPropagation();toggleTask(this.dataset.tid)">'+(done?'&#10003;':'')+'</div>'
+    +'<div class="tbody">'
+    +'<div class="ttitle '+(done?'done-text':'')+'">'+(ov?'&#9888; ':'')+t.titel+'</div>'
+    +'<div class="tmeta">'
+    +'<span>&#128100; '+t.verantw+'</span>'
+    +(t.faellig?'<span style="color:'+col+'">&#128197; '+t.faellig+(ov?' ⚠':'')+'</span>':'')
+    +'<span>'+t.entityTyp+': '+t.entityId+'</span>'
+    +(t.freigabe?'<span style="color:var(--amber)">&#128274; Freigabe</span>':'')
+    +'</div></div>'
+    +'<div class="frow" style="gap:5px">'+pbadge(t.prio)+sbadge(t.status)+'</div>'
+    +(isAdmin()&&done?'<button class="btn btn-danger btn-xs" style="margin-left:4px" data-tid="'+t.id+'" onclick="event.stopPropagation();permDelTask(this.dataset.tid)">&#128465;</button>':'')
+    +'</div>';
+}
+
+// ════════════════════════════════════════════════════════
+// KONZEPTE
+// ════════════════════════════════════════════════════════
+
+function tfClick(btn){setTaskFilter(btn.getAttribute('data-f'),btn);}
 
 async function delNutzer(id){
   var u=db.nutzer.find(function(x){return x.id===id;});
@@ -3622,6 +3582,26 @@ async function delNutzer(id){
   }
   renderEinst();
 }
+window.addEventListener('load', function(){
+  G('login-overlay').style.display='flex';
+  L_init();
+});
+
+async function delMitglied(id){
+  var m=db.mitglieder.find(function(x){return x.id===id;});
+  if(!m)return;
+  if(!confirm('Mitglied "'+m.name+'" löschen? Zugehöriger Login wird ebenfalls entfernt.'))return;
+  db.mitglieder=db.mitglieder.filter(function(x){return x.id!==id;});
+  await sbDel('mitglieder',id);
+  var roleIds=db.rollen.filter(function(r){return r.personId===id;}).map(function(r){return r.id;});
+  db.rollen=db.rollen.filter(function(r){return r.personId!==id;});
+  for(var ri=0;ri<roleIds.length;ri++) await sbDel('rollen',roleIds[ri]);
+  var u=db.nutzer.find(function(x){return x.name===m.name;});
+  if(u){db.nutzer=db.nutzer.filter(function(x){return x.id!==u.id;});await sbDel('nutzer',u.id);}
+  renderView('mitglieder');
+  toast('Mitglied'+(u?' + Login':'')+' '+m.name+' gelöscht','ok');
+}
+
 window.addEventListener('load', function(){
   G('login-overlay').style.display='flex';
   L_init();
