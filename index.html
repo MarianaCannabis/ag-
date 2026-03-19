@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V20</title>
+<title>Mariana CSC - AG-Verwaltung V21</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
 :root{
   --bg:#0d0f18;--surface:#141720;--card:#1b1f2e;--card2:#202535;
@@ -331,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V20</div>
+    <div class="login-sub">AG-Verwaltung V21</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -364,7 +365,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V20</p>
+    <p>AG-Verwaltung V21</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -384,9 +385,11 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
       <div class="nav-item" data-view="aufgaben" onclick="nav(this)"><span class="ico">✅</span>Aufgaben <span class="nav-badge" id="nb-aufgaben"></span></div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Konzepte</div>
-      <div class="nav-item" data-view="konzepte" onclick="nav(this)"><span class="ico">📄</span>Konzept-Archiv</div>
-      <div class="nav-item" data-view="wizard" onclick="nav(this)"><span class="ico">✨</span>KI-Assistent</div>
+      <div class="nav-label">Konzepte &amp; KI</div>
+      <div class="nav-item" data-view="konzepte" onclick="nav(this)"><span class="ico">&#128196;</span>Konzept-Archiv</div>
+      <div class="nav-item" data-view="wizard" onclick="nav(this)"><span class="ico">&#10024;</span>KI-Assistent</div>
+      <div class="nav-item" data-view="upload" onclick="nav(this)"><span class="ico">&#128204;</span>Konzept hochladen</div>
+    </div>
     <div class="nav-section">
       <div class="nav-label">Kommunikation</div>
       <div class="nav-item" data-view="posteingang" onclick="nav(this)"><span class="ico">&#9993;</span>Posteingang<span id="nb-post" style="margin-left:auto;background:#4f7cff;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;display:none"></span></div>
@@ -397,16 +400,8 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
       
       <div class="nav-item" data-view="freigaben" onclick="nav(this)"><span class="ico">&#128274;</span>Freigaben<span id="nb-frg" style="margin-left:auto;background:#f59e0b;color:#000;border-radius:10px;padding:1px 6px;font-size:10px;display:none"></span></div>
       <div class="nav-item" data-view="notizen" onclick="nav(this)"><span class="ico">&#128221;</span>Notizen</div>
-      <div class="nav-item" data-view="upload" onclick="nav(this)"><span class="ico">&#128204;</span>Konzept hochladen</div>
       <div class="nav-item" data-view="einst" onclick="nav(this)"><span class="ico">&#9881;</span>Einstellungen</div>
     </div>
-    <div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#6b7199;padding:12px 16px 4px;text-transform:uppercase">Kommunikation</div>
-    
-    
-    <div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:#6b7199;padding:12px 16px 4px;text-transform:uppercase">Verwaltung</div>
-    
-    
-    
     </div>
   </div>
   <div id="ag-nav" style="display:none">
@@ -3111,105 +3106,358 @@ async function saveEditNutzer(id){
 async function toggleNutzerAktiv(id){var u=db.nutzer.find(function(x){return x.id===id;});if(!u||u.rolle==='SuperAdmin')return;u.aktiv=u.aktiv===false;await sbUp('nutzer',u);toast(u.aktiv?'Freigeschaltet':'Gesperrt','ok');renderEinst();}
 
 // ── Konzept Upload ────────────────────────────────────────
+// ─── V21 UPLOAD SYSTEM ───────────────────────────────────────────────────────
+
 function renderKonzeptUpload(){
   var c=el('content');if(!c)return;
-  var tOpts='<option value="">-- Kein Bezug --</option>'+db.ags.map(function(a){return '<option value="'+a.id+'">[AG] '+a.name+'</option>';}).join('')+db.ugs.map(function(u){return '<option value="'+u.id+'">[UG] '+u.name+'</option>';}).join('');
-  var wrap=document.createElement('div');wrap.style.maxWidth='640px';
-  wrap.innerHTML='<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px">'
-    +'<h3 style="font-size:14px;margin:0 0 14px">&#128204; Konzept hochladen</h3>'
-    +'<select id="up-tgt" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;margin-bottom:12px">'+tOpts+'</select>'
-    +'<div id="up-zone" style="border:2px dashed var(--border);border-radius:10px;padding:36px;text-align:center;cursor:pointer"><div style="font-size:32px;margin-bottom:8px">&#128196;</div><p style="font-size:13px;font-weight:600;margin-bottom:4px">Datei ablegen oder klicken</p><p style="font-size:11px;color:var(--muted)">TXT MD PDF DOCX XLSX CSV &middot; max 10MB</p></div>'
-    +'<input type="file" id="up-file" accept=".txt,.md,.pdf,.docx,.doc,.xlsx,.xls,.csv,.pptx" style="display:none"></div>'
-    +'<div id="up-preview" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">'
-    +'<div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong id="up-fname"></strong><span id="up-fsize" style="color:var(--muted);font-size:11px"></span></div>'
-    +'<div id="up-text-pre" style="background:var(--card2);border-radius:6px;padding:10px;font-size:11px;color:var(--muted2);max-height:100px;overflow-y:auto;white-space:pre-wrap;margin-bottom:12px"></div>'
-    +'<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="analyzeKonzept()">&#10024; KI analysieren</button></div></div>'
+  var tOpts='<option value="">-- Kein Bezug --</option>'
+    +'<option value="__new_ag__">&#10133; Neue AG jetzt anlegen...</option>'
+    +db.ags.map(function(a){return'<option value="ag:'+a.id+'">[AG] '+a.name+'</option>';}).join('')
+    +db.ugs.map(function(u){return'<option value="ug:'+u.id+'">[UG] '+u.name+'</option>';}).join('');
+
+  var wrap=document.createElement('div');
+  wrap.style.maxWidth='720px';
+  wrap.innerHTML=
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:12px">'
+    +'<h3 style="font-size:14px;margin:0 0 14px">&#128204; Konzept hochladen &amp; analysieren</h3>'
+    +'<div style="margin-bottom:12px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Zuordnung</label>'
+    +'<select id="up-tgt" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px">'+tOpts+'</select></div>'
+
+    +'<div id="up-new-ag-form" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px">'
+    +'<div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px">&#127963; Neue AG anlegen</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    +'<div><label style="font-size:10px;color:var(--muted)">Name *</label>'
+    +'<input id="new-ag-name" placeholder="z.B. AG Kommunikation" style="width:100%;background:var(--card);border:1px solid var(--border);color:inherit;border-radius:5px;padding:6px 8px;font-size:12px;box-sizing:border-box;margin-top:3px"></div>'
+    +'<div><label style="font-size:10px;color:var(--muted)">Kategorie</label>'
+    +'<input id="new-ag-kat" placeholder="z.B. Kommunikation" style="width:100%;background:var(--card);border:1px solid var(--border);color:inherit;border-radius:5px;padding:6px 8px;font-size:12px;box-sizing:border-box;margin-top:3px"></div>'
+    +'<div><label style="font-size:10px;color:var(--muted)">Koordination</label>'
+    +'<input id="new-ag-koo" placeholder="Name" style="width:100%;background:var(--card);border:1px solid var(--border);color:inherit;border-radius:5px;padding:6px 8px;font-size:12px;box-sizing:border-box;margin-top:3px"></div>'
+    +'<div><label style="font-size:10px;color:var(--muted)">Status</label>'
+    +'<select id="new-ag-status" style="width:100%;background:var(--card);border:1px solid var(--border);color:inherit;border-radius:5px;padding:6px 8px;font-size:12px;box-sizing:border-box;margin-top:3px"><option>In Planung</option><option>Aktiv</option><option>Idee</option></select></div>'
+    +'</div></div>'
+
+    +'<div id="up-zone" style="border:2px dashed var(--border);border-radius:10px;padding:36px;text-align:center;cursor:pointer;transition:border-color .2s">'
+    +'<div style="font-size:40px;margin-bottom:8px">&#128196;</div>'
+    +'<p style="font-size:13px;font-weight:600;margin-bottom:4px">Datei hier ablegen oder klicken</p>'
+    +'<p style="font-size:11px;color:var(--muted)">TXT &middot; MD &middot; PDF &middot; DOCX &middot; XLSX &middot; CSV &middot; max 10MB</p></div>'
+    +'<input type="file" id="up-file" accept=".txt,.md,.pdf,.docx,.doc,.xlsx,.xls,.csv,.pptx,.rtf" style="display:none"></div>'
+
+    +'<div id="up-preview" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<div style="display:flex;align-items:center;gap:10px">'
+    +'<div id="up-file-ico" style="font-size:28px"></div>'
+    +'<div><strong id="up-fname" style="font-size:13px"></strong>'
+    +'<div id="up-fsize" style="font-size:11px;color:var(--muted)"></div></div></div>'
+    +'<span id="up-read-status" style="font-size:11px"></span></div>'
+    +'<div id="up-text-pre" style="background:var(--card2);border-radius:6px;padding:10px;font-size:11px;color:var(--muted2);max-height:140px;overflow-y:auto;white-space:pre-wrap;margin-bottom:12px;line-height:1.6"></div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn btn-primary btn-sm" id="up-analyze-btn">&#10024; KI analysieren &amp; Vorschau</button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="upReset()">&#8635; Andere Datei</button></div></div>'
     +'<div id="up-result"></div>';
-  c.innerHTML=''; c.appendChild(wrap); window._uploadText='';
-  var zone=G('up-zone'),finp=G('up-file');
-  if(zone&&finp){
-    zone.onclick=function(){finp.click();};
-    zone.ondragover=function(e){e.preventDefault();zone.style.borderColor='#4f7cff';};
-    zone.ondragleave=function(){zone.style.borderColor='var(--border)';};
-    zone.ondrop=function(e){e.preventDefault();zone.style.borderColor='var(--border)';if(e.dataTransfer.files[0]) processUpFile(e.dataTransfer.files[0]);};
-    finp.onchange=function(){if(this.files[0]) processUpFile(this.files[0]);};
-  }
+
+  c.innerHTML=''; c.appendChild(wrap);
+  window._uploadText=''; window._uploadFile=null;
+
+  var zone=G('up-zone'),finp=G('up-file'),tgt=G('up-tgt'),abtn=G('up-analyze-btn');
+  zone.onclick=function(){finp.click();};
+  zone.ondragover=function(e){e.preventDefault();zone.style.borderColor='#4f7cff';};
+  zone.ondragleave=function(){zone.style.borderColor='var(--border)';};
+  zone.ondrop=function(e){e.preventDefault();zone.style.borderColor='var(--border)';if(e.dataTransfer.files[0])processUpFile(e.dataTransfer.files[0]);};
+  finp.onchange=function(){if(this.files[0])processUpFile(this.files[0]);};
+  tgt.onchange=function(){G('up-new-ag-form').style.display=this.value==='__new_ag__'?'block':'none';};
+  abtn.addEventListener('click',analyzeKonzept);
 }
-function processUpFile(file){
-  if(file.size>10*1024*1024){toast('Zu groß (max 10MB)','error');return;}
-  window._uploadFile=file;
-  var isDocx=/\.docx?$/i.test(file.name), isBin=/\.(pdf|xlsx?|pptx?)$/i.test(file.name);
+
+function upReset(){
+  window._uploadText=''; window._uploadFile=null;
+  var pv=G('up-preview'),res=G('up-result');
+  if(pv)pv.style.display='none';
+  if(res)res.innerHTML='';
+}
+
+// File reading helpers
+function readAsText(file){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.onerror=function(){rej(new Error('Lesefehler'));};r.readAsText(file,'UTF-8');});}
+function readAsAB(file){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.onerror=function(){rej(new Error('Lesefehler'));};r.readAsArrayBuffer(file);});}
+
+async function extractPdfText(file){
+  if(typeof pdfjsLib==='undefined')throw new Error('PDF.js nicht geladen');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  var ab=await readAsAB(file);
+  var pdf=await pdfjsLib.getDocument({data:ab}).promise;
+  var lines=[];
+  for(var i=1;i<=pdf.numPages;i++){
+    var page=await pdf.getPage(i);
+    var tc=await page.getTextContent();
+    lines.push(tc.items.map(function(it){return it.str;}).join(' '));
+  }
+  return lines.join('\n').trim();
+}
+
+async function processUpFile(file){
+  if(file.size>10*1024*1024){toast('Zu gro\u00df (max 10MB)','error');return;}
+  window._uploadFile=file; window._uploadText='';
+  var nm=file.name.toLowerCase();
+  var icons={'.pdf':'&#128196;','.docx':'&#128209;','.doc':'&#128209;','.xlsx':'&#128200;','.xls':'&#128200;','.csv':'&#128202;','.txt':'&#128203;','.md':'&#128203;','.rtf':'&#128203;','.pptx':'&#128248;'};
+  var ext=nm.substring(nm.lastIndexOf('.'));
+  G('up-file-ico').innerHTML=icons[ext]||'&#128196;';
   G('up-fname').textContent=file.name;
   G('up-fsize').textContent=(file.size/1024).toFixed(1)+'KB';
   G('up-preview').style.display='';
-  if(isDocx){
-    if(typeof mammoth!=='undefined'){
-      G('up-text-pre').innerHTML='<span style="color:#4f7cff">&#128196; DOCX wird gelesen...</span>';
-      var ab=new FileReader();
-      ab.onload=function(e){
-        mammoth.extractRawText({arrayBuffer:e.target.result}).then(function(res2){
-          window._uploadText=res2.value||'';
-          G('up-text-pre').textContent=window._uploadText.slice(0,500)+(window._uploadText.length>500?'\n...':'');
-          if(!window._uploadText.trim()) G('up-text-pre').innerHTML='<span style="color:#f59e0b">&#9888; Kein Text. TXT-Export empfohlen.</span>';
-        }).catch(function(e2){G('up-text-pre').innerHTML='<span style="color:#ef4444">Fehler: '+e2.message+'</span>';});
-      };
-      ab.readAsArrayBuffer(file);
-    } else {
-      G('up-text-pre').innerHTML='<span style="color:#f59e0b">&#9888; DOCX-Bibliothek lädt... Bitte kurz warten und erneut hochladen.</span>';
-    }
-    return;
-  } else if(isBin){
-    window._uploadText='['+file.name+']';
-    G('up-text-pre').innerHTML='<span style="color:#f59e0b">&#9888; Binärdatei. TXT-Export für KI-Analyse empfohlen.</span>';
-  } else {
-    var r=new FileReader();
-    r.onload=function(e){window._uploadText=e.target.result;G('up-text-pre').textContent=window._uploadText.slice(0,500)+(window._uploadText.length>500?'\n...':'');};
-    r.readAsText(file,'UTF-8');
-  }
-}
-async function analyzeKonzept(){
-  if(!geminiKey&&!apiKey){toast('Bitte API-Key in Einstellungen','error');return;}
-  var text=window._uploadText||'';if(!text){toast('Keine Datei','error');return;}
-  var res=G('up-result');
-  res.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:8px"><div style="width:16px;height:16px;border:2px solid #4f7cff;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite"></div><span style="font-size:12px;color:var(--muted)">KI analysiert...</span></div>';
-  var p='Analysiere dieses Dokument. JSON (keine Backticks):\n{"name":"Titel","ziel":"Ziel","struktur":"Struktur","aufgaben":[{"titel":"T","verantw":"P","prio":"Hoch"}],"mitglieder":[{"name":"N","rolle":"R"}]}\n\nDokument:\n'+text.slice(0,4000);
-  try {
-    var raw=await aiCall(p,2000), json=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    var tid=(G('up-tgt')||{value:''}).value, isAGe=db.ags.some(function(a){return a.id===tid;});
-    var k={id:'KON-'+Date.now(),entityId:tid,entityTyp:isAGe?'AG':'UG',name:json.name||'Konzept',version:'1.0',status:'Entwurf',ziel:json.ziel||'',struktur:json.struktur||'',aw:'',ns:'',op:'',stand:new Date().toISOString().slice(0,10),verantw:curUser?curUser.name:''};
-    db.konzepte.push(k); await sbUp('konzepte',k);
-    var tc=0,mc=0;
-    if(json.aufgaben) for(var i=0;i<json.aufgaben.length;i++){
-      var ta=json.aufgaben[i];if(!ta.titel)continue;
-      var tobj={id:'T-'+Date.now()+'-'+i,entityTyp:isAGe?'AG':'UG',entityId:tid,titel:ta.titel,verantw:ta.verantw||'',faellig:'',prio:ta.prio||'Mittel',status:'Offen',freigabe:false,sensibel:'Nein',naechster:'',notizen:''};
-      db.aufgaben.push(tobj); await sbUp('aufgaben',tobj); tc++;
-    }
-    if(json.mitglieder) for(var j=0;j<json.mitglieder.length;j++){
-      var mj=json.mitglieder[j];if(!mj.name)continue;
-      if(!db.mitglieder.find(function(x){return x.name.toLowerCase()===mj.name.toLowerCase();})){
-        var mobj={id:'P-'+Date.now()+'-'+j,name:mj.name,kontakt:'',region:'',kompetenzen:mj.rolle||'',verfueg:'mittel',aktiv:true,start:new Date().toISOString().slice(0,10),notizen:''};
-        db.mitglieder.push(mobj); await sbUp('mitglieder',mobj); mc++;
+  G('up-read-status').innerHTML='<span style="color:#4f7cff">&#8635; Lese Datei...</span>';
+  G('up-text-pre').innerHTML='';
+
+  try{
+    if(ext==='.docx'||ext==='.doc'){
+      if(typeof mammoth==='undefined')throw new Error('mammoth.js nicht geladen');
+      var ab2=await readAsAB(file);
+      var res2=await mammoth.extractRawText({arrayBuffer:ab2});
+      window._uploadText=res2.value||'';
+    } else if(ext==='.pdf'){
+      window._uploadText=await extractPdfText(file);
+    } else if(ext==='.xlsx'||ext==='.xls'){
+      if(typeof XLSX!=='undefined'){
+        var ab3=await readAsAB(file);
+        var wb=XLSX.read(ab3,{type:'array'});
+        var txt='';
+        wb.SheetNames.forEach(function(sn){txt+='=== Tabelle: '+sn+' ===\n'+XLSX.utils.sheet_to_csv(wb.Sheets[sn])+'\n\n';});
+        window._uploadText=txt;
+      } else {
+        window._uploadText=await readAsText(file);
       }
+    } else {
+      window._uploadText=await readAsText(file);
     }
-    res.innerHTML='<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:14px"><div style="font-size:16px;margin-bottom:8px">&#10003; Fertig!</div><div style="font-size:12px;line-height:1.8">Konzept: <strong>'+json.name+'</strong><br>Aufgaben: <strong>'+tc+'</strong><br>Mitglieder: <strong>'+mc+'</strong></div>'
-      +'<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary btn-sm" onclick="renderKonzepte()">Zum Archiv</button><button class="btn btn-ghost btn-sm" onclick="renderKonzeptUpload()">Weiteres</button></div></div>';
-    updateBadges();
-  } catch(e) {
-    res.innerHTML='<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:14px"><strong style="color:#ef4444">Fehler:</strong> <span style="font-size:12px">'+e.message+'</span></div>';
+
+    if(!window._uploadText||!window._uploadText.trim())throw new Error('Kein Text extrahiert');
+    var prev=window._uploadText.slice(0,600);
+    G('up-text-pre').textContent=prev+(window._uploadText.length>600?'\n\n[... '+(window._uploadText.length-600)+' weitere Zeichen]':'');
+    G('up-read-status').innerHTML='<span style="color:#22c55e">&#10003; '+window._uploadText.length.toLocaleString()+' Zeichen gelesen</span>';
+  }catch(err){
+    window._uploadText='';
+    G('up-read-status').innerHTML='<span style="color:#ef4444">&#10007; '+err.message+'</span>';
+    G('up-text-pre').innerHTML='<div style="color:#f59e0b;font-size:11px">Tipp: DOCX \u2192 als .txt speichern \u00b7 PDF \u2192 Text kopieren \u00b7 Excel \u2192 Als CSV exportieren</div>';
   }
 }
 
-// ── Boot ──────────────────────────────────────────────────
-document.addEventListener('click', function(e){
-  var row=e.target.closest('.task-clickable');
-  if(row && e.target.type!=='checkbox' && !e.target.closest('button')){
-    openTaskDetail(row.getAttribute('data-tid'));
+async function analyzeKonzept(){
+  if(!geminiKey&&!apiKey){toast('Bitte API-Key in Einstellungen setzen','error');return;}
+  var text=window._uploadText||'';
+  if(!text.trim()){toast('Keine Datei geladen oder Text konnte nicht gelesen werden','error');return;}
+  var res=G('up-result');if(!res)return;
+  var tgtVal=(G('up-tgt')||{value:''}).value;
+
+  // Handle Neue AG anlegen
+  var preAGid='';
+  if(tgtVal==='__new_ag__'){
+    var agName=(G('new-ag-name')||{value:''}).value.trim();
+    if(!agName){toast('Bitte AG-Name eingeben','error');if(G('new-ag-name'))G('new-ag-name').focus();return;}
+    preAGid='AG-'+Date.now();
+    var newAG2={id:preAGid,name:agName,kat:(G('new-ag-kat')||{value:'Allgemein'}).value||'Allgemein',
+      status:(G('new-ag-status')||{value:'In Planung'}).value,prio:'Mittel',
+      koo:(G('new-ag-koo')||{value:''}).value,stv:'',ziel:'',rhythmus:'',
+      farbe:'#4f7cff',notizen:'',letzteAktu:new Date().toISOString().slice(0,10)};
+    db.ags.push(newAG2); await sbUp('ags',newAG2);
+    tgtVal='ag:'+preAGid;
+    toast('AG "'+agName+'" angelegt','ok');
   }
-});
+
+  res.innerHTML='<div style="display:flex;align-items:center;gap:12px;padding:16px;background:var(--card);border:1px solid var(--border);border-radius:8px">'
+    +'<div style="width:18px;height:18px;border:2px solid #4f7cff;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0"></div>'
+    +'<div><div style="font-size:13px;font-weight:500">KI analysiert...</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+Math.round(text.length/100)/10+' KB Text</div></div></div>';
+
+  var heute=new Date().toISOString().slice(0,10);
+  var prompt='Du bist Experte fuer Vereinsstrukturen bei einem Cannabis Social Club.\n'
+    +'Analysiere dieses Konzept und extrahiere ALLE relevanten Daten.\n'
+    +'Antworte NUR mit validem JSON ohne Backticks.\n\n'
+    +'{"konzept":{"name":"Titel","ziel":"Zielsetzung","zielgruppe":"Zielgruppen","struktur":"Struktur","aw":"Arbeitsweise","ns":"Naechste Schritte","op":"Offene Punkte","rhythmus":"Rhythmus","kanaele":"Kanaele","sicherheit":"Sicherheit","notizen":"Notizen"},'
+    +'"ags":[{"name":"string","kat":"string","ziel":"string","koo":"string","rhythmus":"string"}],'
+    +'"ugs":[{"name":"string","typ":"Team","agName":"zugeh. AG","lead":"string","fokus":"string"}],'
+    +'"aufgaben":[{"titel":"string","verantw":"string","prio":"Hoch","faellig":"'+heute.slice(0,7)+'-15","entityName":"AG/UG Name","freigabe":false,"naechster":"string"}],'
+    +'"mitglieder":[{"name":"string","rolle":"string","kompetenzen":"string","verfueg":"mittel"}]}\n\n'
+    +'Wichtig: Alle Personen als Mitglieder. Alle To-Dos als Aufgaben. entityName=exakter Name.\n\n'
+    +'Konzept:\n'+text.slice(0,6000);
+
+  try{
+    var raw=await aiCall(prompt,4000);
+    var jsonStr=raw.replace(/```json|```/g,'').trim();
+    jsonStr=jsonStr.replace(/,(\s*[}\]])/g,'$1');
+    var json=JSON.parse(jsonStr);
+    showUploadPreview(json,tgtVal);
+  }catch(e){
+    res.innerHTML='<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:16px">'
+      +'<div style="font-weight:600;color:#ef4444;margin-bottom:8px">&#10007; Analyse fehlgeschlagen: '+e.message+'</div>'
+      +'<details style="font-size:11px;color:var(--muted);margin-top:8px"><summary style="cursor:pointer">Details</summary><pre style="background:var(--bg);padding:8px;border-radius:4px;overflow-x:auto;margin-top:6px;max-height:150px">'+raw.slice(0,800)+'</pre></details>'
+      +'<button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="analyzeKonzept()">&#8635; Nochmal</button></div>';
+  }
 
 
+function upEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-// ── KI-Analyse: Konzept → AGs/UGs/Aufgaben/Mitglieder ────────────────────────
+function showUploadPreview(json,tgtVal){
+  var res=G('up-result');if(!res)return;
+  window._analyzeResult={json:json,tgtVal:tgtVal};
+  var k=json.konzept||{};
+  var ags=json.ags||[],ugs=json.ugs||[],tasks=json.aufgaben||[],members=json.mitglieder||[];
+
+  var h='<div style="background:var(--card);border:1px solid var(--accent);border-radius:10px;overflow:hidden">';
+  // Header
+  h+='<div style="background:rgba(79,124,255,.1);padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">'
+    +'<div><div style="font-size:14px;font-weight:600">&#10024; KI-Analyse: Vorschau &amp; Bearbeitung</div>'
+    +'<div style="font-size:11px;color:var(--muted2);margin-top:2px">Pr\u00fcfe und bearbeite die Erkennungen &mdash; nur Angehakte werden gespeichert</div></div>'
+    +'<div style="display:flex;gap:5px">'
+    +'<div style="text-align:center;background:rgba(79,124,255,.15);border-radius:6px;padding:5px 8px"><div style="font-size:15px;font-weight:700;color:#4f7cff">'+ags.length+'</div><div style="font-size:9px;color:var(--muted)">AGs</div></div>'
+    +'<div style="text-align:center;background:rgba(167,139,250,.15);border-radius:6px;padding:5px 8px"><div style="font-size:15px;font-weight:700;color:#a78bfa">'+ugs.length+'</div><div style="font-size:9px;color:var(--muted)">UGs</div></div>'
+    +'<div style="text-align:center;background:rgba(34,197,94,.15);border-radius:6px;padding:5px 8px"><div style="font-size:15px;font-weight:700;color:#22c55e">'+members.length+'</div><div style="font-size:9px;color:var(--muted)">Mitgl.</div></div>'
+    +'<div style="text-align:center;background:rgba(245,158,11,.15);border-radius:6px;padding:5px 8px"><div style="font-size:15px;font-weight:700;color:#f59e0b">'+tasks.length+'</div><div style="font-size:9px;color:var(--muted)">Aufg.</div></div>'
+    +'</div></div>';
+
+  h+='<div style="padding:16px;max-height:580px;overflow-y:auto">';
+
+  // Konzept-Felder
+  h+='<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px">&#128196; Konzept-Felder</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    +'<div><label style="font-size:10px;color:var(--muted)">Titel</label><input id="pv-k-name" value="'+upEsc(k.name)+'" style="width:100%;background:var(--bg);border:1px solid var(--border);color:inherit;border-radius:5px;padding:5px 8px;font-size:12px;box-sizing:border-box;margin-top:2px"></div>'
+    +'<div><label style="font-size:10px;color:var(--muted)">Zielgruppe</label><input id="pv-k-zg" value="'+upEsc(k.zielgruppe)+'" style="width:100%;background:var(--bg);border:1px solid var(--border);color:inherit;border-radius:5px;padding:5px 8px;font-size:12px;box-sizing:border-box;margin-top:2px"></div>'
+    +'<div style="grid-column:1/-1"><label style="font-size:10px;color:var(--muted)">Zielsetzung</label><textarea id="pv-k-ziel" rows="3" style="width:100%;background:var(--bg);border:1px solid var(--border);color:inherit;border-radius:5px;padding:5px 8px;font-size:12px;box-sizing:border-box;resize:vertical;margin-top:2px">'+upEsc(k.ziel)+'</textarea></div>'
+    +'<div style="grid-column:1/-1"><label style="font-size:10px;color:var(--muted)">N\u00e4chste Schritte</label><textarea id="pv-k-ns" rows="2" style="width:100%;background:var(--bg);border:1px solid var(--border);color:inherit;border-radius:5px;padding:5px 8px;font-size:12px;box-sizing:border-box;resize:vertical;margin-top:2px">'+upEsc(k.ns)+'</textarea></div>'
+    +'</div></div>';
+
+  function row(cls,fields){
+    return '<div style="display:flex;align-items:center;gap:6px;background:var(--bg);border-radius:6px;padding:6px 8px;margin-bottom:4px">'+fields+'</div>';
+  }
+  function cb(cls,i,col){return '<input type="checkbox" class="'+cls+'" data-i="'+i+'" checked style="flex-shrink:0;accent-color:'+col+'">';}
+  function inp(cls,i,val,w,ph){return '<input class="'+cls+'" data-i="'+i+'" value="'+upEsc(val)+'" placeholder="'+ph+'" style="'+(w?'width:'+w+';':'flex:1;')+'background:transparent;border:none;border-bottom:1px solid var(--border);color:inherit;font-size:12px;padding:2px 4px">';}
+
+  if(ags.length){
+    h+='<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:600;color:#4f7cff;margin-bottom:6px">&#127963; AGs ('+ags.length+')</div>';
+    ags.forEach(function(a,i){h+=row('',cb('pv-ag-cb',i,'#4f7cff')+inp('pv-ag-name',i,a.name,'','Name')+inp('pv-ag-kat',i,a.kat||'','120px','Kategorie')+inp('pv-ag-koo',i,a.koo||'','100px','Koordination'));});
+    h+='</div>';
+  }
+  if(ugs.length){
+    h+='<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:6px">&#9681; UGs ('+ugs.length+')</div>';
+    ugs.forEach(function(u,i){h+=row('',cb('pv-ug-cb',i,'#a78bfa')+inp('pv-ug-name',i,u.name,'','Name')+inp('pv-ug-lead',i,u.lead||'','90px','Lead')+'<span style="font-size:10px;color:var(--muted);flex-shrink:0">\u2192 '+upEsc(u.agName||'?')+'</span>');});
+    h+='</div>';
+  }
+  if(members.length){
+    h+='<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:600;color:#22c55e;margin-bottom:6px">&#128100; Mitglieder ('+members.length+')</div><div style="display:flex;flex-wrap:wrap;gap:5px">';
+    members.forEach(function(m,i){h+='<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:6px;padding:4px 7px">'+cb('pv-m-cb',i,'#22c55e')+inp('pv-m-name',i,m.name,'80px','Name')+inp('pv-m-rolle',i,m.rolle||'','70px','Rolle')+'</div>';});
+    h+='</div></div>';
+  }
+  if(tasks.length){
+    h+='<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:600;color:#f59e0b;margin-bottom:6px">&#9989; Aufgaben ('+tasks.length+')</div>';
+    tasks.forEach(function(t,i){
+      h+=row('',cb('pv-t-cb',i,'#f59e0b')+inp('pv-t-titel',i,t.titel,'','Aufgabe')
+        +inp('pv-t-verantw',i,t.verantw||'','80px','Verantw.')
+        +'<select class="pv-t-prio" data-i="'+i+'" style="background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:4px;font-size:10px;padding:2px 4px;flex-shrink:0">'
+        +'<option'+(t.prio==='Hoch'?' selected':'')+'>Hoch</option><option'+(!t.prio||t.prio==='Mittel'?' selected':'')+'>Mittel</option><option'+(t.prio==='Niedrig'?' selected':'')+'>Niedrig</option></select>'
+        +'<input class="pv-t-faellig" data-i="'+i+'" value="'+upEsc(t.faellig||'')+'" type="date" style="background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:4px;font-size:10px;padding:2px;flex-shrink:0;width:120px">');
+    });
+    h+='</div>';
+  }
+
+  h+='</div>';
+  h+='<div style="padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+    +'<button class="btn btn-primary" id="pv-save-btn">&#128190; Ausgew\u00e4hlte speichern</button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="analyzeKonzept()">&#8635; Neu analysieren</button>'
+    +'<span style="font-size:11px;color:var(--muted)">Nur angehakte Eintr\u00e4ge werden angelegt</span></div></div>';
+
+  res.innerHTML=h;
+  document.getElementById('pv-save-btn').addEventListener('click',saveUploadResult);
+}
+
+async function saveUploadResult(){
+  var d=window._analyzeResult;if(!d){toast('Keine Analyse vorhanden','error');return;}
+  var json=d.json,tgtVal=d.tgtVal;
+  var entityId=tgtVal.replace(/^ag:|^ug:/,'');
+  var isAGe=tgtVal.startsWith('ag:')||db.ags.some(function(a){return a.id===entityId;});
+  var log=[];var ts0=Date.now();
+
+  // Collect edited konzept fields
+  var kn=(G('pv-k-name')||{value:''}).value.trim();
+  var kz=(G('pv-k-ziel')||{value:''}).value.trim();
+  var kzg=(G('pv-k-zg')||{value:''}).value.trim();
+  var kns=(G('pv-k-ns')||{value:''}).value.trim();
+  var kObj={id:'KON-'+ts0,entityId:entityId,entityTyp:isAGe?'AG':'UG',
+    name:kn||(window._uploadFile?window._uploadFile.name.replace(/\.[^.]+$/,''):'Konzept'),
+    version:'1.0',status:'Entwurf',ziel:kz,zielgruppe:kzg,
+    struktur:(json.konzept||{}).struktur||'',aw:(json.konzept||{}).aw||'',
+    ns:kns,op:(json.konzept||{}).op||'',rhythmus:(json.konzept||{}).rhythmus||'',
+    kanaele:(json.konzept||{}).kanaele||'',sicherheit:(json.konzept||{}).sicherheit||'',
+    notizen:(json.konzept||{}).notizen||'',
+    stand:new Date().toISOString().slice(0,10),verantw:curUser?curUser.name:''};
+  db.konzepte.push(kObj);await sbUp('konzepte',kObj);
+  log.push('&#128196; Konzept: '+kObj.name);
+
+  // AGs
+  document.querySelectorAll('.pv-ag-cb:checked').forEach(function(cb){
+    var i=cb.getAttribute('data-i');
+    var nm=(document.querySelector('.pv-ag-name[data-i="'+i+'"]')||{value:''}).value.trim();
+    if(!nm)return;
+    if(db.ags.find(function(a){return a.name.toLowerCase()===nm.toLowerCase();})){log.push('&#9432; AG vorhanden: '+nm);return;}
+    var na={id:'AG-'+ts0+'-ag'+i,name:nm,kat:(document.querySelector('.pv-ag-kat[data-i="'+i+'"]')||{value:'Allgemein'}).value||'Allgemein',status:'In Planung',prio:'Mittel',koo:(document.querySelector('.pv-ag-koo[data-i="'+i+'"]')||{value:''}).value||'',stv:'',ziel:'',rhythmus:'',farbe:'#4f7cff',notizen:'',letzteAktu:new Date().toISOString().slice(0,10)};
+    db.ags.push(na);sbUp('ags',na);log.push('&#127963; AG: '+nm);
+  });
+
+  // UGs
+  document.querySelectorAll('.pv-ug-cb:checked').forEach(function(cb){
+    var i=cb.getAttribute('data-i');
+    var nm=(document.querySelector('.pv-ug-name[data-i="'+i+'"]')||{value:''}).value.trim();
+    if(!nm)return;
+    if(db.ugs.find(function(u){return u.name.toLowerCase()===nm.toLowerCase();})){log.push('&#9432; UG vorhanden: '+nm);return;}
+    var nu={id:'UG-'+ts0+'-ug'+i,name:nm,typ:'Team',status:'In Planung',prio:'Mittel',lead:(document.querySelector('.pv-ug-lead[data-i="'+i+'"]')||{value:''}).value||'',kanal:'',fokus:'',notizen:''};
+    db.ugs.push(nu);sbUp('ugs',nu);
+    var agNm=(json.ugs&&json.ugs[i])?json.ugs[i].agName||'':'';
+    if(agNm){var pAG2=db.ags.find(function(a){return a.name.toLowerCase().includes(agNm.toLowerCase());});if(pAG2){var lnk={id:'LNK-'+ts0+'-ug'+i,agId:pAG2.id,ugId:nu.id,art:'',aktiv:true};db.agUgLinks.push(lnk);sbUp('ag_ug_links',lnk);}}
+    log.push('&#9681; UG: '+nm);
+  });
+
+  // Mitglieder
+  document.querySelectorAll('.pv-m-cb:checked').forEach(function(cb){
+    var i=cb.getAttribute('data-i');
+    var nm=(document.querySelector('.pv-m-name[data-i="'+i+'"]')||{value:''}).value.trim();
+    if(!nm)return;
+    if(db.mitglieder.find(function(x){return x.name.toLowerCase()===nm.toLowerCase();})){log.push('&#9432; Mitglied vorhanden: '+nm);return;}
+    var mo={id:'P-'+ts0+'-m'+i,name:nm,kontakt:'',region:'',kompetenzen:(document.querySelector('.pv-m-rolle[data-i="'+i+'"]')||{value:''}).value||'',verfueg:'mittel',aktiv:true,start:new Date().toISOString().slice(0,10),notizen:''};
+    db.mitglieder.push(mo);sbUp('mitglieder',mo);
+    if(!db.nutzer.find(function(u){return u.name===nm;})){var pw3=nm.toLowerCase().replace(/\s+/g,'')+'2024';var nu3={id:'U-'+ts0+'-m'+i,name:nm,pw:pw3,rolle:'intern',agIds:[],ugIds:[],aktiv:true,farbe:'#6b7199'};db.nutzer.push(nu3);sbUp('nutzer',nu3);}
+    log.push('&#128100; Mitglied: '+nm);
+  });
+
+  // Aufgaben
+  document.querySelectorAll('.pv-t-cb:checked').forEach(function(cb){
+    var i=cb.getAttribute('data-i');
+    var tt=(document.querySelector('.pv-t-titel[data-i="'+i+'"]')||{value:''}).value.trim();
+    if(!tt)return;
+    var eid3=entityId;
+    var enm=(json.aufgaben&&json.aufgaben[i])?json.aufgaben[i].entityName||'':'';
+    if(enm){var fa3=db.ags.find(function(a){return a.name.toLowerCase().includes(enm.toLowerCase());});var fu3=!fa3&&db.ugs.find(function(u){return u.name.toLowerCase().includes(enm.toLowerCase());});if(fa3)eid3=fa3.id;else if(fu3)eid3=fu3.id;}
+    var eTyp3=db.ags.some(function(a){return a.id===eid3;})?'AG':'UG';
+    var to3={id:'T-'+ts0+'-t'+i,entityTyp:eTyp3,entityId:eid3,
+      titel:tt,verantw:(document.querySelector('.pv-t-verantw[data-i="'+i+'"]')||{value:''}).value||'',
+      faellig:(document.querySelector('.pv-t-faellig[data-i="'+i+'"]')||{value:''}).value||'',
+      prio:(document.querySelector('.pv-t-prio[data-i="'+i+'"]')||{value:'Mittel'}).value,
+      status:'Offen',freigabe:false,sensibel:'Nein',naechster:'',notizen:''};
+    db.aufgaben.push(to3);sbUp('aufgaben',to3);log.push('&#10003; Aufgabe: '+tt);
+  });
+
+  updateBadges();
+  var res2=G('up-result');
+  if(res2){
+    res2.innerHTML='<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:16px">'
+      +'<div style="font-size:15px;font-weight:600;margin-bottom:12px">&#10003; Gespeichert!</div>'
+      +'<div style="font-size:12px;line-height:1.9;max-height:200px;overflow-y:auto;background:var(--bg);border-radius:6px;padding:10px;margin-bottom:12px">'+log.join('<br>')+'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +'<button class="btn btn-primary btn-sm" onclick="navTo(\'konzepte\')">&#128196; Archiv</button>'
+      +'<button class="btn btn-ghost btn-sm" onclick="navTo(\'ags\')">AGs</button>'
+      +'<button class="btn btn-ghost btn-sm" onclick="navTo(\'aufgaben\')">Aufgaben</button>'
+      +'<button class="btn btn-ghost btn-sm" onclick="renderKonzeptUpload()">&#8635; Weitere Datei</button>'
+      +'</div></div>';
+  }
+  toast('Gespeichert: '+log.filter(function(l){return l.indexOf('vorhanden')<0;}).length+' neue Eintr\u00e4ge','ok');
+}
+
+
 function startKonzeptAnalyse(konzeptId){
   var k=db.konzepte.find(function(x){return x.id===konzeptId;});if(!k)return;
   if(!geminiKey&&!apiKey){toast('Bitte API-Key in Einstellungen setzen','error');return;}
