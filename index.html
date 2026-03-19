@@ -2918,7 +2918,7 @@ function renderEinst(){
         +'<div style="font-size:11px;color:var(--muted2);margin-top:2px">Login-ID: '+u.id+'</div>'
         +'</div>'
         +'<div style="display:flex;gap:6px" onclick="event.stopPropagation()">'
-        +(u.rolle!=='SuperAdmin'
+        +(curUser&&u.id!==curUser.id
           ?'<button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:11px" data-uid="'+u.id+'" onclick="toggleNutzerAktiv(this.dataset.uid)">'+(u.aktiv!==false?'Sperren':'Aktiv.')+'</button>'
           +'<button class="btn btn-danger btn-sm" style="padding:3px 8px;font-size:11px" data-uid="'+u.id+'" onclick="delNutzer(this.dataset.uid)">&#128465; Löschen</button>'
           :'')
@@ -2973,7 +2973,7 @@ function openNutzerForm(){
     +'<h3 style="font-size:14px;margin:0 0 14px">Neuer Nutzer</h3>'
     +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name</label><input id="nu-name" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
     +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Passwort</label><input id="nu-pw" type="password" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
-    +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Rolle</label><select id="nu-rolle" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px"><option>Admin</option><option>Editor</option><option selected>intern</option></select></div>'
+    +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Rolle</label><select id="nu-rolle" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px"><option>SuperAdmin</option><option>Admin</option><option>Editor</option><option selected>intern</option></select></div>'
     +'<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="saveNewNutzer()">Erstellen</button><button class="btn btn-ghost btn-sm" onclick="renderEinst()">Abbrechen</button></div></div>';
   setTimeout(function(){var n=G('nu-name');if(n) n.focus();},50);
 }
@@ -3562,7 +3562,8 @@ function tfClick(btn){setTaskFilter(btn.getAttribute('data-f'),btn);}
 async function delNutzer(id){
   var u=db.nutzer.find(function(x){return x.id===id;});
   if(!u)return;
-  if(u.rolle==='SuperAdmin'){toast('SuperAdmin kann nicht gelöscht werden','error');return;}
+  if(curUser&&u.id===curUser.id){toast('Eigenen Account nicht löschbar','error');return;}
+  if(u.rolle==='SuperAdmin'&&!isSA()){toast('Nur SuperAdmins dürfen SuperAdmins löschen','error');return;}
   if(!confirm('Nutzer "'+u.name+'" wirklich löschen? Zugehöriges Mitglied wird ebenfalls entfernt.'))return;
   // Remove from nutzer
   db.nutzer=db.nutzer.filter(function(x){return x.id!==id;});
