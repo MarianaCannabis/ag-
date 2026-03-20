@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V36</title>
+<title>Mariana CSC - AG-Verwaltung V38</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V36</div>
+    <div class="login-sub">AG-Verwaltung V38</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V36</p>
+    <p>AG-Verwaltung V38</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -2840,7 +2840,7 @@ async function L_submit(){
   nav(document.querySelector('[data-view="dashboard"]'));
   setTimeout(function(){sbRealtime();startPolling();initLive();},400);
   setTimeout(function(){toast('Willkommen, '+curUser.name+'! &#128075;','ok');},600);
-  setTimeout(function(){applyRoleRestrictions();},300);
+  applyRoleRestrictions();
 }
 function L_logout(){
   if(sbRT){try{getSB().removeChannel(sbRT);}catch(e){} sbRT=null;}
@@ -2902,7 +2902,13 @@ setMode=function(m,btn){
   _SM(m,btn);
   if(m==='ag'){
     var list=el('ag-nav-list'); if(!list) return;
-    var visAGs=db.ags.filter(function(a){return isSA()||canSee(a.id);});
+    // Zeige AGs wo User Mitglied ist, ODER wo User in einer UG ist
+    var visAGs=db.ags.filter(function(a){
+      if(isSA()||isAdmin()) return true;
+      if(canSee(a.id)) return true;
+      // User ist in einer UG dieser AG
+      return db.agUgLinks.some(function(l){return l.agId===a.id&&canSee(l.ugId);});
+    });
     if(!visAGs.length){
       list.innerHTML='<div style="padding:12px;font-size:11px;color:var(--muted)">Keine AGs vorhanden</div>';
       el('content').innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:var(--muted)"><div style="font-size:36px;margin-bottom:12px">&#127963;&#65039;</div><p>Keine Arbeitsgruppen vorhanden.<br>Wechsle zu Admin-Ansicht um AGs anzulegen.</p></div>';
@@ -5356,24 +5362,39 @@ function kalWeekNav(dir){
 function applyRoleRestrictions(){
   if(!curUser)return;
   var rolle=curUser.rolle;
-  // Admin-Ansicht nur für Admin+
-  if(rolle==='intern'){
-    // Verstecke Admin-Toggle (AG-Ansicht bleibt)
-    var mt=document.querySelector('.mode-toggle');
-    if(mt){
-      // Zeige nur AG-Ansicht, setze direkt
-      var adminBtn=mt.querySelector('[onclick*="admin"]');
-      var agBtn=mt.querySelector('[onclick*="ag"]');
-      if(adminBtn) adminBtn.style.display='none';
-      if(agBtn&&agBtn.onclick) agBtn.onclick.call(agBtn);
-    }
-    // Verstecke Admin-only Nav-Items
-    var adminOnly=['ags','ugs','mitglieder','aufgaben','einst','freigaben'];
-    adminOnly.forEach(function(view){
+  var isAdminRole=rolle==='SuperAdmin'||rolle==='Admin';
+  var isEditor=rolle==='Editor';
+  var isIntern=!isAdminRole&&!isEditor;
+
+  // Mode-Toggle Buttons: exakten onclick-Text matchen um Verwechslung zu vermeiden
+  var allModeBtns=document.querySelectorAll('.mode-btn');
+  var adminBtn=null,agBtn=null;
+  allModeBtns.forEach(function(b){
+    var oc=b.getAttribute('onclick')||'';
+    if(oc.indexOf("'admin'")>=0) adminBtn=b;
+    else if(oc.indexOf("'ag'")>=0) agBtn=b;
+  });
+
+  if(isIntern){
+    // Nur AG-Ansicht — Admin-Toggle komplett verstecken
+    if(adminBtn) adminBtn.style.display='none';
+    // In AG-Modus wechseln
+    if(agBtn) setMode('ag',agBtn);
+    // Admin-Nav Section komplett ausblenden
+    var adminNav=document.getElementById('admin-nav');
+    if(adminNav) adminNav.style.display='none';
+    // AG-Nav einblenden
+    var agNav=document.getElementById('ag-nav');
+    if(agNav) agNav.style.display='';
+  } else if(isEditor){
+    // Editor: Admin-Nav sichtbar, ABER Freigaben + Einstellungen verstecken
+    ['einst','freigaben'].forEach(function(view){
       var item=document.querySelector('[data-view="'+view+'"]');
       if(item) item.style.display='none';
     });
+    // Auch den mode-toggle sichtbar lassen (Editor darf zwischen Admin/AG wechseln)
   }
+  // Admin/SuperAdmin: keine Einschränkungen
 }
 
 // ═══════════ 5. WORKSPACE AUFGABEN-ÜBERSICHT ══════════════════
