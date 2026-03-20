@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V28</title>
+<title>Mariana CSC - AG-Verwaltung V29</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V28</div>
+    <div class="login-sub">AG-Verwaltung V29</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V28</p>
+    <p>AG-Verwaltung V29</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -1448,7 +1448,7 @@ function saveMitglied(){
   else{db.mitglieder.push(data);db.ids.m++;}
   cm('m-mitgl');renderView(curView);toast(editId?'Mitglied aktualisiert':'Mitglied erstellt','ok');
 }
-// delMitglied: see async version below
+function delMitglied(id){if(!confirm('Mitglied löschen?'))return;db.mitglieder=db.mitglieder.filter(m=>m.id!==id);renderView('mitglieder');toast('Mitglied gelöscht','ok');}
 
 // ════════════════════════════════════════════════════════
 // AUFGABE FORM
@@ -1488,10 +1488,6 @@ function saveTask(){
 // ════════════════════════════════════════════════════════
 // NETZWERK-KARTE
 // ════════════════════════════════════════════════════════
-// ── NETZWERK V2 — strukturiertes Layout (AG | UG | Mitglieder) ──────────────
-
-// ── NETZWERK V3 — strukturiertes Layout mit Farben & unzugeordnete ───────────
-
 // ── NETZWERK V4 — 4 Ansichten + Konfigurationsmenü ──────────────────────────
 
 var netCfg={
@@ -2161,9 +2157,6 @@ function netSaveSVG(){
   setTimeout(function(){URL.revokeObjectURL(url);},1000);
   toast('SVG gespeichert \u2713','ok');
 }
-
-
-
 
 
 
@@ -4388,6 +4381,7 @@ async function delMitglied(id){
   if(u){db.nutzer=db.nutzer.filter(function(x){return x.id!==u.id;});await sbDel('nutzer',u.id);}
   updateBadges();renderView('mitglieder');toast('Mitglied "'+m.name+'" geloescht','ok');
 }
+
 </script>
 </body>
 </html>
