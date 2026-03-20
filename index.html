@@ -708,7 +708,7 @@ function updateBadges(){
 // ═══ NAVIGATION ═══
 const viewCfg={
   dashboard:{title:'Dashboard',btn:'+ Neue AG',fn:()=>openAGModal()},
-  netzwerk:{title:'Netzwerk-Karte',btn:'↻ Refresh',fn:()=>renderNet()},
+  netzwerk:{title:'Netzwerk-Karte',btn:'↻ Refresh',fn:()=>renderNetzwerkView()},
   ags:{title:'Arbeitsgruppen',btn:'+ Neue AG',fn:()=>openAGModal()},
   ugs:{title:'Untergruppen',btn:'+ Neue UG',fn:()=>openUGModal()},
   mitglieder:{title:'Mitglieder',btn:'+ Mitglied',fn:()=>openMitgliedModal()},
@@ -746,7 +746,7 @@ function tbAction(){viewCfg[curView]?.fn()}
 function renderView(view){
   el('content').innerHTML='';
   ({dashboard:renderDash,netzwerk:renderNetzwerkView,ags:renderAGs,ugs:renderUGs,
-    mitglieder:renderMitglieder,aufgaben:renderAufgaben,konzepte:renderKonzepte,wizard:renderWizard}[view]||renderDash)();
+    mitglieder:renderMitglieder,aufgaben:renderAufgaben,konzepte:renderKonzepte,wizard:(typeof renderWizard==='function'?renderWizard:renderKonzeptUpload)}[view]||renderDash)();
   updateBadges();
 }
 
@@ -2839,15 +2839,16 @@ setInterval(function(){if(bc&&curUser) bc.postMessage({type:'presence',name:curU
 
 // renderView / nav overrides
 // Final renderView - overrides any previous versions
-var _RV=window._origRV||renderView;
+// renderView: leite spezielle Views an V21-Funktionen, Rest an Original (V3)
+var _RV=renderView;  // Original V3 renderView - direkt speichern, KEIN window._origRV
 renderView=function(view){
   if(curView&&curView.startsWith('nachDet_'))return;
-  var m={posteingang:renderPosteingang,freigaben:renderFreigaben,notizen:renderNotizen,allchats:renderAllchats,einst:renderEinst,upload:renderKonzeptUpload,konzepte:renderKonzepte};
-  if(m[view]){m[view]();return;}
-  // V3/V9 views
-  _RV(view);
+  var specialViews={posteingang:renderPosteingang,freigaben:renderFreigaben,
+    notizen:renderNotizen,allchats:renderAllchats,einst:renderEinst,
+    upload:renderKonzeptUpload,konzepte:renderKonzepte};
+  if(specialViews[view]){specialViews[view]();return;}
+  _RV(view);  // Original V3: dashboard, netzwerk, ags, ugs, mitglieder, aufgaben, wizard
 };
-window._origRV=_RV;
 var _nav=nav;
 nav=function(el2){
   _nav(el2); updateBadges();
