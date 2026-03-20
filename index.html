@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V29</title>
+<title>Mariana CSC - AG-Verwaltung V30</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V29</div>
+    <div class="login-sub">AG-Verwaltung V30</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V29</p>
+    <p>AG-Verwaltung V30</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -653,6 +653,15 @@ function wsOf(agId){
 
 // ═══ STATE ═══
 let mode='admin', curView='dashboard', editId=null, wizAnswers={}, netZoom=1, netOffset={x:0,y:0};
+const wizQs=[
+  {key:'ziel',label:'Ziel & Zweck',q:'Was ist das Ziel dieser AG / UG?',ph:'z.B. Den X-Account professionell betreuen…'},
+  {key:'zielgruppe',label:'Zielgruppe',q:'Wer sind die Zielgruppen?',ph:'z.B. Mitglieder, Öffentlichkeit, Medien…'},
+  {key:'struktur',label:'Struktur',q:'Wie soll die Gruppe strukturiert sein?',ph:'z.B. 1 Koordinator, 3-5 Mitglieder…'},
+  {key:'arbeitsweise',label:'Arbeitsweise',q:'Wie arbeitet die Gruppe zusammen?',ph:'z.B. Wöchentliche Meetings, asynchron via Chat…'},
+  {key:'rhythmus',label:'Rhythmus',q:'In welchem Rhythmus trifft sich die Gruppe?',ph:'z.B. 2-wöchentlich, monatlich…'},
+  {key:'kanaele',label:'Kanäle',q:'Welche Kommunikationskanäle werden genutzt?',ph:'z.B. Discord, E-Mail, internes Forum…'},
+  {key:'naechsteSchritte',label:'Nächste Schritte',q:'Was sind die ersten konkreten Schritte?',ph:'z.B. Kick-off organisieren, Rollen vergeben…'},
+];
 let apiKey=''; // set in UI via prompt
 
 // ═══ AVATAR COLORS ═══
@@ -714,7 +723,7 @@ const viewCfg={
   mitglieder:{title:'Mitglieder',btn:'+ Mitglied',fn:()=>openMitgliedModal()},
   aufgaben:{title:'Aufgaben',btn:'+ Aufgabe',fn:()=>openTaskModal()},
   konzepte:{title:'Konzept-Archiv',btn:'+ Konzept',fn:()=>openKonzeptModal()},
-  wizard:{title:'KI-Konzept-Assistent',btn:null,fn:()=>{}},
+  wizard:{title:'KI-Konzept-Assistent',btn:null,fn:()=>renderWizard()},
 };
 function nav(el2){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -746,7 +755,7 @@ function tbAction(){viewCfg[curView]?.fn()}
 function renderView(view){
   el('content').innerHTML='';
   ({dashboard:renderDash,netzwerk:renderNetzwerkView,ags:renderAGs,ugs:renderUGs,
-    mitglieder:renderMitglieder,aufgaben:renderAufgaben,konzepte:renderKonzepte,wizard:(typeof renderWizard==='function'?renderWizard:renderKonzeptUpload)}[view]||renderDash)();
+    mitglieder:renderMitglieder,aufgaben:renderAufgaben,konzepte:renderKonzepte,wizard:renderWizard}[view]||renderDash)();
   updateBadges();
 }
 
@@ -1838,7 +1847,7 @@ function renderNet2(){
 
 function netLayoutColumns(W,H,padTop,sz,visAGs,agColorMap){
   var colAG=W*0.10,colUG=W*0.40,colM=W*0.70,colU=W*0.92;
-  var agStep=Math.max(70,(H-padTop*2)/Math.max(visAGs.length,1));
+  var agStep=Math.max(110,(H-padTop*2)/Math.max(visAGs.length,1));
   visAGs.forEach(function(ag,i){
     var y=padTop+i*agStep+agStep/2;
     net2.nodes.push({id:ag.id,label:ag.name,x:colAG,y:y,type:'ag',color:agColorMap[ag.id],r:sz.ag,data:ag,agColor:agColorMap[ag.id]});
@@ -1847,7 +1856,7 @@ function netLayoutColumns(W,H,padTop,sz,visAGs,agColorMap){
     var links=db.agUgLinks.filter(function(l){return l.agId===ag.id;});
     var agNode=net2.nodes.find(function(n){return n.id===ag.id;});
     var agUGs=links.map(function(l){return db.ugs.find(function(u){return u.id===l.ugId;});}).filter(Boolean);
-    var bh=Math.max(48,Math.min(agStep,160)/Math.max(agUGs.length,1));
+    var bh=Math.max(64,Math.min(agStep,200)/Math.max(agUGs.length,1));
     var sy=agNode?agNode.y-((agUGs.length-1)*bh)/2:padTop;
     agUGs.forEach(function(ug,j){
       if(net2.nodes.find(function(n){return n.id===ug.id;}))return;
@@ -1868,7 +1877,7 @@ function netLayoutRadial(W,H,sz,visAGs,agColorMap){
     // UGs um jede AG herum
     var links=db.agUgLinks.filter(function(l){return l.agId===ag.id;});
     var agUGs=links.map(function(l){return db.ugs.find(function(u){return u.id===l.ugId;});}).filter(Boolean);
-    var ugR=90+sz.ag;
+    var ugR=120+sz.ag;
     agUGs.forEach(function(ug,j){
       if(net2.nodes.find(function(n){return n.id===ug.id;}))return;
       var a2=angle+(j-(agUGs.length-1)/2)*0.55;
@@ -1924,7 +1933,7 @@ function netLayoutTree(W,H,padTop,sz,visAGs,agColorMap){
     var agRows=Math.max(1,a.ugs.reduce(function(s,u){return s+Math.max(1,u.members.length);},0));
     a._rows=agRows; totalRows+=agRows;
   });
-  var rowH=Math.max(36,Math.min(60,(H-padTop*2)/Math.max(totalRows,1)));
+  var rowH=Math.max(48,Math.min(72,(H-padTop*2)/Math.max(totalRows,1)));
 
   var curRow=0;
   agItems.forEach(function(a){
@@ -2018,7 +2027,7 @@ function netPlaceMembers(colM,colU,sz,agColorMap){
     if(!anchor){unassigned.push(m);return;}
     var tY=anchor.y,tries=0,offset=0,dir=1;
     while(tries<40){
-      var conflict=net2.nodes.find(function(n){return n.type==='m'&&Math.abs(n.x-colM)<20&&Math.abs(n.y-tY)<28;});
+      var conflict=net2.nodes.find(function(n){return n.type==='m'&&Math.abs(n.x-colM)<20&&Math.abs(n.y-tY)<38;});
       if(!conflict)break;
       offset+=28;dir=-dir;tY=anchor.y+offset*dir;tries++;
     }
@@ -2159,6 +2168,22 @@ function netSaveSVG(){
 }
 
 
+
+function renderWizard(){
+  var c=el('content');if(!c)return;
+  c.innerHTML='<div class="card" style="max-width:720px;margin:0 auto">'
+    +'<div class="card-header"><span class="card-title">&#10024; KI-Konzept-Assistent</span>'
+    +'<span style="font-size:11px;color:var(--muted)">Beantworte die Fragen — die KI erstellt ein vollständiges Konzept</span></div>'
+    +'<div id="wiz-progress" style="display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap"></div>'
+    +'<div style="font-size:12px;color:var(--muted2);margin-bottom:8px">Schritt <span id="wiz-num">1</span> von '+(wizQs.length+1)+'</div>'
+    +'<div id="wiz-body"></div></div>';
+  if(!document.getElementById("wiz-style")){
+    var st=document.createElement("style");st.id="wiz-style";
+    st.textContent=".ws{display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.4;transition:.2s}.ws.done,.ws.cur{opacity:1}.ws-circle{width:26px;height:26px;border-radius:50%;background:var(--card2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}.ws.done .ws-circle{background:#22c55e;border-color:#22c55e;color:#fff}.ws.cur .ws-circle{background:var(--accent);border-color:var(--accent);color:#fff}.ws-lbl{font-size:10px;color:var(--muted)}";
+    document.head.appendChild(st);
+  }
+  renderWizStep(0);
+}
 
 function renderWizStep(step){
   el('wiz-num').textContent=step+1;
