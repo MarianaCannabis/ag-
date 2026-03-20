@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V25</title>
+<title>Mariana CSC - AG-Verwaltung V26</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V25</div>
+    <div class="login-sub">AG-Verwaltung V26</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V25</p>
+    <p>AG-Verwaltung V26</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -1488,162 +1488,328 @@ function saveTask(){
 // ════════════════════════════════════════════════════════
 // NETZWERK-KARTE
 // ════════════════════════════════════════════════════════
+// ── NETZWERK V2 — strukturiertes Layout (AG | UG | Mitglieder) ──────────────
+
 function renderNetzwerkView(){
-  el('content').innerHTML=`
-  <div class="net-controls">
-    <div class="net-search"><span class="net-search-icon">🔍</span><input id="net-search" placeholder="AG / UG / Mitglied suchen…" oninput="netHighlight(this.value)"></div>
-    <div class="frow">
-      <button class="btn btn-ghost btn-sm" onclick="netZoomIn()">🔍+</button>
-      <button class="btn btn-ghost btn-sm" onclick="netZoomOut()">🔍–</button>
-      <button class="btn btn-ghost btn-sm" onclick="netReset()">↺ Reset</button>
-    </div>
-    <div class="frow" style="gap:8px;font-size:11px;color:var(--muted)">
-      <span>🔵 AG</span><span>🟣 UG</span><span>🟢 Mitglied</span>
-    </div>
-  </div>
-  <canvas id="net-canvas"></canvas>`;
-  setTimeout(renderNet,100);
+  var c=el('content'); if(!c)return;
+  c.innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">'
+    +'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+    +'<input id="net-search" placeholder="Suchen..." oninput="netFilter(this.value)" style="background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:5px 10px;font-size:12px;width:160px">'
+    +'<button class="btn btn-ghost btn-sm" onclick="netZoomIn()">&#128269;+</button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="netZoomOut()">&#128269;&ndash;</button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="netReset()">&#8635; Reset</button>'
+    +'<span style="font-size:11px;color:var(--muted);margin-left:4px">&#128309; AG &nbsp; &#128995; UG &nbsp; &#128994; Mitglied</span>'
+    +'</div>'
+    +'<div style="display:flex;gap:6px">'
+    +'<button class="btn btn-ghost btn-sm" onclick="netSavePNG()" title="Als PNG speichern">&#128247; Speichern</button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="netSaveSVG()" title="Als SVG speichern">&#128196; SVG</button>'
+    +'</div></div>'
+    +'<canvas id="net-canvas" style="width:100%;display:block;border-radius:10px;background:var(--bg);border:1px solid var(--border)"></canvas>'
+    +'<div id="net-tip" style="position:fixed;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;pointer-events:none;display:none;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.4);max-width:220px"></div>';
+  setTimeout(renderNet2,80);
 }
 
-let netNodes=[], netEdges=[], netDrag=null, netPan={dragging:false,sx:0,sy:0,ox:0,oy:0};
-let netTransform={x:0,y:0,scale:1}, netHighlightId='';
+var net2={nodes:[],edges:[],drag:null,pan:{on:false,sx:0,sy:0,ox:0,oy:0},
+  tx:{x:0,y:0,scale:1},hl:'',draw:null};
 
-function renderNet(){
-  const canvas=el('net-canvas');if(!canvas)return;
-  const dpr=window.devicePixelRatio||1;
-  const W=Math.max(canvas.offsetWidth||800,600);
-  const H=Math.max(520,window.innerHeight-230);
+function renderNet2(){
+  var canvas=el('net-canvas'); if(!canvas)return;
+  var dpr=window.devicePixelRatio||1;
+  var W=Math.max(canvas.offsetWidth||900,600);
+  var H=Math.max(560,window.innerHeight-210);
   canvas.width=W*dpr; canvas.height=H*dpr;
   canvas.style.width=W+'px'; canvas.style.height=H+'px';
-  const ctx=canvas.getContext('2d');
+  var ctx=canvas.getContext('2d');
   ctx.scale(dpr,dpr);
 
-  // Build nodes
-  netNodes=[];netEdges=[];
-  const cx=W/2,cy=H/2;
-  db.ags.forEach((ag,i)=>{
-    const angle=(2*Math.PI*i/Math.max(db.ags.length,1))-Math.PI/2;
-    const r=Math.min(W,H)*0.28;
-    netNodes.push({id:ag.id,label:ag.name,x:cx+r*Math.cos(angle),y:cy+r*Math.sin(angle),type:'ag',color:ag.farbe||'#4f7cff',r:34,data:ag});
-  });
-  db.ugs.forEach((ug,i)=>{
-    const links=db.agUgLinks.filter(l=>l.ugId===ug.id);
-    const anchor=links.length?netNodes.find(n=>n.id===links[0].agId):null;
-    const ax=anchor?anchor.x:cx,ay=anchor?anchor.y:cy;
-    const siblings=db.ugs.filter(u=>links[0]?db.agUgLinks.some(l=>l.ugId===u.id&&l.agId===links[0].agId):true);
-    const idx=siblings.findIndex(u=>u.id===ug.id);
-    const baseAngle=Math.atan2(ay-cy,ax-cx);
-    const spread=Math.PI*0.65;
-    const angle=baseAngle+(idx/(Math.max(siblings.length-1,1)))*spread-spread/2;
-    const dist=140;
-    netNodes.push({id:ug.id,label:ug.name,x:ax+dist*Math.cos(angle),y:ay+dist*Math.sin(angle),type:'ug',color:'#a78bfa',r:22,data:ug});
-    links.forEach(l=>netEdges.push({from:l.agId,to:ug.id,color:'rgba(167,139,250,0.35)',w:1.5}));
-  });
-  db.mitglieder.filter(m=>m.aktiv).forEach(m=>{
-    const roles=db.rollen.filter(r=>r.personId===m.id&&r.aktiv);
-    const anchor=roles.length?netNodes.find(n=>n.id===roles[0].entityId):null;
-    const ax=anchor?anchor.x:cx+Math.random()*100-50;
-    const ay=anchor?anchor.y:cy+Math.random()*100-50;
-    const angle=Math.random()*2*Math.PI;
-    const dist=75+Math.random()*20;
-    netNodes.push({id:m.id,label:m.name,x:ax+dist*Math.cos(angle),y:ay+dist*Math.sin(angle),type:'m',color:'#22c55e',r:17,data:m});
-    roles.forEach(r=>netEdges.push({from:r.entityId,to:m.id,color:'rgba(34,197,94,0.2)',w:1}));
+  net2.nodes=[]; net2.edges=[];
+
+  // ── Layout: 3 Spalten ──────────────────────────────────────────
+  var colAG=W*0.12;   // AG x-center
+  var colUG=W*0.45;   // UG x-center
+  var colM =W*0.80;   // Mitglied x-center
+
+  var paddingTop=60, rowGap=72;
+
+  // AGs — gleichmäßig verteilt
+  var visAGs=db.ags.filter(function(a){return isSA()||canSee(a.id);});
+  var agStep=Math.max(rowGap, (H-paddingTop*2)/Math.max(visAGs.length,1));
+  visAGs.forEach(function(ag,i){
+    var y=paddingTop + i*agStep + agStep/2;
+    net2.nodes.push({id:ag.id,label:ag.name,x:colAG,y:y,type:'ag',color:ag.farbe||'#4f7cff',r:32,data:ag});
   });
 
+  // UGs — pro AG gruppiert
+  var ugY=paddingTop;
+  visAGs.forEach(function(ag){
+    var links=db.agUgLinks.filter(function(l){return l.agId===ag.id;});
+    var agNode=net2.nodes.find(function(n){return n.id===ag.id;});
+    var agUGs=links.map(function(l){return db.ugs.find(function(u){return u.id===l.ugId;});}).filter(Boolean);
+    var blockH=Math.max(rowGap, agStep/Math.max(agUGs.length,1));
+    var startY=agNode?agNode.y-((agUGs.length-1)*blockH)/2:ugY;
+    agUGs.forEach(function(ug,j){
+      var y=startY+j*blockH;
+      if(!net2.nodes.find(function(n){return n.id===ug.id;})){
+        net2.nodes.push({id:ug.id,label:ug.name,x:colUG,y:y,type:'ug',color:'#a78bfa',r:20,data:ug});
+      }
+      net2.edges.push({from:ag.id,to:ug.id,color:'rgba(167,139,250,0.5)',w:1.5,dash:false});
+    });
+  });
+
+  // Mitglieder — pro UG/AG Rolle gruppiert
+  var mY=paddingTop;
+  var placedM={};
+  db.mitglieder.filter(function(m){return m.aktiv;}).forEach(function(m){
+    var roles=db.rollen.filter(function(r){return r.personId===m.id&&r.aktiv;});
+    if(!roles.length)return;
+    // Hauptrolle: erste entity
+    var anchor=net2.nodes.find(function(n){return n.id===roles[0].entityId;});
+    if(!anchor) anchor=net2.nodes.find(function(n){return n.type==='ag';});
+    if(!anchor) return;
+
+    // Finde freie Y-Position nahe am Anchor
+    var targetY=anchor.y;
+    var tries=0; var step=36;
+    while(tries<30){
+      var conflict=net2.nodes.find(function(n){
+        return n.type==='m'&&Math.abs(n.x-colM)<10&&Math.abs(n.y-targetY)<28;
+      });
+      if(!conflict) break;
+      targetY+=step; step+=4; tries++;
+    }
+
+    net2.nodes.push({id:m.id,label:m.name,x:colM,y:targetY,type:'m',color:'#22c55e',r:18,data:m});
+
+    // Verbindung zu jeder Rolle
+    roles.forEach(function(r){
+      var eNode=net2.nodes.find(function(n){return n.id===r.entityId;});
+      if(eNode) net2.edges.push({from:eNode.id,to:m.id,color:'rgba(34,197,94,0.35)',w:1,dash:true});
+    });
+  });
+
+  // ── Draw ──────────────────────────────────────────────────────
   function draw(){
     ctx.save();
     ctx.clearRect(0,0,W,H);
-    ctx.translate(netTransform.x,netTransform.y);
-    ctx.scale(netTransform.scale,netTransform.scale);
-    // Grid
-    ctx.fillStyle='rgba(255,255,255,.02)';
-    for(let x=-500;x<W+500;x+=28)for(let y=-500;y<H+500;y+=28){ctx.beginPath();ctx.arc(x,y,.8,0,2*Math.PI);ctx.fill();}
-    // Edges
-    netEdges.forEach(e=>{
-      const f=netNodes.find(n=>n.id===e.from),t=netNodes.find(n=>n.id===e.to);
-      if(!f||!t)return;
-      ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(t.x,t.y);
-      ctx.strokeStyle=e.color;ctx.lineWidth=e.w/netTransform.scale;ctx.stroke();
+
+    // Background dots
+    ctx.fillStyle='rgba(255,255,255,.015)';
+    for(var xi=-200;xi<W+200;xi+=30)for(var yi=-200;yi<H+200;yi+=30){
+      ctx.beginPath();ctx.arc(net2.tx.x%30+xi,net2.tx.y%30+yi,.7,0,6.28);ctx.fill();
+    }
+
+    ctx.translate(net2.tx.x,net2.tx.y);
+    ctx.scale(net2.tx.scale,net2.tx.scale);
+
+    // Column header lines
+    var headers=[{x:colAG,label:'Arbeitsgruppen',color:'#4f7cff'},{x:colUG,label:'Untergruppen',color:'#a78bfa'},{x:colM,label:'Mitglieder',color:'#22c55e'}];
+    headers.forEach(function(h){
+      ctx.strokeStyle=h.color+'22';ctx.lineWidth=1;ctx.setLineDash([4,8]);
+      ctx.beginPath();ctx.moveTo(h.x,20);ctx.lineTo(h.x,H-20);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.fillStyle=h.color+'bb';
+      ctx.fillText(h.label,h.x,16);
     });
-    // Nodes
-    netNodes.forEach(n=>{
-      const hl=netHighlightId&&!n.label.toLowerCase().includes(netHighlightId);
-      ctx.globalAlpha=hl?.2:1;
-      // glow
-      const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*2.2);
-      g.addColorStop(0,n.color+'44');g.addColorStop(1,'transparent');
-      ctx.fillStyle=g;ctx.beginPath();ctx.arc(n.x,n.y,n.r*2.2,0,2*Math.PI);ctx.fill();
-      // circle
-      ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,2*Math.PI);
-      ctx.fillStyle=n.color+'28';ctx.fill();
-      ctx.strokeStyle=n.color;ctx.lineWidth=n.type==='ag'?2.5:1.8;ctx.stroke();
-      // icon
-      ctx.font=`${n.r*.75}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillStyle=n.color;ctx.fillText(n.type==='ag'?'🏛':n.type==='ug'?'⬡':'◎',n.x,n.y);
-      // label
-      ctx.font=`${n.type==='ag'?600:400} ${n.type==='ag'?12.5:10}px Segoe UI,system-ui,sans-serif`;
-      ctx.fillStyle='rgba(221,225,240,.9)';ctx.textAlign='center';ctx.textBaseline='top';
-      const lab=n.label.length>15?n.label.slice(0,13)+'…':n.label;
-      ctx.fillText(lab,n.x,n.y+n.r+3);
+
+    // Edges
+    net2.edges.forEach(function(e){
+      var f=net2.nodes.find(function(n){return n.id===e.from;});
+      var t=net2.nodes.find(function(n){return n.id===e.to;});
+      if(!f||!t)return;
+      if(net2.hl&&!f.label.toLowerCase().includes(net2.hl)&&!t.label.toLowerCase().includes(net2.hl)){
+        ctx.globalAlpha=0.06;
+      }
+      ctx.beginPath();
+      // Bezier curve für schönere Linien
+      var mx=(f.x+t.x)/2;
+      ctx.moveTo(f.x+f.r*0.7,f.y);
+      ctx.bezierCurveTo(mx,f.y, mx,t.y, t.x-t.r*0.7,t.y);
+      if(e.dash)ctx.setLineDash([3,5]);
+      ctx.strokeStyle=e.color;ctx.lineWidth=(e.w||1)/net2.tx.scale;ctx.stroke();
+      ctx.setLineDash([]);
       ctx.globalAlpha=1;
     });
+
+    // Nodes
+    net2.nodes.forEach(function(n){
+      var hl=net2.hl&&!n.label.toLowerCase().includes(net2.hl);
+      ctx.globalAlpha=hl?0.15:1;
+
+      // Glow
+      var g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*2.5);
+      g.addColorStop(0,n.color+'33');g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(n.x,n.y,n.r*2.5,0,6.28);ctx.fill();
+
+      // Circle fill
+      ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,6.28);
+      ctx.fillStyle=n.color+'20';ctx.fill();
+      ctx.strokeStyle=n.color;ctx.lineWidth=n.type==='ag'?2.5:1.8;ctx.stroke();
+
+      // Inner ring for AG
+      if(n.type==='ag'){
+        ctx.beginPath();ctx.arc(n.x,n.y,n.r*0.65,0,6.28);
+        ctx.strokeStyle=n.color+'88';ctx.lineWidth=1.5;ctx.stroke();
+      }
+
+      // Icon
+      ctx.font=(n.r*0.72)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle=n.color;
+      ctx.fillText(n.type==='ag'?'\uD83C\uDFDB':n.type==='ug'?'\u2B21':'\u25CE',n.x,n.y);
+
+      // Label
+      var fontSize=n.type==='ag'?12:10;
+      ctx.font=(n.type==='ag'?'600 ':'400 ')+fontSize+'px system-ui,sans-serif';
+      ctx.fillStyle='rgba(221,225,240,.9)';ctx.textAlign='center';ctx.textBaseline='top';
+      var lab=n.label.length>16?n.label.slice(0,14)+'\u2026':n.label;
+      ctx.fillText(lab,n.x,n.y+n.r+4);
+
+      ctx.globalAlpha=1;
+    });
+
     ctx.restore();
   }
 
-  // interaction
+  // ── Interaction ───────────────────────────────────────────────
   function getPos(e){
-    const r=canvas.getBoundingClientRect();
-    const mx=(e.clientX-r.left-netTransform.x)/netTransform.scale;
-    const my=(e.clientY-r.top-netTransform.y)/netTransform.scale;
-    return{x:mx,y:my,cx:e.clientX-r.left,cy:e.clientY-r.top};
+    var rect=canvas.getBoundingClientRect();
+    return{
+      x:(e.clientX-rect.left-net2.tx.x)/net2.tx.scale,
+      y:(e.clientY-rect.top-net2.tx.y)/net2.tx.scale,
+      cx:e.clientX-rect.left, cy:e.clientY-rect.top
+    };
   }
-  canvas.onmousedown=e=>{
-    const p=getPos(e);
-    netDrag=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+6);
-    if(netDrag){netDrag._ox=p.x-netDrag.x;netDrag._oy=p.y-netDrag.y;}
-    else{netPan.dragging=true;netPan.sx=e.clientX;netPan.sy=e.clientY;netPan.ox=netTransform.x;netPan.oy=netTransform.y;}
+
+  canvas.onmousedown=function(e){
+    var p=getPos(e);
+    net2.drag=net2.nodes.find(function(n){return Math.hypot(n.x-p.x,n.y-p.y)<n.r+8;});
+    if(net2.drag){net2.drag._ox=p.x-net2.drag.x;net2.drag._oy=p.y-net2.drag.y;}
+    else{net2.pan.on=true;net2.pan.sx=e.clientX;net2.pan.sy=e.clientY;net2.pan.ox=net2.tx.x;net2.pan.oy=net2.tx.y;}
   };
-  canvas.onmousemove=e=>{
-    const p=getPos(e);
-    if(netDrag){netDrag.x=p.x-netDrag._ox;netDrag.y=p.y-netDrag._oy;draw();}
-    else if(netPan.dragging){netTransform.x=netPan.ox+(e.clientX-netPan.sx);netTransform.y=netPan.oy+(e.clientY-netPan.sy);draw();}
-    // cursor
-    const hover=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+6);
-    canvas.style.cursor=hover?'pointer':netPan.dragging?'grabbing':'grab';
-    // tooltip
-    if(hover&&!netDrag)showNetTip(hover,e);else hideNetTip();
+  canvas.onmousemove=function(e){
+    var p=getPos(e);
+    if(net2.drag){net2.drag.x=p.x-net2.drag._ox;net2.drag.y=p.y-net2.drag._oy;draw();}
+    else if(net2.pan.on){net2.tx.x=net2.pan.ox+(e.clientX-net2.pan.sx);net2.tx.y=net2.pan.oy+(e.clientY-net2.pan.sy);draw();}
+    var hover=net2.nodes.find(function(n){return Math.hypot(n.x-p.x,n.y-p.y)<n.r+8;});
+    canvas.style.cursor=hover?'pointer':net2.pan.on?'grabbing':'grab';
+    if(hover&&!net2.drag) showNet2Tip(hover,e); else hideNet2Tip();
   };
-  canvas.onmouseup=e=>{
-    const p=getPos(e);
-    if(!netPan.dragging&&!netDrag){
-      const hit=netNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<n.r+6);
-      if(hit)openDetail(hit.type==='ag'?'ag':hit.type==='ug'?'ug':'mitglied',hit.id);
+  canvas.onmouseup=function(e){
+    var p=getPos(e);
+    if(!net2.pan.on&&!net2.drag){
+      var hit=net2.nodes.find(function(n){return Math.hypot(n.x-p.x,n.y-p.y)<n.r+8;});
+      if(hit) openDetail(hit.type==='ag'?'ag':hit.type==='ug'?'ug':'mitglied',hit.id);
     }
-    netDrag=null;netPan.dragging=false;hideNetTip();
+    net2.drag=null;net2.pan.on=false;hideNet2Tip();
   };
-  canvas.onwheel=e=>{
+  canvas.onmouseleave=function(){net2.drag=null;net2.pan.on=false;hideNet2Tip();};
+  canvas.onwheel=function(e){
     e.preventDefault();
-    const r=canvas.getBoundingClientRect();
-    const mx=e.clientX-r.left,my=e.clientY-r.top;
-    const delta=e.deltaY>0?.9:1.1;
-    netTransform.x=mx+(netTransform.x-mx)*delta;
-    netTransform.y=my+(netTransform.y-my)*delta;
-    netTransform.scale=Math.min(3,Math.max(.3,netTransform.scale*delta));
+    var rect=canvas.getBoundingClientRect();
+    var mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    var d=e.deltaY>0?0.88:1.12;
+    net2.tx.x=mx+(net2.tx.x-mx)*d;
+    net2.tx.y=my+(net2.tx.y-my)*d;
+    net2.tx.scale=Math.min(3,Math.max(0.2,net2.tx.scale*d));
     draw();
   };
-  window._netDraw=draw;
-  draw();
+
+  // Touch support
+  var lastTouch=null;
+  canvas.ontouchstart=function(e){if(e.touches.length===1){var t=e.touches[0];net2.pan.on=true;net2.pan.sx=t.clientX;net2.pan.sy=t.clientY;net2.pan.ox=net2.tx.x;net2.pan.oy=net2.tx.y;}lastTouch=e;};
+  canvas.ontouchmove=function(e){e.preventDefault();if(e.touches.length===1&&net2.pan.on){var t=e.touches[0];net2.tx.x=net2.pan.ox+(t.clientX-net2.pan.sx);net2.tx.y=net2.pan.oy+(t.clientY-net2.pan.sy);draw();}};
+  canvas.ontouchend=function(){net2.pan.on=false;};
+
+  net2.draw=draw;
+
+  // Auto-fit: center all nodes
+  netReset2();
 }
-function showNetTip(n,e){
-  const tip=el('net-tip');
-  const a=ampel(n.data||{},{});
-  const extra=n.type==='ag'?`<p>Koordination: ${n.data.koo||'–'}</p><p>Status: ${n.data.status||'–'}</p>`
-    :n.type==='ug'?`<p>Lead: ${n.data.lead||'–'}</p><p>Typ: ${n.data.typ||'–'}</p>`
-    :`<p>Region: ${n.data.region||'–'}</p>`;
-  tip.innerHTML=`<h4>${n.label}</h4><p style="color:var(--muted2);margin-bottom:6px;font-size:10px">${n.id}</p>${extra}<p style="margin-top:6px;font-size:10px;color:var(--muted)">Klick für Details</p>`;
-  tip.style.display='block';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-10)+'px';
+
+function netReset2(){
+  if(!net2.nodes.length){if(net2.draw)net2.draw();return;}
+  var canvas=el('net-canvas');if(!canvas)return;
+  var W=canvas.offsetWidth, H=canvas.offsetHeight;
+  var xs=net2.nodes.map(function(n){return n.x;});
+  var ys=net2.nodes.map(function(n){return n.y;});
+  var minX=Math.min.apply(null,xs)-60, maxX=Math.max.apply(null,xs)+60;
+  var minY=Math.min.apply(null,ys)-60, maxY=Math.max.apply(null,ys)+60;
+  var scaleX=W/(maxX-minX), scaleY=H/(maxY-minY);
+  net2.tx.scale=Math.min(scaleX,scaleY,1.2)*0.9;
+  net2.tx.x=W/2-((minX+maxX)/2)*net2.tx.scale;
+  net2.tx.y=H/2-((minY+maxY)/2)*net2.tx.scale;
+  if(net2.draw) net2.draw();
 }
-function hideNetTip(){el('net-tip').style.display='none';}
+
+function netFilter(q){
+  net2.hl=q.toLowerCase().trim();
+  if(net2.draw) net2.draw();
+}
+function netZoomIn(){net2.tx.scale=Math.min(3,net2.tx.scale*1.2);if(net2.draw)net2.draw();}
+function netZoomOut(){net2.tx.scale=Math.max(0.2,net2.tx.scale/1.2);if(net2.draw)net2.draw();}
+function netReset(){net2.tx={x:0,y:0,scale:1};netReset2();}
+
+function showNet2Tip(n,e){
+  var tip=el('net-tip');if(!tip)return;
+  var extra='';
+  if(n.type==='ag') extra='<div style="color:var(--muted);font-size:10px;margin-top:4px">Koord: '+(n.data.koo||'–')+' &middot; '+n.data.status+'</div>';
+  else if(n.type==='ug') extra='<div style="color:var(--muted);font-size:10px;margin-top:4px">Lead: '+(n.data.lead||'–')+' &middot; '+n.data.typ+'</div>';
+  else extra='<div style="color:var(--muted);font-size:10px;margin-top:4px">'+(n.data.kompetenzen||'')+'</div>';
+  tip.innerHTML='<strong style="font-size:12px">'+n.label+'</strong>'+extra+'<div style="font-size:10px;color:var(--muted);margin-top:6px">&#128065; Klick für Details</div>';
+  tip.style.display='block';tip.style.left=(e.clientX+16)+'px';tip.style.top=(e.clientY-8)+'px';
+}
+function hideNet2Tip(){var tip=el('net-tip');if(tip)tip.style.display='none';}
+
+function netSavePNG(){
+  var canvas=el('net-canvas');if(!canvas)return;
+  var link=document.createElement('a');
+  link.download='Mariana-Netzwerk-'+new Date().toISOString().slice(0,10)+'.png';
+  link.href=canvas.toDataURL('image/png');
+  link.click();
+  toast('Netzwerk als PNG gespeichert \u2713','ok');
+}
+
+function netSaveSVG(){
+  var canvas=el('net-canvas');if(!canvas)return;
+  var W=canvas.offsetWidth, H=canvas.offsetHeight;
+  var svg='<?xml version="1.0" encoding="UTF-8"?>\n';
+  svg+='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" style="background:#0d1117">\n';
+
+  // Column headers
+  var cols=[{x:W*0.12,label:'Arbeitsgruppen',c:'#4f7cff'},{x:W*0.45,label:'Untergruppen',c:'#a78bfa'},{x:W*0.80,label:'Mitglieder',c:'#22c55e'}];
+  cols.forEach(function(col){
+    svg+='<line x1="'+col.x+'" y1="20" x2="'+col.x+'" y2="'+(H-20)+'" stroke="'+col.c+'22" stroke-width="1" stroke-dasharray="4,8"/>\n';
+    svg+='<text x="'+col.x+'" y="14" text-anchor="middle" fill="'+col.c+'bb" font-size="11" font-family="system-ui" font-weight="bold">'+col.label+'</text>\n';
+  });
+
+  // Edges
+  net2.edges.forEach(function(e){
+    var f=net2.nodes.find(function(n){return n.id===e.from;});
+    var t=net2.nodes.find(function(n){return n.id===e.to;});
+    if(!f||!t)return;
+    var mx=(f.x+t.x)/2;
+    var dash=e.dash?' stroke-dasharray="3,5"':'';
+    svg+='<path d="M'+f.x+','+f.y+' C'+mx+','+f.y+' '+mx+','+t.y+' '+t.x+','+t.y+'" fill="none" stroke="'+e.color+'" stroke-width="'+(e.w||1)+'"'+dash+'/>\n';
+  });
+
+  // Nodes
+  net2.nodes.forEach(function(n){
+    svg+='<circle cx="'+n.x+'" cy="'+n.y+'" r="'+n.r+'" fill="'+n.color+'20" stroke="'+n.color+'" stroke-width="'+(n.type==='ag'?2.5:1.8)+'"/>\n';
+    var lab=n.label.length>16?n.label.slice(0,14)+'\u2026':n.label;
+    svg+='<text x="'+n.x+'" y="'+(n.y+n.r+14)+'" text-anchor="middle" fill="rgba(221,225,240,0.9)" font-size="'+(n.type==='ag'?12:10)+'" font-family="system-ui"'+(n.type==='ag'?' font-weight="600"':'')+'>'+lab+'</text>\n';
+  });
+
+  svg+='</svg>';
+  var blob=new Blob([svg],{type:'image/svg+xml'});
+  var url=URL.createObjectURL(blob);
+  var link=document.createElement('a');
+  link.download='Mariana-Netzwerk-'+new Date().toISOString().slice(0,10)+'.svg';
+  link.href=url; link.click();
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  toast('Netzwerk als SVG gespeichert \u2713','ok');
+}
+
+
 function netZoomIn(){netTransform.scale=Math.min(3,netTransform.scale*1.2);window._netDraw?.()}
 function netZoomOut(){netTransform.scale=Math.max(.3,netTransform.scale/1.2);window._netDraw?.()}
 function netReset(){netTransform={x:0,y:0,scale:1};renderNet();}
