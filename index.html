@@ -543,7 +543,11 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   </div>
 </div>
 
-<!-- Net Too
+<!-- Net Tooltip -->
+<div class="net-tooltip" id="net-tip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
 
 // ═══════════════════════════════════════════════════════════
 // DATA STORE  –  vollständig aus V3 Excel übernommen
@@ -4414,7 +4418,7 @@ async function sendSupportMsg(ov){
 }
 
 
-// ── V36 NEUE FUNKTIONEN ──────────────────────────────────────────────────────
+// ── V35 NEUE FUNKTIONEN ──────────────────────────────────────────────────────
 
 // ═══════════════ KALENDER ════════════════════════════════════════════════════
 
@@ -4783,7 +4787,7 @@ function renderWsKal(entityId){
 
 
 // ══════════════════════════════════════════════════════════════
-// V36 FEATURES: Persönlicher Kalender, Verknüpfte Kalender,
+// V35 FEATURES: Persönlicher Kalender, Verknüpfte Kalender,
 //               Abwesenheit für Mitglieder/Admins
 // ══════════════════════════════════════════════════════════════
 
@@ -4932,7 +4936,7 @@ async function kalBestätigen(kalId){
 }
 
 // ── Abwesenheit für Admins in Einstellungen ────────────────────
-// editNutzer bekommt einen Abwesenheit-Button — schon in V36 vorhanden
+// editNutzer bekommt einen Abwesenheit-Button — schon in V35 vorhanden
 // Aber auch in AG/UG-Workspace direkt eintragbar
 function openAbwesenheitForMember(mName){
   openAbwesenheit(mName);
@@ -5063,7 +5067,7 @@ var _origSaveKalEntry=saveKalEntry;
 
 
 // ══════════════════════════════════════════════════════════════
-// V36 FIXES & FEATURES
+// V35 FIXES & FEATURES
 // ══════════════════════════════════════════════════════════════
 
 // ═══════════ 1. PROTOKOLLE: Assistent + Upload ════════════════
@@ -5419,10 +5423,6 @@ async function delMitglied(id){
   afs.forEach(function(t){t.verantw=t.verantw.replace(m.name,'').replace(/[,/ ]+$/,'').replace(/^[,/ ]+/,'').trim();sbUp('aufgaben',t);});
   var u=db.nutzer.find(function(x){return x.name===m.name;});
   if(u){db.nutzer=db.nutzer.filter(function(x){return x.id!==u.id;});await sbDel('nutzer',u.id);}
-  updateBadges();renderView('mitglieder');toast('Mitglied "'+m.name+'" geloescht','ok');
-}
-
-u.id);}
   updateBadges();renderView('mitglieder');toast('Mitglied "'+m.name+'" geloescht','ok');
 }
 
