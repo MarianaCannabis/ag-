@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V31</title>
+<title>Mariana CSC - AG-Verwaltung V33</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V31</div>
+    <div class="login-sub">AG-Verwaltung V33</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V31</p>
+    <p>AG-Verwaltung V33</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -391,8 +391,8 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
     <div class="nav-section">
       <div class="nav-label">Konzepte &amp; KI</div>
       <div class="nav-item" data-view="konzepte" onclick="nav(this)"><span class="ico">&#128196;</span>Konzept-Archiv</div>
-      <div class="nav-item" data-view="wizard" onclick="nav(this)"><span class="ico">&#10024;</span>KI-Assis>Konzept-Archiv</div>
-      <div class="nav-item" data-view="kalender" onclick="nav(this)"><span class="ico">&#10024;</span>KI-Assistent</div>
+      <div class="nav-item" data-view="wizard" onclick="nav(this)"><span class="ico">&#10024;</span>KI-Assistent</div>
+      <div class="nav-item" data-view="kalender" onclick="nav(this)"><span class="ico">&#128197;</span>Kalender</div>
       <div class="nav-item" data-view="upload" onclick="nav(this)"><span class="ico">&#128204;</span>Hochladen</div>
     </div>
     <div class="nav-section">
@@ -727,7 +727,7 @@ const viewCfg={
   aufgaben:{title:'Aufgaben',btn:'+ Aufgabe',fn:()=>openTaskModal()},
   konzepte:{title:'Konzept-Archiv',btn:'+ Konzept',fn:()=>openKonzeptModal()},
   wizard:{title:'KI-Konzept-Assistent',btn:null,fn:()=>renderWizard()},
-  kalender:{title:'Kalender',btn:'+ Termin',fn:()=>openKalEntry(null,null)},
+  kalender:{title:'Kalender',btn:'+ Termin',fn:()=>openKalEntry(null,null,null)},
 };
 function nav(el2){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -1845,14 +1845,14 @@ function renderNet2(){
   canvas.ontouchend=function(){net2.pan.on=false;};
   net2.draw=draw;
   netReset2();
-  setTimeout(netSetupResize,200);
+  netSetupResize();
 }
 
 // ── Layout-Funktionen ────────────────────────────────────────────────────────
 
 function netLayoutColumns(W,H,padTop,sz,visAGs,agColorMap){
   var colAG=W*0.10,colUG=W*0.40,colM=W*0.70,colU=W*0.92;
-  var agStep=Math.max(110,(H-padTop*2)/Math.max(visAGs.length,1));
+  var agStep=Math.max(130,(H-padTop*2)/Math.max(visAGs.length,1));
   visAGs.forEach(function(ag,i){
     var y=padTop+i*agStep+agStep/2;
     net2.nodes.push({id:ag.id,label:ag.name,x:colAG,y:y,type:'ag',color:agColorMap[ag.id],r:sz.ag,data:ag,agColor:agColorMap[ag.id]});
@@ -1861,7 +1861,7 @@ function netLayoutColumns(W,H,padTop,sz,visAGs,agColorMap){
     var links=db.agUgLinks.filter(function(l){return l.agId===ag.id;});
     var agNode=net2.nodes.find(function(n){return n.id===ag.id;});
     var agUGs=links.map(function(l){return db.ugs.find(function(u){return u.id===l.ugId;});}).filter(Boolean);
-    var bh=Math.max(64,Math.min(agStep,200)/Math.max(agUGs.length,1));
+    var bh=Math.max(75,Math.min(agStep,220)/Math.max(agUGs.length,1));
     var sy=agNode?agNode.y-((agUGs.length-1)*bh)/2:padTop;
     agUGs.forEach(function(ug,j){
       if(net2.nodes.find(function(n){return n.id===ug.id;}))return;
@@ -1882,7 +1882,7 @@ function netLayoutRadial(W,H,sz,visAGs,agColorMap){
     // UGs um jede AG herum
     var links=db.agUgLinks.filter(function(l){return l.agId===ag.id;});
     var agUGs=links.map(function(l){return db.ugs.find(function(u){return u.id===l.ugId;});}).filter(Boolean);
-    var ugR=120+sz.ag;
+    var ugR=145+sz.ag;
     agUGs.forEach(function(ug,j){
       if(net2.nodes.find(function(n){return n.id===ug.id;}))return;
       var a2=angle+(j-(agUGs.length-1)/2)*0.55;
@@ -1938,7 +1938,7 @@ function netLayoutTree(W,H,padTop,sz,visAGs,agColorMap){
     var agRows=Math.max(1,a.ugs.reduce(function(s,u){return s+Math.max(1,u.members.length);},0));
     a._rows=agRows; totalRows+=agRows;
   });
-  var rowH=Math.max(48,Math.min(72,(H-padTop*2)/Math.max(totalRows,1)));
+  var rowH=Math.max(56,Math.min(72,(H-padTop*2)/Math.max(totalRows,1)));
 
   var curRow=0;
   agItems.forEach(function(a){
@@ -2032,7 +2032,7 @@ function netPlaceMembers(colM,colU,sz,agColorMap){
     if(!anchor){unassigned.push(m);return;}
     var tY=anchor.y,tries=0,offset=0,dir=1;
     while(tries<40){
-      var conflict=net2.nodes.find(function(n){return n.type==='m'&&Math.abs(n.x-colM)<20&&Math.abs(n.y-tY)<38;});
+      var conflict=net2.nodes.find(function(n){return n.type==='m'&&Math.abs(n.x-colM)<20&&Math.abs(n.y-tY)<45;});
       if(!conflict)break;
       offset+=28;dir=-dir;tY=anchor.y+offset*dir;tries++;
     }
@@ -2088,7 +2088,7 @@ function netBuildLegend(visAGs,agColorMap){
   var h='';
   if(netCfg.colorBy==='ag'){
     visAGs.forEach(function(ag){
-      h+='<div style="display:flex;align-items:center;gap:5px;background:var(--bg);padding:3px 8px;border-radius:20px">'
+      h+='<div style="display:flex;align-items:center;gap:5px;background:var(--bg);padding:3px 8px;border-radius:20px;cursor:pointer" onclick="netJumpTo(\'' + ag.id + '\')" title="Zur AG springen">'
         +'<div style="width:9px;height:9px;border-radius:50%;background:'+agColorMap[ag.id]+'"></div>'
         +'<span style="color:var(--muted2);font-size:11px">'+ag.name+'</span></div>';
     });
@@ -2204,11 +2204,7 @@ function renderWizStep(step){
     const ctxM=db.mitglieder.filter(m=>m.aktiv).map(m=>m.name).join(', ');
     body.innerHTML=`
     <div class="mb16"><div style="font-size:14px;color:var(--muted2);margin-bottom:4px">Frage ${step+1}</div><h3 style="font-size:16px;font-weight:600;margin-bottom:8px">${q.q}</h3>
-    ${step===0?`<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r3);padding:10px;margin-bottom:12px;font-size:11px;color:var(--muted)">
-      <strong style="color:var(--muted2)">Vorhanden im System:</strong><br>
-      AGs: ${ctxAGs||'–'}<br>UGs: ${ctxUGs||'–'}<br>Mitglieder: ${ctxM||'–'}
-    </div>`:''}
-    <textarea id="wiz-ans" rows="5" placeholder="${q.ph}" style="width:100%">${wizAnswers[q.key]||''}</textarea></div>
+        <textarea id="wiz-ans" rows="5" placeholder="${q.ph}" style="width:100%">${wizAnswers[q.key]||''}</textarea></div>
     <div class="frow">${step>0?`<button class="btn btn-ghost" onclick="renderWizStep(${step-1})">← Zurück</button>`:''}
     <button class="btn btn-primary" onclick="wizNext(${step})">Weiter →</button></div>`;
   } else {
@@ -3025,7 +3021,8 @@ async function openWorkspace(entityId, navEl2){
       ['ws-chat','&#128172; Chat ('+msgs.length+')'],
       ['ws-notiz','&#128204; Notizen ('+notizen.length+')'],
       ['ws-docs','&#128193; Dokumente'],
-      ['ws-proto','&#128221; Protokolle']
+      ['ws-proto','&#128221; Protokolle'],
+      ['ws-kal','&#128197; Kalender']
     ].filter(Boolean).map(function(item,i){
       return '<div class="tab'+(i===0?' active':'')+'" data-tab="'+item[0]+'" onclick="switchTab(this,this.dataset.tab)">'+item[1]+'</div>';
     }).join('')
@@ -3104,7 +3101,7 @@ async function openWorkspace(entityId, navEl2){
     +'<div class="tab-content" id="ws-docs"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:12px;font-weight:600">Dokumente</span><button class="btn btn-primary btn-sm" data-eid="'+entityId+'" onclick="wsAddDoc(this.dataset.eid)">+ Dokument</button></div><div id="ws-docs-list"></div></div>'
 
     // Tab: Protokolle
-    +'<div class="tab-content" id="ws-proto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:12px;font-weight:600">Protokolle</span><button class="btn btn-primary btn-sm" data-eid="'+entityId+'" onclick="wsAddProto(this.dataset.eid)">+ Protokoll</button></div><div id="ws-proto-list"></div></div>';
+    +'<div class="tab-content" id="ws-proto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:12px;font-weight:600">Protokolle</span><button class="btn btn-primary btn-sm" data-eid="'+entityId+'" onclick="wsAddProto(this.dataset.eid)">+ Protokoll</button></div><div id="ws-proto-list"></div></div>'+'<div class="tab-content" id="ws-kal"><div id="ws-kal-'+entityId+'"></div></div>';
 
   // Populate
   var tl=G('ws-task-list'); if(tl) tl.innerHTML=renderTaskCards(tasks, entityId);
@@ -3692,7 +3689,12 @@ function editNutzer(id){
     +'<select id="eu-ags" multiple style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:6px;font-size:11px;min-height:60px;margin-bottom:10px">'+agO+'</select>'
     +'<div style="margin-bottom:6px"><label style="font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox" id="eu-ug-all"'+(u.ugIds.includes('*')?' checked':'')+' style="margin-right:5px"> Alle UGs</label></div>'
     +'<select id="eu-ugs" multiple style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:6px;font-size:11px;min-height:60px;margin-bottom:14px">'+ugO+'</select>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn btn-primary btn-sm" data-uid="'+id+'" onclick="saveEditNutzer(this.dataset.uid)">Speichern</button>'+'<button class="btn btn-ghost btn-sm" onclick="renderEinst()">Abbrechen</button>'+(u.id!==curUser?.id?'<button class="btn btn-ghost btn-sm" style="color:'+(u.aktiv===false?'#22c55e':'#f59e0b')+'" data-uid="'+id+'" onclick="toggleNutzerAktiv(this.dataset.uid)">'+(u.aktiv===false?'&#9989; Freischalten':'&#9940; Deaktivieren')+'</button>':'')+'<button class="btn btn-ghost btn-sm" style="color:#06b6d4" data-uname="'+u.name+'" onclick="openAbwesenheit(this.dataset.uname)">&#128197; Abwesenheit</button></div></div>';
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +'<button class="btn btn-primary btn-sm" data-uid="'+id+'" onclick="saveEditNutzer(this.dataset.uid)">Speichern</button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="renderEinst()">Abbrechen</button>'
+    +(u.id!==(curUser&&curUser.id)?'<button class="btn btn-ghost btn-sm" style="color:'+(u.aktiv===false?'#22c55e':'#f59e0b')+'" data-uid="'+id+'" onclick="toggleNutzerAktiv(this.dataset.uid)">'+(u.aktiv===false?'&#9989; Freischalten':'&#9940; Deaktivieren')+'</button>':'')
+    +'<button class="btn btn-ghost btn-sm" style="color:#06b6d4" data-un="'+u.name+'" onclick="openAbwesenheit(this.dataset.un)">&#128197; Abwesenheit</button>'
+    +'</div></div>';
   var eal=G('eu-ag-all'),eas=G('eu-ags'); if(eal&&eas){eas.style.opacity=eal.checked?'.4':'1';eal.onchange=function(){eas.style.opacity=this.checked?'.4':'1';};}
   var eul=G('eu-ug-all'),eus=G('eu-ugs'); if(eul&&eus){eus.style.opacity=eul.checked?'.4':'1';eul.onchange=function(){eus.style.opacity=this.checked?'.4':'1';};}
 }
@@ -4401,272 +4403,235 @@ async function sendSupportMsg(ov){
 }
 
 
-// ── V31 PATCHES ─────────────────────────────────────────────────────────────
+// ── V33 NEUE FUNKTIONEN ──────────────────────────────────────────────────────
 
-// ═══════════════════════════════════════════
-// 1. KALENDER
-// ═══════════════════════════════════════════
+// ═══════════════ KALENDER ════════════════════════════════════════════════════
 
-var kalState={year:new Date().getFullYear(),month:new Date().getMonth(),view:'month',filter:''};
+var kalState={year:new Date().getFullYear(),month:new Date().getMonth(),view:'month'};
 
 function renderKalender(){
   var c=el('content');if(!c)return;
+  var months=['Januar','Februar','M\u00e4rz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
   c.innerHTML=
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">'
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
-    +'<div style="display:flex;gap:6px;align-items:center">'
-    +'<button id="kal-prev" class="btn btn-ghost btn-sm">&#8249;</button>'
-    +'<span id="kal-title" style="font-size:14px;font-weight:600;min-width:160px;text-align:center"></span>'
-    +'<button id="kal-next" class="btn btn-ghost btn-sm">&#8250;</button>'
-    +'<button id="kal-today" class="btn btn-ghost btn-sm">Heute</button>'
+    +'<div style="display:flex;gap:5px;align-items:center">'
+    +'<button id="kp" class="btn btn-ghost btn-sm">&#8249;</button>'
+    +'<span id="kt" style="font-size:14px;font-weight:600;min-width:150px;text-align:center">'+months[kalState.month]+' '+kalState.year+'</span>'
+    +'<button id="kn" class="btn btn-ghost btn-sm">&#8250;</button>'
+    +'<button id="ktd" class="btn btn-ghost btn-sm">Heute</button>'
     +'</div>'
     +'<div style="display:flex;gap:5px;align-items:center">'
-    +'<div style="display:flex;background:var(--bg);border-radius:6px;padding:2px">'
-    +'<button class="kal-view-btn active" data-v="month">Monat</button>'
-    +'<button class="kal-view-btn" data-v="week">Woche</button>'
-    +'<button class="kal-view-btn" data-v="list">Liste</button>'
+    +'<div style="display:flex;background:var(--bg);border-radius:6px;padding:2px;gap:1px">'
+    +'<button class="kv-btn'+(kalState.view==='month'?' kv-active':'')+'" data-kv="month">Monat</button>'
+    +'<button class="kv-btn'+(kalState.view==='week'?' kv-active':'')+'" data-kv="week">Woche</button>'
+    +'<button class="kv-btn'+(kalState.view==='list'?' kv-active':'')+'" data-kv="list">Liste</button>'
     +'</div>'
-    +'<button class="btn btn-primary btn-sm" onclick="openKalEntry(null,null)">+ Termin</button>'
+    +'<button class="btn btn-primary btn-sm" id="knew">+ Termin</button>'
     +'</div></div>'
-    +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;font-size:11px">'
-    +'<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#4f7cff;display:inline-block"></span>Termine</span>'
-    +'<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#ef4444;display:inline-block"></span>Aufgaben f\u00e4llig</span>'
-    +'<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#22c55e;display:inline-block"></span>Abwesenheit</span>'
-    +'<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#f59e0b;display:inline-block"></span>Reviews</span>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:11px">'
+    +'<span style="display:flex;align-items:center;gap:4px"><b style="width:9px;height:9px;border-radius:2px;background:#4f7cff;display:inline-block"></b>Termine</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><b style="width:9px;height:9px;border-radius:2px;background:#ef4444;display:inline-block"></b>Aufgaben</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><b style="width:9px;height:9px;border-radius:2px;background:#22c55e;display:inline-block"></b>Abwesenheit</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><b style="width:9px;height:9px;border-radius:2px;background:#f59e0b;display:inline-block"></b>Reviews</span>'
     +'</div></div>'
-    +'<div id="kal-body"></div>';
+    +'<div id="kb"></div>';
 
-  if(!document.getElementById('kal-style')){
-    var st=document.createElement('style');st.id='kal-style';
-    st.textContent=
-      '.kal-view-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 10px;font-size:11px;border-radius:4px}'
-      +'.kal-view-btn.active{background:var(--accent);color:#fff}'
-      +'.kal-day{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px;min-height:80px;cursor:pointer;transition:.15s}'
-      +'.kal-day:hover{border-color:var(--accent)}'
-      +'.kal-day.today{border-color:var(--accent);background:rgba(79,124,255,.08)}'
-      +'.kal-day.other-month{opacity:.4}'
-      +'.kal-day-num{font-size:11px;font-weight:600;margin-bottom:3px;color:var(--muted2)}'
-      +'.kal-day.today .kal-day-num{color:var(--accent)}'
-      +'.kal-evt{font-size:10px;padding:2px 5px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}'
-      +'.kal-week-row{display:grid;grid-template-columns:60px repeat(7,1fr);border-bottom:1px solid var(--border)}'
-      +'.kal-week-day-hdr{padding:8px;font-size:11px;font-weight:600;text-align:center;color:var(--muted2);border-right:1px solid var(--border)}'
-      +'.kal-week-hour{padding:4px 6px;font-size:10px;color:var(--muted);border-right:1px solid var(--border);text-align:right}'
-      +'.kal-week-cell{border-right:1px solid var(--border);min-height:36px;padding:2px;position:relative}'
-      +'.kal-week-cell:hover{background:rgba(79,124,255,.05)}'
-      +'.kal-list-day{margin-bottom:16px}'
-      +'.kal-list-hdr{font-size:12px;font-weight:700;color:var(--muted2);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)}'
-      +'.kal-list-evt{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;cursor:pointer}'
-      +'.kal-list-evt:hover{border-color:var(--accent)}';
+  if(!document.getElementById('ks')){
+    var st=document.createElement('style');st.id='ks';
+    st.textContent='.kv-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 10px;font-size:11px;border-radius:4px}.kv-btn:hover{color:var(--text)}.kv-active{background:var(--accent);color:#fff!important}.kd{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px;min-height:78px;cursor:pointer}.kd:hover{border-color:var(--accent)}.kd.ktoday{border-color:var(--accent);background:rgba(79,124,255,.07)}.kd.kother{opacity:.4}.kdn{font-size:11px;font-weight:600;color:var(--muted2);margin-bottom:2px}.kd.ktoday .kdn{color:var(--accent)}.ke{font-size:10px;padding:2px 4px;border-radius:3px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}';
     document.head.appendChild(st);
   }
 
-  // Bind nav buttons
-  document.getElementById('kal-prev').onclick=function(){
-    if(kalState.view==='month'){kalState.month--;if(kalState.month<0){kalState.month=11;kalState.year--;}}
-    else{kalState.month--;if(kalState.month<0){kalState.month=11;kalState.year--;}}
-    kalRender();
-  };
-  document.getElementById('kal-next').onclick=function(){
-    if(kalState.view==='month'){kalState.month++;if(kalState.month>11){kalState.month=0;kalState.year++;}}
-    else{kalState.month++;if(kalState.month>11){kalState.month=0;kalState.year++;}}
-    kalRender();
-  };
-  document.getElementById('kal-today').onclick=function(){
-    var now=new Date();kalState.year=now.getFullYear();kalState.month=now.getMonth();kalRender();
-  };
-  document.querySelectorAll('.kal-view-btn').forEach(function(b){
-    b.onclick=function(){
-      document.querySelectorAll('.kal-view-btn').forEach(function(x){x.classList.remove('active');});
-      this.classList.add('active');kalState.view=this.getAttribute('data-v');kalRender();
-    };
+  // Bind nav
+  var bind=function(id,fn){var b=document.getElementById(id);if(b)b.onclick=fn;};
+  bind('kp',function(){kalState.month--;if(kalState.month<0){kalState.month=11;kalState.year--;}kalRender();});
+  bind('kn',function(){kalState.month++;if(kalState.month>11){kalState.month=0;kalState.year++;}kalRender();});
+  bind('ktd',function(){var n=new Date();kalState.year=n.getFullYear();kalState.month=n.getMonth();kalRender();});
+  bind('knew',function(){openKalEntry(null,null,null);});
+  document.querySelectorAll('.kv-btn').forEach(function(b){
+    b.onclick=function(){kalState.view=this.getAttribute('data-kv');renderKalender();};
   });
   kalRender();
 }
 
-function kalGetEvents(){
+function kalGetEvts(){
   var evts=[];
-  // Termine aus db.kalender
-  if(db.kalender) db.kalender.forEach(function(k){evts.push({date:k.datum,title:k.titel,type:'termin',color:'#4f7cff',data:k,id:k.id});});
-  // Aufgaben mit Fälligkeitsdatum
-  db.aufgaben.forEach(function(t){
-    if(t.faellig&&t.status!=='Erledigt')
-      evts.push({date:t.faellig,title:t.titel,type:'aufgabe',color:'#ef4444',data:t,id:t.id});
-  });
-  // Nächste Reviews der AGs
-  db.ags.forEach(function(a){
-    if(a.naechstesReview)
-      evts.push({date:a.naechstesReview,title:'Review: '+a.name,type:'review',color:'#f59e0b',data:a,id:'rev_'+a.id});
-  });
-  // Abwesenheiten
+  if(db.kalender) db.kalender.forEach(function(k){evts.push({date:k.datum,title:k.titel,type:'termin',color:'#4f7cff',data:k});});
+  db.aufgaben.forEach(function(t){if(t.faellig&&t.status!=='Erledigt')evts.push({date:t.faellig,title:t.titel,type:'aufgabe',color:'#ef4444',data:t});});
+  db.ags.forEach(function(a){if(a.naechstesReview)evts.push({date:a.naechstesReview,title:'Review: '+a.name,type:'review',color:'#f59e0b',data:a});});
   if(db.abwesenheiten) db.abwesenheiten.forEach(function(ab){
-    // Expand multi-day
-    var d=new Date(ab.von);var end=new Date(ab.bis||ab.von);
-    while(d<=end){
-      evts.push({date:d.toISOString().slice(0,10),title:ab.person+' abwesend',type:'abwesenheit',color:'#22c55e',data:ab,id:ab.id+'_'+d.toISOString().slice(0,10)});
-      d.setDate(d.getDate()+1);
-    }
+    var d=new Date(ab.von+'T12:00:00'),end=new Date(ab.bis+'T12:00:00');
+    while(d<=end){evts.push({date:d.toISOString().slice(0,10),title:ab.person+' abwesend',type:'abwesenheit',color:'#22c55e',data:ab});d.setDate(d.getDate()+1);}
   });
   return evts;
 }
 
 function kalRender(){
-  var body=document.getElementById('kal-body');if(!body)return;
+  var body=document.getElementById('kb');if(!body)return;
   var months=['Januar','Februar','M\u00e4rz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  var days=['Mo','Di','Mi','Do','Fr','Sa','So'];
-  var title=document.getElementById('kal-title');
-  if(title) title.textContent=months[kalState.month]+' '+kalState.year;
-
-  var evts=kalGetEvents();
-  var evtByDate={};
-  evts.forEach(function(e){if(!evtByDate[e.date])evtByDate[e.date]=[];evtByDate[e.date].push(e);});
+  var t=document.getElementById('kt');if(t)t.textContent=months[kalState.month]+' '+kalState.year;
+  var evts=kalGetEvts();
+  var byDate={};evts.forEach(function(e){if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
+  var today=new Date().toISOString().slice(0,10);
 
   if(kalState.view==='month'){
-    // Month grid
-    var firstDay=new Date(kalState.year,kalState.month,1);
-    var startDow=(firstDay.getDay()+6)%7; // Monday=0
-    var daysInMonth=new Date(kalState.year,kalState.month+1,0).getDate();
-    var daysInPrev=new Date(kalState.year,kalState.month,0).getDate();
-    var today=new Date().toISOString().slice(0,10);
-
-    var h='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px">';
-    days.forEach(function(d){h+='<div style="text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:4px">'+d+'</div>';});
-
+    var first=new Date(kalState.year,kalState.month,1);
+    var startDow=(first.getDay()+6)%7;
+    var dIM=new Date(kalState.year,kalState.month+1,0).getDate();
+    var dIPrev=new Date(kalState.year,kalState.month,0).getDate();
+    var dNames=['Mo','Di','Mi','Do','Fr','Sa','So'];
+    var h='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px">';
+    dNames.forEach(function(d){h+='<div style="text-align:center;font-size:10px;font-weight:600;color:var(--muted);padding:3px">'+d+'</div>';});
     var cell=0;
-    // Prev month fill
     for(var i=0;i<startDow;i++){
-      var d2=daysInPrev-startDow+1+i;
-      var ds=kalState.year+'-'+pad2(kalState.month===0?12:kalState.month)+'-'+pad2(d2);
-      h+='<div class="kal-day other-month" data-date="'+ds+'" onclick="openKalEntry(null,this.dataset.date)"><div class="kal-day-num">'+d2+'</div></div>';cell++;
+      var dp=dIPrev-startDow+1+i;
+      var pm=kalState.month===0?12:kalState.month;var py=kalState.month===0?kalState.year-1:kalState.year;
+      var ds=py+'-'+p2(pm)+'-'+p2(dp);
+      h+='<div class="kd kother" data-d="'+ds+'" onclick="openKalEntry(null,this.dataset.d,null)"><div class="kdn">'+dp+'</div></div>';cell++;
     }
-    // Current month
-    for(var day=1;day<=daysInMonth;day++){
-      var ds2=(kalState.year)+'-'+pad2(kalState.month+1)+'-'+pad2(day);
-      var isToday=ds2===today;
-      var dayEvts=(evtByDate[ds2]||[]).slice(0,3);
-      h+='<div class="kal-day'+(isToday?' today':'')+'" data-date="'+ds2+'" onclick="openKalEntry(null,this.dataset.date)">';
-      h+='<div class="kal-day-num">'+day+'</div>';
-      dayEvts.forEach(function(e){
-        h+='<div class="kal-evt" style="background:'+e.color+'22;color:'+e.color+';border-left:2px solid '+e.color+'" onclick="event.stopPropagation();kalOpenEvt(\''+e.type+'\',\''+e.data.id+'\')">'+e.title+'</div>';
-      });
-      var more=(evtByDate[ds2]||[]).length-3;
-      if(more>0) h+='<div style="font-size:9px;color:var(--muted)">+'+more+' mehr</div>';
+    for(var day=1;day<=dIM;day++){
+      var ds2=kalState.year+'-'+p2(kalState.month+1)+'-'+p2(day);
+      var isT=ds2===today;
+      var de=(byDate[ds2]||[]).slice(0,3);
+      h+='<div class="kd'+(isT?' ktoday':'')+'" data-d="'+ds2+'" onclick="openKalEntry(null,this.dataset.d,null)">'
+        +'<div class="kdn">'+day+'</div>';
+      de.forEach(function(e){h+='<div class="ke" style="background:'+e.color+'22;color:'+e.color+';border-left:2px solid '+e.color+'" onclick="event.stopPropagation();kalClick(\''+e.type+'\',\''+e.data.id+'\')">'+e.title+'</div>';});
+      var more=(byDate[ds2]||[]).length-3;if(more>0)h+='<div style="font-size:9px;color:var(--muted)">+'+more+' mehr</div>';
       h+='</div>';cell++;
     }
-    // Next month fill
-    var remaining=(7-cell%7)%7;
-    for(var i2=0;i2<remaining;i2++){
-      var ds3=(kalState.month===11?kalState.year+1:kalState.year)+'-'+pad2(kalState.month===11?1:kalState.month+2)+'-'+pad2(i2+1);
-      h+='<div class="kal-day other-month" data-date="'+ds3+'" onclick="openKalEntry(null,this.dataset.date)"><div class="kal-day-num">'+(i2+1)+'</div></div>';
+    var rem=(7-cell%7)%7;
+    for(var i2=0;i2<rem;i2++){
+      var nm=kalState.month===11?1:kalState.month+2;var ny=kalState.month===11?kalState.year+1:kalState.year;
+      var ds3=ny+'-'+p2(nm)+'-'+p2(i2+1);
+      h+='<div class="kd kother" data-d="'+ds3+'" onclick="openKalEntry(null,this.dataset.d,null)"><div class="kdn">'+(i2+1)+'</div></div>';
     }
-    h+='</div>';
-    body.innerHTML=h;
+    body.innerHTML=h+'</div>';
 
-  } else if(kalState.view==='list'){
-    // Liste: nächste 60 Tage
-    var h2='<div style="margin-top:10px">';
-    var now2=new Date(kalState.year,kalState.month,1);
-    var end2=new Date(kalState.year,kalState.month+1,0);
-    var allEvts=[];
-    evts.forEach(function(e){if(e.date>=now2.toISOString().slice(0,10)&&e.date<=end2.toISOString().slice(0,10))allEvts.push(e);});
+  } else if(kalState.view==='week'){
+    var wStart=new Date(kalState.year,kalState.month,1);
+    var wDow=(wStart.getDay()+6)%7;wStart.setDate(wStart.getDate()-wDow);
+    var dN=['Mo','Di','Mi','Do','Fr','Sa','So'];
+    var wDates=[];for(var wi=0;wi<7;wi++){var wd=new Date(wStart);wd.setDate(wStart.getDate()+wi);wDates.push(wd.toISOString().slice(0,10));}
+    var hw='<div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;min-width:480px">';
+    hw+='<tr><th style="width:40px;padding:4px;font-size:9px;color:var(--muted);border-bottom:1px solid var(--border)"></th>';
+    for(var wi2=0;wi2<7;wi2++){
+      var isT2=wDates[wi2]===today;
+      var wd2=new Date(wDates[wi2]+'T12:00:00');
+      hw+='<th style="padding:4px;font-size:10px;border-bottom:1px solid var(--border);font-weight:'+(isT2?'700':'400')+';color:'+(isT2?'var(--accent)':'var(--muted2)')+'">'+dN[wi2]+'<br><span style="font-size:12px">'+wd2.getDate()+'</span></th>';
+    }
+    hw+='</tr>';
+    for(var hr=8;hr<=20;hr++){
+      hw+='<tr><td style="padding:2px 5px;font-size:9px;color:var(--muted);border-right:1px solid var(--border);text-align:right;white-space:nowrap">'+hr+'h</td>';
+      for(var di=0;di<7;di++){
+        var ds4=wDates[di];
+        var de2=(byDate[ds4]||[]).filter(function(e){
+          if(!e.data||!e.data.uhrzeit)return hr===9;
+          return parseInt(e.data.uhrzeit.split(':')[0])===hr;
+        });
+        hw+='<td style="padding:1px;border-right:1px solid var(--border);border-bottom:1px solid rgba(255,255,255,.03);min-height:28px;cursor:pointer" data-ds="'+ds4+'">';
+        de2.forEach(function(e){hw+='<div class="ke" style="background:'+e.color+'22;color:'+e.color+';border-left:2px solid '+e.color+'" data-tp="'+e.type+'" data-id="'+e.data.id+'">'+e.title+'</div>';});
+        hw+='</td>';
+      }
+      hw+='</tr>';
+    }
+    hw+='</table></div>';
+    body.innerHTML=hw;
+    body.querySelectorAll('td[data-ds]').forEach(function(td){td.onclick=function(){openKalEntry(null,this.getAttribute('data-ds'),null);};});
+    body.querySelectorAll('[data-tp]').forEach(function(d){d.onclick=function(ev){ev.stopPropagation();kalClick(this.getAttribute('data-tp'),this.getAttribute('data-id'));};});
+
+  } else {
+    var start=new Date(kalState.year,kalState.month,1).toISOString().slice(0,10);
+    var end2=new Date(kalState.year,kalState.month+1,0).toISOString().slice(0,10);
+    var allEvts=evts.filter(function(e){return e.date>=start&&e.date<=end2;});
     allEvts.sort(function(a,b){return a.date<b.date?-1:1;});
-
-    if(!allEvts.length){h2+='<div style="text-align:center;padding:40px;color:var(--muted)">Keine Eintr\u00e4ge in diesem Monat</div>';}
+    var hl='<div style="margin-top:8px">';
+    if(!allEvts.length){hl+='<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px">Keine Eintr\u00e4ge in diesem Monat</div>';}
     else{
-      var curDate='';
+      var ld='';
       allEvts.forEach(function(e){
-        if(e.date!==curDate){
-          curDate=e.date;
-          var d=new Date(e.date+'T12:00:00');
-          h2+='<div class="kal-list-day"><div class="kal-list-hdr">'+d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})+'</div>';
-        }
-        h2+='<div class="kal-list-evt" onclick="kalOpenEvt(\''+e.type+'\',\''+e.data.id+'\')">'
-          +'<div style="width:4px;height:36px;border-radius:2px;background:'+e.color+';flex-shrink:0"></div>'
+        if(e.date!==ld){ld=e.date;var d=new Date(e.date+'T12:00:00');hl+='<div style="font-size:11px;font-weight:700;color:var(--muted);margin:12px 0 5px">'+d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})+'</div>';}
+        hl+='<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;cursor:pointer" onclick="kalClick(\''+e.type+'\',\''+e.data.id+'\')">'
+          +'<div style="width:4px;height:32px;border-radius:2px;background:'+e.color+';flex-shrink:0"></div>'
           +'<div style="flex:1"><div style="font-size:12px;font-weight:500">'+e.title+'</div>'
-          +(e.data.uhrzeit?'<div style="font-size:10px;color:var(--muted)">'+e.data.uhrzeit+'</div>':'')
-          +(e.data.beschreibung?'<div style="font-size:10px;color:var(--muted2)">'+e.data.beschreibung+'</div>':'')
-          +'</div>'
+          +(e.data.uhrzeit?'<div style="font-size:10px;color:var(--muted)">'+e.data.uhrzeit+'</div>':'')+'</div>'
           +'<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:'+e.color+'22;color:'+e.color+'">'
-          +{termin:'Termin',aufgabe:'Aufgabe',review:'Review',abwesenheit:'Abw.'}[e.type]+'</span></div>';
+          +{termin:'Termin',aufgabe:'Aufgabe',review:'Review',abwesenheit:'Abwesend'}[e.type]+'</span></div>';
       });
-      if(curDate) h2+='</div>';
     }
-    h2+='<div style="margin-top:14px;text-align:center"><button class="btn btn-primary btn-sm" onclick="openKalEntry(null,null)">+ Termin hinzuf\u00fcgen</button></div></div>';
-    body.innerHTML=h2;
+    hl+='<div style="margin-top:12px;text-align:center"><button class="btn btn-primary btn-sm" onclick="openKalEntry(null,null,null)">+ Termin hinzuf\u00fcgen</button></div></div>';
+    body.innerHTML=hl;
   }
 }
 
-function pad2(n){return n<10?'0'+n:''+n;}
+function p2(n){return n<10?'0'+n:''+n;}
 
-function kalOpenEvt(type,id){
-  if(type==='aufgabe') openTaskDetail(id);
-  else if(type==='termin'){var k=(db.kalender||[]).find(function(x){return x.id===id;});if(k)openKalEntry(id,null);}
-  else if(type==='review'){var ag=db.ags.find(function(a){return 'rev_'+a.id===id||a.id===id;});if(ag)openDetail('ag',ag.id);}
+function kalClick(type,id){
+  if(type==='aufgabe')openTaskDetail(id);
+  else if(type==='termin')openKalEntry(id,null,null);
+  else if(type==='review'){var ag=db.ags.find(function(a){return a.id===id||'rev_'+a.id===id;});if(ag)openDetail('ag',ag.id);}
 }
 
-function openKalEntry(id,defaultDate){
+function openKalEntry(id,defaultDate,preEntityId){
   var entry=id?(db.kalender||[]).find(function(x){return x.id===id;}):null;
   var ov=document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
   var inner=document.createElement('div');
-  inner.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;width:440px;max-width:95vw';
+  inner.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;width:440px;max-width:95vw;max-height:90vh;overflow-y:auto';
   var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
   var ttl=document.createElement('h3');ttl.style.cssText='font-size:14px;margin:0';ttl.textContent=id?'Termin bearbeiten':'Neuer Termin';
   var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted);line-height:1';
   cls.onclick=function(){ov.remove();};
   hdr.appendChild(ttl);hdr.appendChild(cls);inner.appendChild(hdr);
+  var preEid=preEntityId||'';
   inner.insertAdjacentHTML('beforeend',
-    '<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Titel</label>'
-    +'<input id="ke-titel" value="'+(entry?entry.titel:'')+'" placeholder="Termin-Bezeichnung..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px 9px;font-size:12px;box-sizing:border-box"></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
-    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Datum</label>'
-    +'<input type="date" id="ke-datum" value="'+(entry?entry.datum:defaultDate||new Date().toISOString().slice(0,10))+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    '<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Titel *</label>'
+    +'<input id="ke-t" value="'+(entry?entry.titel:'')+'" placeholder="Termin-Bezeichnung..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px 9px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Datum *</label>'
+    +'<input type="date" id="ke-d" value="'+(entry?entry.datum:defaultDate||new Date().toISOString().slice(0,10))+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
     +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Uhrzeit</label>'
-    +'<input type="time" id="ke-uhrzeit" value="'+(entry&&entry.uhrzeit?entry.uhrzeit:'')+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div></div>'
+    +'<input type="time" id="ke-u" value="'+(entry&&entry.uhrzeit?entry.uhrzeit:'')+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div></div>'
     +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Kategorie</label>'
-    +'<select id="ke-kat" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px">'
+    +'<select id="ke-k" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px">'
     +'<option'+(entry&&entry.kat==='Meeting'?' selected':'')+'>Meeting</option>'
     +'<option'+(entry&&entry.kat==='Deadline'?' selected':'')+'>Deadline</option>'
     +'<option'+(entry&&entry.kat==='Event'?' selected':'')+'>Event</option>'
-    +'<option'+(entry&&entry.kat==='Intern'?' selected':'')+'>Intern</option>'
-    +'<option'+(entry&&entry.kat==='Sonstiges'?' selected':'')+' selected>Sonstiges</option></select></div>'
-    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Zuordnung (AG/UG)</label>'
-    +'<select id="ke-entity" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px">'
+    +'<option'+(entry&&entry.kat==='Sonstiges'?' selected':'')||(!entry)?' selected':''||''+'>Sonstiges</option></select></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">AG / UG Zuordnung</label>'
+    +'<select id="ke-e" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px">'
     +'<option value="">— Allgemein —</option>'
-    +db.ags.map(function(a){return '<option value="'+a.id+'"'+(entry&&entry.entityId===a.id?' selected':'')+'>🏛 '+a.name+'</option>';}).join('')
-    +db.ugs.map(function(u){return '<option value="'+u.id+'"'+(entry&&entry.entityId===u.id?' selected':'')+'>⬡ '+u.name+'</option>';}).join('')
+    +db.ags.map(function(a){return '<option value="'+a.id+'"'+((entry?entry.entityId:preEid)===a.id?' selected':'')+'>&#127963; '+a.name+'</option>';}).join('')
+    +db.ugs.map(function(u){return '<option value="'+u.id+'"'+((entry?entry.entityId:preEid)===u.id?' selected':'')+'>&#11053; '+u.name+'</option>';}).join('')
     +'</select></div>'
     +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Beschreibung</label>'
-    +'<textarea id="ke-desc" rows="3" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box;resize:vertical">'+(entry&&entry.beschreibung?entry.beschreibung:'')+'</textarea></div>'
-    +(id?'<div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn btn-ghost btn-sm" style="color:#ef4444" data-kid="'+id+'" onclick="delKalEntry(this.dataset.kid)">&#128465; L\u00f6schen</button></div>':'')
+    +'<textarea id="ke-b" rows="3" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box;resize:vertical">'+(entry&&entry.beschreibung?entry.beschreibung:'')+'</textarea></div>'
+    +(id?'<button class="btn btn-ghost btn-sm" style="color:#ef4444;margin-bottom:10px" data-kid="'+id+'" onclick="delKalEntry(this.dataset.kid)">&#128465; L\u00f6schen</button>':'')
   );
   var ftr=document.createElement('div');ftr.style.cssText='display:flex;gap:8px;justify-content:flex-end';
-  var btnC=document.createElement('button');btnC.className='btn btn-ghost';btnC.textContent='Abbrechen';btnC.onclick=function(){ov.remove();};
-  var btnS=document.createElement('button');btnS.className='btn btn-primary';btnS.textContent='Speichern';
-  btnS.onclick=function(){saveKalEntry(id,ov);};
-  ftr.appendChild(btnC);ftr.appendChild(btnS);inner.appendChild(ftr);
+  var bc=document.createElement('button');bc.className='btn btn-ghost';bc.textContent='Abbrechen';bc.onclick=function(){ov.remove();};
+  var bs=document.createElement('button');bs.className='btn btn-primary';bs.textContent='Speichern';bs.onclick=function(){saveKalEntry(id,ov);};
+  ftr.appendChild(bc);ftr.appendChild(bs);inner.appendChild(ftr);
   ov.appendChild(inner);document.body.appendChild(ov);
-  setTimeout(function(){var t=document.getElementById('ke-titel');if(t)t.focus();},60);
+  setTimeout(function(){var t2=document.getElementById('ke-t');if(t2)t2.focus();},60);
 }
 
 async function saveKalEntry(id,ov){
-  var titel=(document.getElementById('ke-titel')||{value:''}).value.trim();
-  var datum=(document.getElementById('ke-datum')||{value:''}).value;
-  if(!titel||!datum){toast('Titel und Datum pflicht','error');return;}
-  var entry={
-    id:id||'KAL-'+Date.now(),
-    titel:titel,datum:datum,
-    uhrzeit:(document.getElementById('ke-uhrzeit')||{value:''}).value||'',
-    kat:(document.getElementById('ke-kat')||{value:'Sonstiges'}).value,
-    entityId:(document.getElementById('ke-entity')||{value:''}).value||'',
-    beschreibung:(document.getElementById('ke-desc')||{value:''}).value.trim(),
-    von:curUser?curUser.name:''
-  };
+  var titel=(document.getElementById('ke-t')||{value:''}).value.trim();
+  var datum=(document.getElementById('ke-d')||{value:''}).value;
+  if(!titel||!datum){toast('Titel und Datum ben\u00f6tigt','error');return;}
+  var entry={id:id||'KAL-'+Date.now(),titel:titel,datum:datum,
+    uhrzeit:(document.getElementById('ke-u')||{value:''}).value||'',
+    kat:(document.getElementById('ke-k')||{value:'Sonstiges'}).value,
+    entityId:(document.getElementById('ke-e')||{value:''}).value||'',
+    beschreibung:(document.getElementById('ke-b')||{value:''}).value.trim(),
+    von:curUser?curUser.name:''};
   if(!db.kalender)db.kalender=[];
   if(id){db.kalender=db.kalender.map(function(k){return k.id===id?entry:k;});}
   else{db.kalender.push(entry);}
   await sbUp('kalender',entry);
   if(ov)ov.remove();
-  kalRender();
+  if(curView==='kalender')kalRender(); else toast('Termin gespeichert \u2713','ok');
   toast('Termin gespeichert \u2713','ok');
 }
 
@@ -4675,60 +4640,51 @@ async function delKalEntry(id){
   db.kalender=(db.kalender||[]).filter(function(k){return k.id!==id;});
   await sbDel('kalender',id);
   var ov=document.querySelector('[style*="z-index:9999"]');if(ov)ov.remove();
-  kalRender();toast('Gel\u00f6scht','ok');
+  if(curView==='kalender')kalRender();
+  toast('Gel\u00f6scht','ok');
 }
 
-// ═══════════════════════════════════════════
-// 2. NUTZER DEAKTIVIEREN + ABWESENHEIT
-// ═══════════════════════════════════════════
+// ═══════════════ ABWESENHEIT ══════════════════════════════════════════════════
 
-function openAbwesenheit(nutzerName){
+function openAbwesenheit(name){
   var ov=document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
   var inner=document.createElement('div');
   inner.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;width:400px;max-width:95vw';
-  var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
-  var ttl=document.createElement('h3');ttl.style.cssText='font-size:14px;margin:0';
-  ttl.innerHTML='&#128197; Abwesenheit: '+(nutzerName||'');
-  var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted)';
-  cls.onclick=function(){ov.remove();};
+  var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:14px';
+  var ttl=document.createElement('h3');ttl.style.cssText='font-size:14px;margin:0';ttl.innerHTML='&#128197; Abwesenheit: '+name;
+  var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted)';cls.onclick=function(){ov.remove();};
   hdr.appendChild(ttl);hdr.appendChild(cls);inner.appendChild(hdr);
-
-  // Bestehende Abwesenheiten dieser Person
-  var existing=(db.abwesenheiten||[]).filter(function(a){return a.person===nutzerName;});
-  var existH='';
+  var existing=(db.abwesenheiten||[]).filter(function(a){return a.person===name;});
   if(existing.length){
-    existH='<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:5px">Geplante Abwesenheiten:</div>';
+    var eh='<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:5px">Geplant:</div>';
     existing.forEach(function(a){
-      existH+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--bg);border-radius:5px;margin-bottom:3px;font-size:11px">'
-        +'<span>'+a.von+' bis '+a.bis+' &mdash; '+(a.grund||'Kein Grund')+'</span>'
-        +'<button style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px" data-aid="'+a.id+'" onclick="delAbwesenheit(this.dataset.aid)">&#10005;</button></div>';
+      eh+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--bg);border-radius:5px;margin-bottom:3px;font-size:11px">'
+        +'<span>'+a.von+' \u2013 '+a.bis+(a.grund?' ('+a.grund+')':'')+'</span>'
+        +'<span style="cursor:pointer;color:#ef4444;font-size:14px" data-aid="'+a.id+'" onclick="delAbw(this.dataset.aid)">&#10005;</span></div>';
     });
-    existH+='</div>';
+    inner.insertAdjacentHTML('beforeend',eh+'</div>');
   }
-
-  inner.insertAdjacentHTML('beforeend', existH
-    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Von</label>'
-    +'<input type="date" id="ab-von" value="'+new Date().toISOString().slice(0,10)+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+  inner.insertAdjacentHTML('beforeend',
+    '<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Von</label>'
+    +'<input type="date" id="ab-v" value="'+new Date().toISOString().slice(0,10)+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
     +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Bis</label>'
-    +'<input type="date" id="ab-bis" value="'+new Date().toISOString().slice(0,10)+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
-    +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Grund (optional)</label>'
-    +'<input id="ab-grund" placeholder="Urlaub, Krank, etc." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<input type="date" id="ab-b" value="'+new Date().toISOString().slice(0,10)+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Grund</label>'
+    +'<input id="ab-g" placeholder="Urlaub, Krank..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
   );
   var ftr=document.createElement('div');ftr.style.cssText='display:flex;gap:8px;justify-content:flex-end';
-  var btnC=document.createElement('button');btnC.className='btn btn-ghost';btnC.textContent='Abbrechen';btnC.onclick=function(){ov.remove();};
-  var btnS=document.createElement('button');btnS.className='btn btn-primary';btnS.textContent='Eintragen';
-  btnS.onclick=function(){saveAbwesenheit(nutzerName,ov);};
-  ftr.appendChild(btnC);ftr.appendChild(btnS);inner.appendChild(ftr);
+  var bc=document.createElement('button');bc.className='btn btn-ghost';bc.textContent='Abbrechen';bc.onclick=function(){ov.remove();};
+  var bs=document.createElement('button');bs.className='btn btn-primary';bs.textContent='Eintragen';bs.onclick=function(){saveAbw(name,ov);};
+  ftr.appendChild(bc);ftr.appendChild(bs);inner.appendChild(ftr);
   ov.appendChild(inner);document.body.appendChild(ov);
 }
 
-async function saveAbwesenheit(person,ov){
-  var von=(document.getElementById('ab-von')||{value:''}).value;
-  var bis=(document.getElementById('ab-bis')||{value:''}).value;
+async function saveAbw(person,ov){
+  var von=(document.getElementById('ab-v')||{value:''}).value;
+  var bis=(document.getElementById('ab-b')||{value:''}).value;
   if(!von||!bis){toast('Von und Bis ben\u00f6tigt','error');return;}
-  var ab={id:'AB-'+Date.now(),person:person,von:von,bis:bis,
-    grund:(document.getElementById('ab-grund')||{value:''}).value.trim()};
+  var ab={id:'AB-'+Date.now(),person:person,von:von,bis:bis,grund:(document.getElementById('ab-g')||{value:''}).value.trim()};
   if(!db.abwesenheiten)db.abwesenheiten=[];
   db.abwesenheiten.push(ab);
   await sbUp('abwesenheiten',ab);
@@ -4737,38 +4693,76 @@ async function saveAbwesenheit(person,ov){
   toast('Abwesenheit eingetragen \u2713','ok');
 }
 
-async function delAbwesenheit(id){
+async function delAbw(id){
   db.abwesenheiten=(db.abwesenheiten||[]).filter(function(a){return a.id!==id;});
   await sbDel('abwesenheiten',id);
   renderEinst();
   toast('Gel\u00f6scht','ok');
 }
 
-// ═══════════════════════════════════════════
-// 3. NETZWERK: ResizeObserver für dynamische Größe
-// ═══════════════════════════════════════════
+// ═══════════════ NETZWERK: Jump + Resize ══════════════════════════════════════
+
+function netJumpTo(eid){
+  var n=net2.nodes.find(function(x){return x.id===eid;});
+  if(!n||!net2.draw)return;
+  var cv=el('net-canvas');if(!cv)return;
+  net2.tx.x=cv.offsetWidth/2-n.x*net2.tx.scale;
+  net2.tx.y=cv.offsetHeight/2-n.y*net2.tx.scale;
+  net2.hl=n.label.toLowerCase();
+  net2.draw();
+  setTimeout(function(){net2.hl='';if(net2.draw)net2.draw();},2500);
+}
 
 function netSetupResize(){
-  var canvas=el('net-canvas');if(!canvas||!net2.draw)return;
-  if(window._netResizeObs) window._netResizeObs.disconnect();
-  window._netResizeObs=new ResizeObserver(function(){
-    var dpr=window.devicePixelRatio||1;
-    var W=Math.max(canvas.offsetWidth||700,400);
-    var H=Math.max(500,window.innerHeight-230);
-    if(Math.abs(canvas.width/dpr-W)>10||Math.abs(canvas.height/dpr-H)>10){
-      canvas.width=W*dpr;canvas.height=H*dpr;
-      canvas.style.width=W+'px';canvas.style.height=H+'px';
-      var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
-      // Rebuild layout then draw
-      renderNet2();
-    }
-  });
-  window._netResizeObs.observe(canvas.parentElement||document.body);
-  // Also listen to device pixel ratio changes (zoom)
-  if(window.matchMedia){
-    var mq=window.matchMedia('(resolution: '+window.devicePixelRatio+'dppx)');
-    mq.addEventListener('change',function(){renderNet2();});
+  if(window._netRH)window.removeEventListener('resize',window._netRH);
+  var timer=null;
+  window._netRH=function(){
+    clearTimeout(timer);
+    timer=setTimeout(function(){
+      var cv=el('net-canvas');if(!cv||!net2.draw)return;
+      var dpr=window.devicePixelRatio||1;
+      var par=cv.parentElement;
+      var W=Math.max(par?par.offsetWidth-4:700,400);
+      var H=Math.max(500,window.innerHeight-230);
+      var saved={x:net2.tx.x,y:net2.tx.y,scale:net2.tx.scale};
+      cv.width=W*dpr;cv.height=H*dpr;
+      cv.style.width=W+'px';cv.style.height=H+'px';
+      var cx2=cv.getContext('2d');cx2.scale(dpr,dpr);
+      net2.tx=saved;
+      net2.draw();
+    },200);
+  };
+  window.addEventListener('resize',window._netRH);
+}
+
+// ═══════════════ WORKSPACE KALENDER ══════════════════════════════════════════
+
+function renderWsKal(entityId){
+  var wrap=document.getElementById('ws-kal-'+entityId);if(!wrap)return;
+  var td=new Date().toISOString().slice(0,10);
+  var n30=new Date();n30.setDate(n30.getDate()+30);
+  var n30s=n30.toISOString().slice(0,10);
+  var evts=[];
+  (db.kalender||[]).filter(function(k){return k.entityId===entityId&&k.datum>=td&&k.datum<=n30s;})
+    .forEach(function(k){evts.push({date:k.datum,title:k.titel,type:'termin',color:'#4f7cff',id:k.id,uhrzeit:k.uhrzeit||''});});
+  db.aufgaben.filter(function(t){return t.entityId===entityId&&t.faellig&&t.faellig>=td&&t.faellig<=n30s&&t.status!=='Erledigt';})
+    .forEach(function(t){evts.push({date:t.faellig,title:t.titel,type:'aufgabe',color:'#ef4444',id:t.id,uhrzeit:''});});
+  evts.sort(function(a,b){return a.date<b.date?-1:1;});
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<span style="font-size:12px;font-weight:600">&#128197; N\u00e4chste 30 Tage</span>'
+    +'<button class="btn btn-primary btn-sm" onclick="openKalEntry(null,null,\''+entityId+'\')">+ Termin</button></div>';
+  if(!evts.length){h+='<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">Keine Eintr\u00e4ge in den n\u00e4chsten 30 Tagen</div>';}
+  else{
+    var ld='';
+    evts.forEach(function(e){
+      if(e.date!==ld){ld=e.date;var d=new Date(e.date+'T12:00:00');h+='<div style="font-size:10px;font-weight:600;color:var(--muted);margin:8px 0 3px">'+d.toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'})+'</div>';}
+      h+='<div style="display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--bg);border-radius:6px;margin-bottom:3px;cursor:pointer" onclick="kalClick(\''+e.type+'\',\''+e.id+'\')">'
+        +'<div style="width:3px;height:26px;border-radius:2px;background:'+e.color+';flex-shrink:0"></div>'
+        +'<div style="flex:1"><div style="font-size:11px;font-weight:500">'+e.title+'</div>'+(e.uhrzeit?'<div style="font-size:10px;color:var(--muted)">'+e.uhrzeit+'</div>':'')+'</div>'
+        +'<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:'+e.color+'22;color:'+e.color+'">'+(e.type==='termin'?'Termin':'Aufgabe')+'</span></div>';
+    });
   }
+  wrap.innerHTML=h;
 }
 
 window.addEventListener('load', function(){
