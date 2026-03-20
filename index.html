@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V30</title>
+<title>Mariana CSC - AG-Verwaltung V31</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V30</div>
+    <div class="login-sub">AG-Verwaltung V31</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V30</p>
+    <p>AG-Verwaltung V31</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -391,7 +391,8 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
     <div class="nav-section">
       <div class="nav-label">Konzepte &amp; KI</div>
       <div class="nav-item" data-view="konzepte" onclick="nav(this)"><span class="ico">&#128196;</span>Konzept-Archiv</div>
-      <div class="nav-item" data-view="wizard" onclick="nav(this)"><span class="ico">&#10024;</span>KI-Assistent</div>
+      <div class="nav-item" data-view="wizard" onclick="nav(this)"><span class="ico">&#10024;</span>KI-Assis>Konzept-Archiv</div>
+      <div class="nav-item" data-view="kalender" onclick="nav(this)"><span class="ico">&#10024;</span>KI-Assistent</div>
       <div class="nav-item" data-view="upload" onclick="nav(this)"><span class="ico">&#128204;</span>Hochladen</div>
     </div>
     <div class="nav-section">
@@ -640,7 +641,9 @@ const db = {
   notizen:[],
   chats:{},
   freigaben:[],
-  dokumente:[]
+  dokumente:[],
+  kalender:[],
+  abwesenheiten:[]
 };
 
 // Workspace init per AG
@@ -724,6 +727,7 @@ const viewCfg={
   aufgaben:{title:'Aufgaben',btn:'+ Aufgabe',fn:()=>openTaskModal()},
   konzepte:{title:'Konzept-Archiv',btn:'+ Konzept',fn:()=>openKonzeptModal()},
   wizard:{title:'KI-Konzept-Assistent',btn:null,fn:()=>renderWizard()},
+  kalender:{title:'Kalender',btn:'+ Termin',fn:()=>openKalEntry(null,null)},
 };
 function nav(el2){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -1841,6 +1845,7 @@ function renderNet2(){
   canvas.ontouchend=function(){net2.pan.on=false;};
   net2.draw=draw;
   netReset2();
+  setTimeout(netSetupResize,200);
 }
 
 // ── Layout-Funktionen ────────────────────────────────────────────────────────
@@ -2617,6 +2622,8 @@ function fromSB(t,r){
   if(t==='nutzer') return {id:r.id,name:r.name,pw:r.pw||'',rolle:r.rolle||'intern',agIds:Array.isArray(r.ag_ids)?r.ag_ids:[],ugIds:Array.isArray(r.ug_ids)?r.ug_ids:[],aktiv:r.aktiv!==false,farbe:r.farbe||'#4f7cff'};
   if(t==='plaene') return {id:r.id,entityId:r.entity_id,typ:r.typ||'aufgaben',name:r.name||'',inhalt:r.inhalt||'{}',erstellt:r.erstellt||'',autor:r.autor||''};
   if(t==='dokumente') return {id:r.id,entityId:r.entity_id,name:r.name||'',kat:r.kat||'Sonstiges',typ:r.typ||'file',url:r.url||'',dateiname:r.dateiname||'',groesse:r.groesse||0,von:r.von||'',erstellt:r.erstellt||'',text:r.text||'',storagePath:r.storage_path||''};
+  if(t==='kalender') return {id:r.id,titel:r.titel||'',datum:r.datum||'',uhrzeit:r.uhrzeit||'',kat:r.kat||'Sonstiges',entityId:r.entity_id||'',beschreibung:r.beschreibung||'',von:r.von||''};
+  if(t==='abwesenheiten') return {id:r.id,person:r.person||'',von:r.von||'',bis:r.bis||'',grund:r.grund||''};
   return r;
 }
 function toSB(t,o){
@@ -2632,6 +2639,8 @@ function toSB(t,o){
   if(t==='nutzer') return {id:o.id,name:o.name,pw:o.pw,rolle:o.rolle,ag_ids:o.agIds||[],ug_ids:o.ugIds||[],aktiv:o.aktiv!==false,farbe:o.farbe};
   if(t==='plaene') return {id:o.id,entity_id:o.entityId,typ:o.typ,name:o.name,inhalt:o.inhalt,erstellt:o.erstellt,autor:o.autor};
   if(t==='dokumente') return {id:o.id,entity_id:o.entityId,name:o.name,kat:o.kat||'Sonstiges',typ:o.typ||'file',url:o.url||'',dateiname:o.dateiname||'',groesse:o.groesse||0,von:o.von||'',erstellt:o.erstellt||'',text:o.text||'',storage_path:o.storagePath||''};
+  if(t==='kalender')return{id:o.id,titel:o.titel,datum:o.datum,uhrzeit:o.uhrzeit||'',kat:o.kat||'Sonstiges',entity_id:o.entityId||'',beschreibung:o.beschreibung||'',von:o.von||''};
+  if(t==='abwesenheiten')return{id:o.id,person:o.person,von:o.von,bis:o.bis,grund:o.grund||''};
   return o;
 }
 async function sbUp(t,o){ if(!o||!o.id) return; var mapped=toSB(t,o); var {error}=await getSB().from(t).upsert(mapped,{onConflict:'id'}); if(error){console.error('sbUp error:',t,error.message,mapped);}else syncDot(1); }
@@ -2670,6 +2679,8 @@ async function sbLoadAll(){
     db.notizen    = (res[8].data||[]).map(function(r){return fromSB('notizen',r);});
     db.nutzer     = (res[9].data||[]).map(function(r){return fromSB('nutzer',r);});
     try{var dr=await getSB().from('dokumente').select('*');if(!dr.error)db.dokumente=(dr.data||[]).map(function(r){return fromSB('dokumente',r);});}catch(e){}
+    try{var kr=await getSB().from('kalender').select('*');if(!kr.error)db.kalender=(kr.data||[]).map(function(r){return fromSB('kalender',r);});}catch(e){}
+    try{var abr=await getSB().from('abwesenheiten').select('*');if(!abr.error)db.abwesenheiten=(abr.data||[]).map(function(r){return fromSB('abwesenheiten',r);});}catch(e){}
     if(!db.plaene) db.plaene=[];
     try { var pr=await sb.from('plaene').select('*'); if(!pr.error) db.plaene=(pr.data||[]).map(function(r){return fromSB('plaene',r);}); } catch(e){}
     try { var sr=await sb.from('einstellungen').select('*'); if(sr.data) sr.data.forEach(function(r){ if(r.key==='gemini_key'&&r.value) geminiKey=r.value; if(r.key==='claude_key'&&r.value) apiKey=r.value; if(r.key==='ai_provider'&&r.value) aiProvider=r.value; }); } catch(e){}
@@ -2870,7 +2881,7 @@ renderView=function(view){
   if(curView&&curView.startsWith('nachDet_'))return;
   var specialViews={posteingang:renderPosteingang,freigaben:renderFreigaben,
     notizen:renderNotizen,allchats:renderAllchats,einst:renderEinst,
-    upload:renderKonzeptUpload,konzepte:renderKonzepte};
+    upload:renderKonzeptUpload,konzepte:renderKonzepte,kalender:renderKalender};
   if(specialViews[view]){specialViews[view]();return;}
   _RV(view);  // Original V3: dashboard, netzwerk, ags, ugs, mitglieder, aufgaben, wizard
 };
@@ -3681,7 +3692,7 @@ function editNutzer(id){
     +'<select id="eu-ags" multiple style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:6px;font-size:11px;min-height:60px;margin-bottom:10px">'+agO+'</select>'
     +'<div style="margin-bottom:6px"><label style="font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox" id="eu-ug-all"'+(u.ugIds.includes('*')?' checked':'')+' style="margin-right:5px"> Alle UGs</label></div>'
     +'<select id="eu-ugs" multiple style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:6px;font-size:11px;min-height:60px;margin-bottom:14px">'+ugO+'</select>'
-    +'<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" data-uid="'+id+'" onclick="saveEditNutzer(this.dataset.uid)">Speichern</button><button class="btn btn-ghost btn-sm" onclick="renderEinst()">Abbrechen</button></div></div>';
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+'<button class="btn btn-primary btn-sm" data-uid="'+id+'" onclick="saveEditNutzer(this.dataset.uid)">Speichern</button>'+'<button class="btn btn-ghost btn-sm" onclick="renderEinst()">Abbrechen</button>'+(u.id!==curUser?.id?'<button class="btn btn-ghost btn-sm" style="color:'+(u.aktiv===false?'#22c55e':'#f59e0b')+'" data-uid="'+id+'" onclick="toggleNutzerAktiv(this.dataset.uid)">'+(u.aktiv===false?'&#9989; Freischalten':'&#9940; Deaktivieren')+'</button>':'')+'<button class="btn btn-ghost btn-sm" style="color:#06b6d4" data-uname="'+u.name+'" onclick="openAbwesenheit(this.dataset.uname)">&#128197; Abwesenheit</button></div></div>';
   var eal=G('eu-ag-all'),eas=G('eu-ags'); if(eal&&eas){eas.style.opacity=eal.checked?'.4':'1';eal.onchange=function(){eas.style.opacity=this.checked?'.4':'1';};}
   var eul=G('eu-ug-all'),eus=G('eu-ugs'); if(eul&&eus){eus.style.opacity=eul.checked?'.4':'1';eul.onchange=function(){eus.style.opacity=this.checked?'.4':'1';};}
 }
@@ -4387,6 +4398,377 @@ async function sendSupportMsg(ov){
   if(res)res.innerHTML='<div style="color:#22c55e;font-size:12px;margin-bottom:8px">✓ Nachricht gesendet! Andre wird sich melden.</div>';
   setTimeout(function(){if(ov&&ov.parentNode)ov.remove();},2000);
   toast('Support-Nachricht gesendet ✓','ok');
+}
+
+
+// ── V31 PATCHES ─────────────────────────────────────────────────────────────
+
+// ═══════════════════════════════════════════
+// 1. KALENDER
+// ═══════════════════════════════════════════
+
+var kalState={year:new Date().getFullYear(),month:new Date().getMonth(),view:'month',filter:''};
+
+function renderKalender(){
+  var c=el('content');if(!c)return;
+  c.innerHTML=
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+    +'<div style="display:flex;gap:6px;align-items:center">'
+    +'<button id="kal-prev" class="btn btn-ghost btn-sm">&#8249;</button>'
+    +'<span id="kal-title" style="font-size:14px;font-weight:600;min-width:160px;text-align:center"></span>'
+    +'<button id="kal-next" class="btn btn-ghost btn-sm">&#8250;</button>'
+    +'<button id="kal-today" class="btn btn-ghost btn-sm">Heute</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:5px;align-items:center">'
+    +'<div style="display:flex;background:var(--bg);border-radius:6px;padding:2px">'
+    +'<button class="kal-view-btn active" data-v="month">Monat</button>'
+    +'<button class="kal-view-btn" data-v="week">Woche</button>'
+    +'<button class="kal-view-btn" data-v="list">Liste</button>'
+    +'</div>'
+    +'<button class="btn btn-primary btn-sm" onclick="openKalEntry(null,null)">+ Termin</button>'
+    +'</div></div>'
+    +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;font-size:11px">'
+    +'<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#4f7cff;display:inline-block"></span>Termine</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#ef4444;display:inline-block"></span>Aufgaben f\u00e4llig</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#22c55e;display:inline-block"></span>Abwesenheit</span>'
+    +'<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#f59e0b;display:inline-block"></span>Reviews</span>'
+    +'</div></div>'
+    +'<div id="kal-body"></div>';
+
+  if(!document.getElementById('kal-style')){
+    var st=document.createElement('style');st.id='kal-style';
+    st.textContent=
+      '.kal-view-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 10px;font-size:11px;border-radius:4px}'
+      +'.kal-view-btn.active{background:var(--accent);color:#fff}'
+      +'.kal-day{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px;min-height:80px;cursor:pointer;transition:.15s}'
+      +'.kal-day:hover{border-color:var(--accent)}'
+      +'.kal-day.today{border-color:var(--accent);background:rgba(79,124,255,.08)}'
+      +'.kal-day.other-month{opacity:.4}'
+      +'.kal-day-num{font-size:11px;font-weight:600;margin-bottom:3px;color:var(--muted2)}'
+      +'.kal-day.today .kal-day-num{color:var(--accent)}'
+      +'.kal-evt{font-size:10px;padding:2px 5px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}'
+      +'.kal-week-row{display:grid;grid-template-columns:60px repeat(7,1fr);border-bottom:1px solid var(--border)}'
+      +'.kal-week-day-hdr{padding:8px;font-size:11px;font-weight:600;text-align:center;color:var(--muted2);border-right:1px solid var(--border)}'
+      +'.kal-week-hour{padding:4px 6px;font-size:10px;color:var(--muted);border-right:1px solid var(--border);text-align:right}'
+      +'.kal-week-cell{border-right:1px solid var(--border);min-height:36px;padding:2px;position:relative}'
+      +'.kal-week-cell:hover{background:rgba(79,124,255,.05)}'
+      +'.kal-list-day{margin-bottom:16px}'
+      +'.kal-list-hdr{font-size:12px;font-weight:700;color:var(--muted2);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)}'
+      +'.kal-list-evt{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;cursor:pointer}'
+      +'.kal-list-evt:hover{border-color:var(--accent)}';
+    document.head.appendChild(st);
+  }
+
+  // Bind nav buttons
+  document.getElementById('kal-prev').onclick=function(){
+    if(kalState.view==='month'){kalState.month--;if(kalState.month<0){kalState.month=11;kalState.year--;}}
+    else{kalState.month--;if(kalState.month<0){kalState.month=11;kalState.year--;}}
+    kalRender();
+  };
+  document.getElementById('kal-next').onclick=function(){
+    if(kalState.view==='month'){kalState.month++;if(kalState.month>11){kalState.month=0;kalState.year++;}}
+    else{kalState.month++;if(kalState.month>11){kalState.month=0;kalState.year++;}}
+    kalRender();
+  };
+  document.getElementById('kal-today').onclick=function(){
+    var now=new Date();kalState.year=now.getFullYear();kalState.month=now.getMonth();kalRender();
+  };
+  document.querySelectorAll('.kal-view-btn').forEach(function(b){
+    b.onclick=function(){
+      document.querySelectorAll('.kal-view-btn').forEach(function(x){x.classList.remove('active');});
+      this.classList.add('active');kalState.view=this.getAttribute('data-v');kalRender();
+    };
+  });
+  kalRender();
+}
+
+function kalGetEvents(){
+  var evts=[];
+  // Termine aus db.kalender
+  if(db.kalender) db.kalender.forEach(function(k){evts.push({date:k.datum,title:k.titel,type:'termin',color:'#4f7cff',data:k,id:k.id});});
+  // Aufgaben mit Fälligkeitsdatum
+  db.aufgaben.forEach(function(t){
+    if(t.faellig&&t.status!=='Erledigt')
+      evts.push({date:t.faellig,title:t.titel,type:'aufgabe',color:'#ef4444',data:t,id:t.id});
+  });
+  // Nächste Reviews der AGs
+  db.ags.forEach(function(a){
+    if(a.naechstesReview)
+      evts.push({date:a.naechstesReview,title:'Review: '+a.name,type:'review',color:'#f59e0b',data:a,id:'rev_'+a.id});
+  });
+  // Abwesenheiten
+  if(db.abwesenheiten) db.abwesenheiten.forEach(function(ab){
+    // Expand multi-day
+    var d=new Date(ab.von);var end=new Date(ab.bis||ab.von);
+    while(d<=end){
+      evts.push({date:d.toISOString().slice(0,10),title:ab.person+' abwesend',type:'abwesenheit',color:'#22c55e',data:ab,id:ab.id+'_'+d.toISOString().slice(0,10)});
+      d.setDate(d.getDate()+1);
+    }
+  });
+  return evts;
+}
+
+function kalRender(){
+  var body=document.getElementById('kal-body');if(!body)return;
+  var months=['Januar','Februar','M\u00e4rz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  var days=['Mo','Di','Mi','Do','Fr','Sa','So'];
+  var title=document.getElementById('kal-title');
+  if(title) title.textContent=months[kalState.month]+' '+kalState.year;
+
+  var evts=kalGetEvents();
+  var evtByDate={};
+  evts.forEach(function(e){if(!evtByDate[e.date])evtByDate[e.date]=[];evtByDate[e.date].push(e);});
+
+  if(kalState.view==='month'){
+    // Month grid
+    var firstDay=new Date(kalState.year,kalState.month,1);
+    var startDow=(firstDay.getDay()+6)%7; // Monday=0
+    var daysInMonth=new Date(kalState.year,kalState.month+1,0).getDate();
+    var daysInPrev=new Date(kalState.year,kalState.month,0).getDate();
+    var today=new Date().toISOString().slice(0,10);
+
+    var h='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px">';
+    days.forEach(function(d){h+='<div style="text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:4px">'+d+'</div>';});
+
+    var cell=0;
+    // Prev month fill
+    for(var i=0;i<startDow;i++){
+      var d2=daysInPrev-startDow+1+i;
+      var ds=kalState.year+'-'+pad2(kalState.month===0?12:kalState.month)+'-'+pad2(d2);
+      h+='<div class="kal-day other-month" data-date="'+ds+'" onclick="openKalEntry(null,this.dataset.date)"><div class="kal-day-num">'+d2+'</div></div>';cell++;
+    }
+    // Current month
+    for(var day=1;day<=daysInMonth;day++){
+      var ds2=(kalState.year)+'-'+pad2(kalState.month+1)+'-'+pad2(day);
+      var isToday=ds2===today;
+      var dayEvts=(evtByDate[ds2]||[]).slice(0,3);
+      h+='<div class="kal-day'+(isToday?' today':'')+'" data-date="'+ds2+'" onclick="openKalEntry(null,this.dataset.date)">';
+      h+='<div class="kal-day-num">'+day+'</div>';
+      dayEvts.forEach(function(e){
+        h+='<div class="kal-evt" style="background:'+e.color+'22;color:'+e.color+';border-left:2px solid '+e.color+'" onclick="event.stopPropagation();kalOpenEvt(\''+e.type+'\',\''+e.data.id+'\')">'+e.title+'</div>';
+      });
+      var more=(evtByDate[ds2]||[]).length-3;
+      if(more>0) h+='<div style="font-size:9px;color:var(--muted)">+'+more+' mehr</div>';
+      h+='</div>';cell++;
+    }
+    // Next month fill
+    var remaining=(7-cell%7)%7;
+    for(var i2=0;i2<remaining;i2++){
+      var ds3=(kalState.month===11?kalState.year+1:kalState.year)+'-'+pad2(kalState.month===11?1:kalState.month+2)+'-'+pad2(i2+1);
+      h+='<div class="kal-day other-month" data-date="'+ds3+'" onclick="openKalEntry(null,this.dataset.date)"><div class="kal-day-num">'+(i2+1)+'</div></div>';
+    }
+    h+='</div>';
+    body.innerHTML=h;
+
+  } else if(kalState.view==='list'){
+    // Liste: nächste 60 Tage
+    var h2='<div style="margin-top:10px">';
+    var now2=new Date(kalState.year,kalState.month,1);
+    var end2=new Date(kalState.year,kalState.month+1,0);
+    var allEvts=[];
+    evts.forEach(function(e){if(e.date>=now2.toISOString().slice(0,10)&&e.date<=end2.toISOString().slice(0,10))allEvts.push(e);});
+    allEvts.sort(function(a,b){return a.date<b.date?-1:1;});
+
+    if(!allEvts.length){h2+='<div style="text-align:center;padding:40px;color:var(--muted)">Keine Eintr\u00e4ge in diesem Monat</div>';}
+    else{
+      var curDate='';
+      allEvts.forEach(function(e){
+        if(e.date!==curDate){
+          curDate=e.date;
+          var d=new Date(e.date+'T12:00:00');
+          h2+='<div class="kal-list-day"><div class="kal-list-hdr">'+d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})+'</div>';
+        }
+        h2+='<div class="kal-list-evt" onclick="kalOpenEvt(\''+e.type+'\',\''+e.data.id+'\')">'
+          +'<div style="width:4px;height:36px;border-radius:2px;background:'+e.color+';flex-shrink:0"></div>'
+          +'<div style="flex:1"><div style="font-size:12px;font-weight:500">'+e.title+'</div>'
+          +(e.data.uhrzeit?'<div style="font-size:10px;color:var(--muted)">'+e.data.uhrzeit+'</div>':'')
+          +(e.data.beschreibung?'<div style="font-size:10px;color:var(--muted2)">'+e.data.beschreibung+'</div>':'')
+          +'</div>'
+          +'<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:'+e.color+'22;color:'+e.color+'">'
+          +{termin:'Termin',aufgabe:'Aufgabe',review:'Review',abwesenheit:'Abw.'}[e.type]+'</span></div>';
+      });
+      if(curDate) h2+='</div>';
+    }
+    h2+='<div style="margin-top:14px;text-align:center"><button class="btn btn-primary btn-sm" onclick="openKalEntry(null,null)">+ Termin hinzuf\u00fcgen</button></div></div>';
+    body.innerHTML=h2;
+  }
+}
+
+function pad2(n){return n<10?'0'+n:''+n;}
+
+function kalOpenEvt(type,id){
+  if(type==='aufgabe') openTaskDetail(id);
+  else if(type==='termin'){var k=(db.kalender||[]).find(function(x){return x.id===id;});if(k)openKalEntry(id,null);}
+  else if(type==='review'){var ag=db.ags.find(function(a){return 'rev_'+a.id===id||a.id===id;});if(ag)openDetail('ag',ag.id);}
+}
+
+function openKalEntry(id,defaultDate){
+  var entry=id?(db.kalender||[]).find(function(x){return x.id===id;}):null;
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  var inner=document.createElement('div');
+  inner.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;width:440px;max-width:95vw';
+  var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
+  var ttl=document.createElement('h3');ttl.style.cssText='font-size:14px;margin:0';ttl.textContent=id?'Termin bearbeiten':'Neuer Termin';
+  var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted);line-height:1';
+  cls.onclick=function(){ov.remove();};
+  hdr.appendChild(ttl);hdr.appendChild(cls);inner.appendChild(hdr);
+  inner.insertAdjacentHTML('beforeend',
+    '<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Titel</label>'
+    +'<input id="ke-titel" value="'+(entry?entry.titel:'')+'" placeholder="Termin-Bezeichnung..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px 9px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Datum</label>'
+    +'<input type="date" id="ke-datum" value="'+(entry?entry.datum:defaultDate||new Date().toISOString().slice(0,10))+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Uhrzeit</label>'
+    +'<input type="time" id="ke-uhrzeit" value="'+(entry&&entry.uhrzeit?entry.uhrzeit:'')+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Kategorie</label>'
+    +'<select id="ke-kat" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px">'
+    +'<option'+(entry&&entry.kat==='Meeting'?' selected':'')+'>Meeting</option>'
+    +'<option'+(entry&&entry.kat==='Deadline'?' selected':'')+'>Deadline</option>'
+    +'<option'+(entry&&entry.kat==='Event'?' selected':'')+'>Event</option>'
+    +'<option'+(entry&&entry.kat==='Intern'?' selected':'')+'>Intern</option>'
+    +'<option'+(entry&&entry.kat==='Sonstiges'?' selected':'')+' selected>Sonstiges</option></select></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Zuordnung (AG/UG)</label>'
+    +'<select id="ke-entity" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px">'
+    +'<option value="">— Allgemein —</option>'
+    +db.ags.map(function(a){return '<option value="'+a.id+'"'+(entry&&entry.entityId===a.id?' selected':'')+'>🏛 '+a.name+'</option>';}).join('')
+    +db.ugs.map(function(u){return '<option value="'+u.id+'"'+(entry&&entry.entityId===u.id?' selected':'')+'>⬡ '+u.name+'</option>';}).join('')
+    +'</select></div>'
+    +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Beschreibung</label>'
+    +'<textarea id="ke-desc" rows="3" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box;resize:vertical">'+(entry&&entry.beschreibung?entry.beschreibung:'')+'</textarea></div>'
+    +(id?'<div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn btn-ghost btn-sm" style="color:#ef4444" data-kid="'+id+'" onclick="delKalEntry(this.dataset.kid)">&#128465; L\u00f6schen</button></div>':'')
+  );
+  var ftr=document.createElement('div');ftr.style.cssText='display:flex;gap:8px;justify-content:flex-end';
+  var btnC=document.createElement('button');btnC.className='btn btn-ghost';btnC.textContent='Abbrechen';btnC.onclick=function(){ov.remove();};
+  var btnS=document.createElement('button');btnS.className='btn btn-primary';btnS.textContent='Speichern';
+  btnS.onclick=function(){saveKalEntry(id,ov);};
+  ftr.appendChild(btnC);ftr.appendChild(btnS);inner.appendChild(ftr);
+  ov.appendChild(inner);document.body.appendChild(ov);
+  setTimeout(function(){var t=document.getElementById('ke-titel');if(t)t.focus();},60);
+}
+
+async function saveKalEntry(id,ov){
+  var titel=(document.getElementById('ke-titel')||{value:''}).value.trim();
+  var datum=(document.getElementById('ke-datum')||{value:''}).value;
+  if(!titel||!datum){toast('Titel und Datum pflicht','error');return;}
+  var entry={
+    id:id||'KAL-'+Date.now(),
+    titel:titel,datum:datum,
+    uhrzeit:(document.getElementById('ke-uhrzeit')||{value:''}).value||'',
+    kat:(document.getElementById('ke-kat')||{value:'Sonstiges'}).value,
+    entityId:(document.getElementById('ke-entity')||{value:''}).value||'',
+    beschreibung:(document.getElementById('ke-desc')||{value:''}).value.trim(),
+    von:curUser?curUser.name:''
+  };
+  if(!db.kalender)db.kalender=[];
+  if(id){db.kalender=db.kalender.map(function(k){return k.id===id?entry:k;});}
+  else{db.kalender.push(entry);}
+  await sbUp('kalender',entry);
+  if(ov)ov.remove();
+  kalRender();
+  toast('Termin gespeichert \u2713','ok');
+}
+
+async function delKalEntry(id){
+  if(!confirm('Termin l\u00f6schen?'))return;
+  db.kalender=(db.kalender||[]).filter(function(k){return k.id!==id;});
+  await sbDel('kalender',id);
+  var ov=document.querySelector('[style*="z-index:9999"]');if(ov)ov.remove();
+  kalRender();toast('Gel\u00f6scht','ok');
+}
+
+// ═══════════════════════════════════════════
+// 2. NUTZER DEAKTIVIEREN + ABWESENHEIT
+// ═══════════════════════════════════════════
+
+function openAbwesenheit(nutzerName){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  var inner=document.createElement('div');
+  inner.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;width:400px;max-width:95vw';
+  var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
+  var ttl=document.createElement('h3');ttl.style.cssText='font-size:14px;margin:0';
+  ttl.innerHTML='&#128197; Abwesenheit: '+(nutzerName||'');
+  var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted)';
+  cls.onclick=function(){ov.remove();};
+  hdr.appendChild(ttl);hdr.appendChild(cls);inner.appendChild(hdr);
+
+  // Bestehende Abwesenheiten dieser Person
+  var existing=(db.abwesenheiten||[]).filter(function(a){return a.person===nutzerName;});
+  var existH='';
+  if(existing.length){
+    existH='<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:5px">Geplante Abwesenheiten:</div>';
+    existing.forEach(function(a){
+      existH+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--bg);border-radius:5px;margin-bottom:3px;font-size:11px">'
+        +'<span>'+a.von+' bis '+a.bis+' &mdash; '+(a.grund||'Kein Grund')+'</span>'
+        +'<button style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px" data-aid="'+a.id+'" onclick="delAbwesenheit(this.dataset.aid)">&#10005;</button></div>';
+    });
+    existH+='</div>';
+  }
+
+  inner.insertAdjacentHTML('beforeend', existH
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Von</label>'
+    +'<input type="date" id="ab-von" value="'+new Date().toISOString().slice(0,10)+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Bis</label>'
+    +'<input type="date" id="ab-bis" value="'+new Date().toISOString().slice(0,10)+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Grund (optional)</label>'
+    +'<input id="ab-grund" placeholder="Urlaub, Krank, etc." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+  );
+  var ftr=document.createElement('div');ftr.style.cssText='display:flex;gap:8px;justify-content:flex-end';
+  var btnC=document.createElement('button');btnC.className='btn btn-ghost';btnC.textContent='Abbrechen';btnC.onclick=function(){ov.remove();};
+  var btnS=document.createElement('button');btnS.className='btn btn-primary';btnS.textContent='Eintragen';
+  btnS.onclick=function(){saveAbwesenheit(nutzerName,ov);};
+  ftr.appendChild(btnC);ftr.appendChild(btnS);inner.appendChild(ftr);
+  ov.appendChild(inner);document.body.appendChild(ov);
+}
+
+async function saveAbwesenheit(person,ov){
+  var von=(document.getElementById('ab-von')||{value:''}).value;
+  var bis=(document.getElementById('ab-bis')||{value:''}).value;
+  if(!von||!bis){toast('Von und Bis ben\u00f6tigt','error');return;}
+  var ab={id:'AB-'+Date.now(),person:person,von:von,bis:bis,
+    grund:(document.getElementById('ab-grund')||{value:''}).value.trim()};
+  if(!db.abwesenheiten)db.abwesenheiten=[];
+  db.abwesenheiten.push(ab);
+  await sbUp('abwesenheiten',ab);
+  if(ov)ov.remove();
+  renderEinst();
+  toast('Abwesenheit eingetragen \u2713','ok');
+}
+
+async function delAbwesenheit(id){
+  db.abwesenheiten=(db.abwesenheiten||[]).filter(function(a){return a.id!==id;});
+  await sbDel('abwesenheiten',id);
+  renderEinst();
+  toast('Gel\u00f6scht','ok');
+}
+
+// ═══════════════════════════════════════════
+// 3. NETZWERK: ResizeObserver für dynamische Größe
+// ═══════════════════════════════════════════
+
+function netSetupResize(){
+  var canvas=el('net-canvas');if(!canvas||!net2.draw)return;
+  if(window._netResizeObs) window._netResizeObs.disconnect();
+  window._netResizeObs=new ResizeObserver(function(){
+    var dpr=window.devicePixelRatio||1;
+    var W=Math.max(canvas.offsetWidth||700,400);
+    var H=Math.max(500,window.innerHeight-230);
+    if(Math.abs(canvas.width/dpr-W)>10||Math.abs(canvas.height/dpr-H)>10){
+      canvas.width=W*dpr;canvas.height=H*dpr;
+      canvas.style.width=W+'px';canvas.style.height=H+'px';
+      var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+      // Rebuild layout then draw
+      renderNet2();
+    }
+  });
+  window._netResizeObs.observe(canvas.parentElement||document.body);
+  // Also listen to device pixel ratio changes (zoom)
+  if(window.matchMedia){
+    var mq=window.matchMedia('(resolution: '+window.devicePixelRatio+'dppx)');
+    mq.addEventListener('change',function(){renderNet2();});
+  }
 }
 
 window.addEventListener('load', function(){
