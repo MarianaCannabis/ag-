@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V24</title>
+<title>Mariana CSC - AG-Verwaltung V25</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V24</div>
+    <div class="login-sub">AG-Verwaltung V25</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -347,6 +347,10 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
     </div>
     <button class="login-btn" onclick="L_submit()">Anmelden</button>
     <div class="login-err" id="L_err"></div>
+    <div style="display:flex;justify-content:space-between;margin-top:14px">
+      <button onclick="showPwResetDialog()" style="background:none;border:none;color:#6b7199;font-size:11px;cursor:pointer;padding:0">&#128279; Passwort vergessen?</button>
+      <button onclick="showSupportDialog()" style="background:none;border:none;color:#6b7199;font-size:11px;cursor:pointer;padding:0">&#128172; Support</button>
+    </div>
   </div>
 </div>
 <div id="sync-dot" title="Sync" onclick="toggleLivePanel()"></div>
@@ -365,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V24</p>
+    <p>AG-Verwaltung V25</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -2295,6 +2299,8 @@ async function L_submit(){
     if(err){err.textContent=db.nutzer.some(function(u){return u.name.toLowerCase()===name.toLowerCase();})?'Passwort falsch.':'Name nicht gefunden.';err.style.display='block';}
     G('L_pw').value=''; G('L_pw').focus(); return;
   }
+  var autoPw2=found.name.toLowerCase().replace(/\s+/g,'')+'2024';
+  if(found.pw===autoPw2){showFirstLoginDialog(found);return;}
   curUser={id:found.id,name:found.name,rolle:found.rolle,agIds:found.agIds||[],ugIds:found.ugIds||[],farbe:found.farbe||'#4f7cff'};
   G('login-overlay').style.display='none';
   G('main-app').style.display='';
@@ -3100,7 +3106,7 @@ function renderEinst(){
     +'<h3 style="font-size:13px;margin:0 0 10px">&#128100; Profil</h3>'
     +'<div style="font-size:12px;margin-bottom:4px"><span style="color:var(--muted)">Name:</span> <strong>'+(curUser?curUser.name:'')+'</strong></div>'
     +'<div style="font-size:12px;margin-bottom:14px"><span style="color:var(--muted)">Rolle:</span> '+(curUser?curUser.rolle:'')+'</div>'
-    +'<button class="btn btn-ghost btn-sm" onclick="L_logout()">&#9211; Abmelden</button></div>'
+    +'<button class="btn btn-ghost btn-sm" onclick="L_logout()">&#9211; Abmelden</button>'+'<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="showSupportDialog()">&#128172; Support</button></div>'
     +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px">'
     +'<h3 style="font-size:13px;margin:0 0 10px">&#127864; Live-Pr&auml;senz</h3>'
     +'<div id="live-users-list" style="margin-bottom:8px"></div>'
@@ -3130,14 +3136,16 @@ function openNutzerForm(){
     +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:400px">'
     +'<h3 style="font-size:14px;margin:0 0 14px">Neuer Nutzer</h3>'
     +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name</label><input id="nu-name" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
-    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Passwort</label><input id="nu-pw" type="password" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Passwort <span style="color:#6b7199;font-weight:400">(leer = Name+2024)</span></label><input id="nu-pw" type="password" placeholder="Leer für Auto-PW..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box"></div>'
     +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Rolle</label><select id="nu-rolle" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:12px"><option>SuperAdmin</option><option>Admin</option><option>Editor</option><option selected>intern</option></select></div>'
     +'<div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="saveNewNutzer()">Erstellen</button><button class="btn btn-ghost btn-sm" onclick="renderEinst()">Abbrechen</button></div></div>';
   setTimeout(function(){var n=G('nu-name');if(n) n.focus();},50);
 }
 async function saveNewNutzer(){
-  var name=(G('nu-name')||{value:''}).value.trim(), pw=(G('nu-pw')||{value:''}).value;
-  if(!name||!pw){toast('Name und PW Pflicht','error');return;}
+  var name=(G('nu-name')||{value:''}).value.trim();
+  var pw=(G('nu-pw')||{value:''}).value.trim();
+  if(!name){toast('Name eingeben','error');return;}
+  if(!pw)pw=name.toLowerCase().replace(/\s+/g,'')+"2024";
   var u={id:'U-'+Date.now(),name:name,pw:pw,rolle:(G('nu-rolle')||{value:'intern'}).value,agIds:[],ugIds:[],aktiv:true,farbe:'#4f7cff'};
   db.nutzer.push(u); await sbUp('nutzer',u);
   if(!db.mitglieder.find(function(m){return m.name===name;})){
@@ -3742,6 +3750,133 @@ async function delNutzer(id){
   db.aufgaben.forEach(function(t){if(t.verantw&&t.verantw.indexOf(u.name)>=0){t.verantw=t.verantw.replace(u.name,'').replace(/[,/ ]+$/,'').replace(/^[,/ ]+/,'').trim();sbUp('aufgaben',t);}});
   updateBadges();renderEinst();
 }
+
+
+function showFirstLoginDialog(user){
+  var box=document.querySelector('.login-box');if(!box)return;
+  box.innerHTML=
+    '<div class="login-logo">&#128274;</div>'
+    +'<div class="login-title" style="font-size:16px">Passwort festlegen</div>'
+    +'<div class="login-sub" style="margin-bottom:18px">Willkommen '+user.name+'! Bitte lege dein persönliches Passwort fest.</div>'
+    +'<div style="font-size:11px;color:#6b7199;margin-bottom:4px">Neues Passwort</div>'
+    +'<div class="lf-wrap" style="margin-bottom:12px"><input type="password" id="fl-pw1" placeholder="Neues Passwort..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:13px;box-sizing:border-box"></div>'
+    +'<div style="font-size:11px;color:#6b7199;margin-bottom:4px">Passwort bestätigen</div>'
+    +'<div class="lf-wrap" style="margin-bottom:16px"><input type="password" id="fl-pw2" placeholder="Wiederholen..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:13px;box-sizing:border-box"></div>'
+    +'<button class="login-btn" id="fl-save-btn">Passwort speichern &amp; Anmelden</button>'
+    +'<div class="login-err" id="fl-err"></div>';
+  document.getElementById('fl-save-btn').addEventListener('click',function(){saveFirstLoginPw(user.id);});
+  setTimeout(function(){var p=document.getElementById('fl-pw1');if(p)p.focus();},80);
+  window._firstLoginUser=user;
+}
+
+async function saveFirstLoginPw(userId){
+  var pw1=(G('fl-pw1')||{value:''}).value;
+  var pw2=(G('fl-pw2')||{value:''}).value;
+  var err=G('fl-err');
+  if(!pw1||pw1.length<4){if(err){err.textContent='Mindestens 4 Zeichen.';err.style.display='block';}return;}
+  if(pw1!==pw2){if(err){err.textContent='Passwörter stimmen nicht überein.';err.style.display='block';}return;}
+  var u=db.nutzer.find(function(x){return x.id===userId;});
+  if(!u){if(err){err.textContent='Nutzer nicht gefunden.';err.style.display='block';}return;}
+  u.pw=pw1;
+  await sbUp('nutzer',u);
+  curUser={id:u.id,name:u.name,rolle:u.rolle,agIds:u.agIds||[],ugIds:u.ugIds||[],farbe:u.farbe||'#4f7cff'};
+  G('login-overlay').style.display='none';
+  G('main-app').style.display='';
+  var tu=G('tb-user');if(tu)tu.style.display='flex';
+  var tn=G('tb-user-name');if(tn)tn.textContent=curUser.name;
+  var td=G('tb-user-dot');if(td)td.style.background=curUser.farbe;
+  var dot=G('ubdot');if(dot)dot.style.background=curUser.farbe;
+  var ubn=G('ubname');if(ubn)ubn.textContent=curUser.name+' ('+curUser.rolle+')';
+  G('ubadge').style.display='flex';
+  updateBadges();
+  nav(document.querySelector('[data-view="dashboard"]'));
+  setTimeout(function(){sbRealtime();startPolling();initLive();},400);
+  setTimeout(function(){toast('Passwort gesetzt! Willkommen, '+curUser.name+' ✨','ok');},600);
+}
+
+function showPwResetDialog(){
+  var box=document.querySelector('.login-box');if(!box)return;
+  box.innerHTML=
+    '<div class="login-logo">&#128279;</div>'
+    +'<div class="login-title" style="font-size:16px">Passwort zurücksetzen</div>'
+    +'<div class="login-sub" style="margin-bottom:18px">Dein Passwort wird auf <strong>Name+2024</strong> zurückgesetzt.<br>Beim nächsten Login kannst du es ändern.</div>'
+    +'<div style="font-size:11px;color:#6b7199;margin-bottom:4px">Dein Name</div>'
+    +'<div class="lf-wrap" style="margin-bottom:16px"><input type="text" id="pr-name" placeholder="Name eingeben..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:8px;font-size:13px;box-sizing:border-box"></div>'
+    +'<button class="login-btn" id="pr-btn">Passwort zurücksetzen</button>'
+    +'<div class="login-err" id="pr-err"></div>'
+    +'<div style="text-align:center;margin-top:14px"><button onclick="location.reload()" style="background:none;border:none;color:#6b7199;font-size:11px;cursor:pointer">← Zurück zum Login</button></div>';
+  document.getElementById('pr-btn').addEventListener('click',doPwReset);
+  setTimeout(function(){var n=G('pr-name');if(n)n.focus();},80);
+}
+
+async function doPwReset(){
+  var name=(G('pr-name')||{value:''}).value.trim();
+  var err=G('pr-err');
+  if(!name){if(err){err.textContent='Name eingeben.';err.style.display='block';}return;}
+  // Lade aktuell aus Supabase
+  var res=await getSB().from('nutzer').select('*').ilike('name',name);
+  var u=res.data&&res.data.length?res.data[0]:db.nutzer.find(function(x){return x.name.toLowerCase()===name.toLowerCase();});
+  if(!u){if(err){err.textContent='Name nicht gefunden.';err.style.display='block';}return;}
+  var newPw=u.name.toLowerCase().replace(/\s+/g,'')+'2024';
+  var uObj=db.nutzer.find(function(x){return x.id===u.id;});
+  if(uObj)uObj.pw=newPw;
+  await getSB().from('nutzer').update({pw:newPw}).eq('id',u.id);
+  var box=document.querySelector('.login-box');
+  if(box) box.innerHTML=
+    '<div class="login-logo" style="color:#22c55e">&#10003;</div>'
+    +'<div class="login-title">Passwort zurückgesetzt</div>'
+    +'<div class="login-sub" style="margin-bottom:8px">Neues Passwort: <strong style="color:var(--accent)">'+newPw+'</strong></div>'
+    +'<div class="login-sub" style="margin-bottom:20px;font-size:11px">Beim nächsten Login wirst du aufgefordert ein neues Passwort zu wählen.</div>'
+    +'<button class="login-btn" onclick="location.reload()">Zum Login</button>';
+}
+
+function showSupportDialog(){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  var inner=document.createElement('div');
+  inner.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;width:460px;max-width:95vw';
+  var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
+  var ttl=document.createElement('h3');ttl.style.cssText='font-size:14px;margin:0';ttl.innerHTML='&#128172; Support-Nachricht an Andre';
+  var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted);line-height:1';
+  cls.onclick=function(){ov.remove();};
+  hdr.appendChild(ttl);hdr.appendChild(cls);inner.appendChild(hdr);
+  inner.insertAdjacentHTML('beforeend',
+    '<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Betreff</label>'
+    +'<input id="sup-betreff" placeholder="Worum geht es?" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px 9px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Priorität</label>'
+    +'<select id="sup-prio" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px 9px;font-size:12px">'
+    +'<option>Normal</option><option>Dringend</option><option>Fehler / Bug</option><option>Idee / Wunsch</option></select></div>'
+    +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Nachricht</label>'
+    +'<textarea id="sup-text" rows="5" placeholder="Beschreibe dein Anliegen..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px 9px;font-size:12px;box-sizing:border-box;resize:vertical"></textarea></div>'
+    +'<div id="sup-result"></div>');
+  var ftr=document.createElement('div');ftr.style.cssText='display:flex;gap:8px;justify-content:flex-end';
+  var btnC=document.createElement('button');btnC.className='btn btn-ghost';btnC.textContent='Abbrechen';btnC.onclick=function(){ov.remove();};
+  var btnS=document.createElement('button');btnS.className='btn btn-primary';btnS.textContent='Senden';
+  btnS.addEventListener('click',function(){sendSupportMsg(ov);});
+  ftr.appendChild(btnC);ftr.appendChild(btnS);inner.appendChild(ftr);
+  ov.appendChild(inner);document.body.appendChild(ov);
+  setTimeout(function(){var b=G('sup-betreff');if(b)b.focus();},80);
+}
+
+async function sendSupportMsg(ov){
+  var betreff=(G('sup-betreff')||{value:''}).value.trim();
+  var prio=(G('sup-prio')||{value:'Normal'}).value;
+  var text=(G('sup-text')||{value:''}).value.trim();
+  var res=G('sup-result');
+  if(!betreff||!text){if(res)res.innerHTML='<div style="color:#ef4444;font-size:12px;margin-bottom:8px">Bitte Betreff und Nachricht ausfüllen.</div>';return;}
+  var ts=new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  var msg={id:'SUP-'+Date.now(),von:curUser?curUser.name:'Anonym',an:'Andre',
+    betreff:'[Support]['+prio+'] '+betreff,
+    text:text+'\n\n---\nVon: '+(curUser?curUser.name+' ('+curUser.rolle+')':'Anonym')+'\nZeit: '+ts,
+    ts:ts,gelesen:false,antworten:[]};
+  db.nachrichten.push(msg);
+  await sbUp('nachrichten',msg);
+  updateBadges();
+  if(res)res.innerHTML='<div style="color:#22c55e;font-size:12px;margin-bottom:8px">✓ Nachricht gesendet! Andre wird sich melden.</div>';
+  setTimeout(function(){if(ov&&ov.parentNode)ov.remove();},2000);
+  toast('Support-Nachricht gesendet ✓','ok');
+}
+
 window.addEventListener('load', function(){
   G('login-overlay').style.display='flex';
   L_init();
