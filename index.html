@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V33</title>
+<title>Mariana CSC - AG-Verwaltung V34</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V33</div>
+    <div class="login-sub">AG-Verwaltung V34</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V33</p>
+    <p>AG-Verwaltung V34</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -393,6 +393,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
       <div class="nav-item" data-view="konzepte" onclick="nav(this)"><span class="ico">&#128196;</span>Konzept-Archiv</div>
       <div class="nav-item" data-view="wizard" onclick="nav(this)"><span class="ico">&#10024;</span>KI-Assistent</div>
       <div class="nav-item" data-view="kalender" onclick="nav(this)"><span class="ico">&#128197;</span>Kalender</div>
+      <div class="nav-item" data-view="meinkalender" onclick="nav(this)"><span class="ico">&#128100;</span>Mein Kalender</div>
       <div class="nav-item" data-view="upload" onclick="nav(this)"><span class="ico">&#128204;</span>Hochladen</div>
     </div>
     <div class="nav-section">
@@ -728,6 +729,7 @@ const viewCfg={
   konzepte:{title:'Konzept-Archiv',btn:'+ Konzept',fn:()=>openKonzeptModal()},
   wizard:{title:'KI-Konzept-Assistent',btn:null,fn:()=>renderWizard()},
   kalender:{title:'Kalender',btn:'+ Termin',fn:()=>openKalEntry(null,null,null)},
+  meinkalender:{title:'Mein Kalender',btn:'Abwesenheit',fn:()=>openAbwesenheit(curUser?curUser.name:'')},
 };
 function nav(el2){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -2877,7 +2879,7 @@ renderView=function(view){
   if(curView&&curView.startsWith('nachDet_'))return;
   var specialViews={posteingang:renderPosteingang,freigaben:renderFreigaben,
     notizen:renderNotizen,allchats:renderAllchats,einst:renderEinst,
-    upload:renderKonzeptUpload,konzepte:renderKonzepte,kalender:renderKalender};
+    upload:renderKonzeptUpload,konzepte:renderKonzepte,kalender:renderKalender,meinkalender:renderMeinKalender};
   if(specialViews[view]){specialViews[view]();return;}
   _RV(view);  // Original V3: dashboard, netzwerk, ags, ugs, mitglieder, aufgaben, wizard
 };
@@ -3107,6 +3109,7 @@ async function openWorkspace(entityId, navEl2){
   var tl=G('ws-task-list'); if(tl) tl.innerHTML=renderTaskCards(tasks, entityId);
   renderWsNotizen(entityId);
   renderWsDocs(entityId); renderWsProtos(entityId);
+  setTimeout(function(){renderWsKalEx(entityId);},80);
   setTimeout(function(){var cb=G('chatbox-ws-'+entityId); if(cb) cb.scrollTop=cb.scrollHeight;},60);
   var nb=G('ws-notiz-add-btn'); if(nb) nb.addEventListener('click',function(){openNotizWS(entityId);});
   // Init planning tab
@@ -4403,7 +4406,7 @@ async function sendSupportMsg(ov){
 }
 
 
-// ── V33 NEUE FUNKTIONEN ──────────────────────────────────────────────────────
+// ── V34 NEUE FUNKTIONEN ──────────────────────────────────────────────────────
 
 // ═══════════════ KALENDER ════════════════════════════════════════════════════
 
@@ -4764,6 +4767,315 @@ function renderWsKal(entityId){
   }
   wrap.innerHTML=h;
 }
+
+
+// ══════════════════════════════════════════════════════════════
+// V34 FEATURES: Persönlicher Kalender, Verknüpfte Kalender,
+//               Abwesenheit für Mitglieder/Admins
+// ══════════════════════════════════════════════════════════════
+
+// ── Persönlicher Kalender (Mitglied-Ansicht) ──────────────────
+function renderMeinKalender(){
+  if(!curUser)return;
+  var c=el('content');if(!c)return;
+  var mName=curUser.name;
+  // Mitglied-Objekt finden
+  var mObj=db.mitglieder.find(function(m){return m.name===mName;});
+  // Rollen dieser Person
+  var myRoles=db.rollen.filter(function(r){return r.personId===(mObj?mObj.id:'')&&r.aktiv;});
+  var myEntityIds=myRoles.map(function(r){return r.entityId;});
+
+  c.innerHTML=
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+    +'<div><h3 style="font-size:14px;margin:0">&#128100; Mein Kalender</h3>'
+    +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+mName+' &middot; '+(myEntityIds.length)+' Zuordnungen</div></div>'
+    +'<div style="display:flex;gap:6px">'
+    +'<button class="btn btn-primary btn-sm" onclick="openKalEntry(null,null,null)">+ Termin</button>'
+    +'<button class="btn btn-ghost btn-sm" onclick="openAbwesenheit(\''+mName+'\')">&#128197; Abwesenheit</button>'
+    +'</div></div>'
+    // Filter Tabs
+    +'<div style="display:flex;gap:5px;margin-top:10px;flex-wrap:wrap">'
+    +'<button class="mk-filter active" data-f="all" style="background:var(--accent);color:#fff;border:none;border-radius:20px;padding:3px 12px;font-size:11px;cursor:pointer">Alle</button>'
+    +'<button class="mk-filter" data-f="persoenlich" style="background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:11px;cursor:pointer">Persönlich</button>'
+    +myEntityIds.map(function(eid){
+      var ag=db.ags.find(function(a){return a.id===eid;});
+      var ug=db.ugs.find(function(u){return u.id===eid;});
+      var ent=ag||ug;if(!ent)return'';
+      return '<button class="mk-filter" data-f="'+eid+'" style="background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:11px;cursor:pointer">'+(ag?'&#127963;':'&#11053;')+' '+ent.name+'</button>';
+    }).join('')
+    +'</div></div>'
+    +'<div id="mk-body" style="margin-top:10px"></div>';
+
+  // Bind filter buttons
+  document.querySelectorAll('.mk-filter').forEach(function(b){
+    b.onclick=function(){
+      document.querySelectorAll('.mk-filter').forEach(function(x){x.style.background='var(--card2)';x.style.color='var(--text)';x.style.border='1px solid var(--border)';});
+      this.style.background='var(--accent)';this.style.color='#fff';this.style.border='1px solid var(--accent)';
+      renderMeinKalBody(myEntityIds,mName,this.getAttribute('data-f'));
+    };
+  });
+  renderMeinKalBody(myEntityIds,mName,'all');
+}
+
+function renderMeinKalBody(myEntityIds,mName,filter){
+  var body=document.getElementById('mk-body');if(!body)return;
+  var today=new Date().toISOString().slice(0,10);
+  var future=new Date();future.setDate(future.getDate()+60);
+  var futureStr=future.toISOString().slice(0,10);
+  var evts=[];
+
+  // Persönliche Termine (entityId leer oder = eigene Person)
+  if(filter==='all'||filter==='persoenlich'){
+    (db.kalender||[]).filter(function(k){
+      return (k.von===mName||!k.entityId)&&k.datum>=today&&k.datum<=futureStr;
+    }).forEach(function(k){
+      evts.push({date:k.datum,title:k.titel,type:'termin',color:'#4f7cff',id:k.id,uhrzeit:k.uhrzeit||'',entity:'Persönlich',data:k});
+    });
+  }
+
+  // AG/UG spezifische Events
+  var filterIds=filter==='all'?myEntityIds:filter==='persoenlich'?[]:[filter];
+  filterIds.forEach(function(eid){
+    var ag=db.ags.find(function(a){return a.id===eid;});
+    var ug=db.ugs.find(function(u){return u.id===eid;});
+    var entName=(ag||ug)?((ag||ug).name):'';
+    var entColor=ag?(ag.farbe||'#4f7cff'):'#a78bfa';
+
+    // Kalender-Einträge dieser Entity
+    (db.kalender||[]).filter(function(k){return k.entityId===eid&&k.datum>=today&&k.datum<=futureStr;})
+      .forEach(function(k){
+        // Fremdeinträge: von anderen erstellt?
+        var isPending=k.von&&k.von!==mName&&k.status==='pending';
+        evts.push({date:k.datum,title:k.titel,type:isPending?'pending':'termin',
+          color:isPending?'#f59e0b':entColor,id:k.id,uhrzeit:k.uhrzeit||'',
+          entity:entName,pending:isPending,data:k});
+      });
+
+    // Aufgaben dieser Entity an mich
+    db.aufgaben.filter(function(t){
+      return t.entityId===eid&&t.faellig&&t.faellig>=today&&t.faellig<=futureStr
+        &&t.status!=='Erledigt'&&(t.verantw||'').indexOf(mName)>=0;
+    }).forEach(function(t){
+      evts.push({date:t.faellig,title:t.titel,type:'aufgabe',color:'#ef4444',
+        id:t.id,uhrzeit:'',entity:entName,data:t});
+    });
+  });
+
+  // Abwesenheiten dieser Person
+  if(filter==='all'||filter==='persoenlich'){
+    (db.abwesenheiten||[]).filter(function(a){return a.person===mName;}).forEach(function(ab){
+      var d=new Date(ab.von+'T12:00:00'),end=new Date(ab.bis+'T12:00:00');
+      while(d<=end&&d.toISOString().slice(0,10)<=futureStr){
+        var ds=d.toISOString().slice(0,10);
+        if(ds>=today) evts.push({date:ds,title:'Abwesend'+(ab.grund?' ('+ab.grund+')':''),type:'abwesenheit',color:'#22c55e',id:ab.id,uhrzeit:'',entity:'Persönlich',data:ab});
+        d.setDate(d.getDate()+1);
+      }
+    });
+  }
+
+  evts.sort(function(a,b){return a.date<b.date?-1:1;});
+
+  if(!evts.length){
+    body.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px">&#128197; Keine Einträge in den nächsten 60 Tagen</div>';
+    return;
+  }
+
+  var h=''; var ld='';
+  evts.forEach(function(e){
+    if(e.date!==ld){
+      ld=e.date;
+      var d=new Date(e.date+'T12:00:00');
+      var isT=e.date===today;
+      h+='<div style="font-size:11px;font-weight:700;color:'+(isT?'var(--accent)':'var(--muted)')+';margin:12px 0 5px;display:flex;align-items:center;gap:8px">'
+        +(isT?'<span style="background:var(--accent);color:#fff;border-radius:4px;padding:1px 6px;font-size:10px">Heute</span>':'')
+        +d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})+'</div>';
+    }
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card);border:1px solid '+(e.pending?'#f59e0b':'var(--border)')+';border-radius:8px;margin-bottom:4px;cursor:pointer" onclick="mkalClick(\''+e.type+'\',\''+e.id+'\')">'
+      +'<div style="width:4px;height:34px;border-radius:2px;background:'+e.color+';flex-shrink:0"></div>'
+      +'<div style="flex:1">'
+      +'<div style="font-size:12px;font-weight:500">'+e.title+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-top:1px">'+(e.uhrzeit?e.uhrzeit+' &middot; ':'')+e.entity+'</div>'
+      +'</div>'
+      +(e.pending?'<button class="btn btn-ghost btn-sm" style="color:#22c55e;font-size:11px" data-kid="'+e.id+'" onclick="event.stopPropagation();kalBestätigen(this.dataset.kid)">&#10003; Bestätigen</button>':'')
+      +'<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:'+e.color+'22;color:'+e.color+'">'
+      +{termin:'Termin',aufgabe:'Aufgabe',abwesenheit:'Abwesend',review:'Review',pending:'Ausstehend'}[e.type]+'</span></div>';
+  });
+  body.innerHTML=h;
+}
+
+function mkalClick(type,id){
+  if(type==='aufgabe')openTaskDetail(id);
+  else if(type==='termin'||type==='pending')openKalEntry(id,null,null);
+}
+
+async function kalBestätigen(kalId){
+  var k=(db.kalender||[]).find(function(x){return x.id===kalId;});
+  if(!k)return;
+  k.status='confirmed';
+  await sbUp('kalender',k);
+  toast('Termin bestätigt ✓','ok');
+  renderMeinKalender();
+}
+
+// ── Abwesenheit für Admins in Einstellungen ────────────────────
+// editNutzer bekommt einen Abwesenheit-Button — schon in V34 vorhanden
+// Aber auch in AG/UG-Workspace direkt eintragbar
+function openAbwesenheitForMember(mName){
+  openAbwesenheit(mName);
+}
+
+// ── Kalender mit verknüpften AGs/UGs ──────────────────────────
+// Beim Anzeigen der WS-Kalender auch verknüpfte Entities einbeziehen
+function renderWsKalEx(entityId){
+  var wrap=document.getElementById('ws-kal-'+entityId);if(!wrap)return;
+  var ag=db.ags.find(function(a){return a.id===entityId;});
+  var ug=db.ugs.find(function(u){return u.id===entityId;});
+
+  // Eigene Entity + verknüpfte
+  var entityIds=[entityId];
+  if(ag){
+    // AG: auch alle UGs
+    db.agUgLinks.filter(function(l){return l.agId===ag.id;}).forEach(function(l){entityIds.push(l.ugId);});
+  } else if(ug){
+    // UG: auch übergeordnete AGs
+    db.agUgLinks.filter(function(l){return l.ugId===ug.id;}).forEach(function(l){entityIds.push(l.agId);});
+  }
+
+  var today=new Date().toISOString().slice(0,10);
+  var n60=new Date();n60.setDate(n60.getDate()+60);
+  var n60s=n60.toISOString().slice(0,10);
+  var evts=[];
+
+  entityIds.forEach(function(eid){
+    var entAg=db.ags.find(function(a){return a.id===eid;});
+    var entUg=db.ugs.find(function(u){return u.id===eid;});
+    var entName=(entAg||entUg)?((entAg||entUg).name):'';
+    var entColor=entAg?(entAg.farbe||'#4f7cff'):'#a78bfa';
+    var isPrimary=eid===entityId;
+
+    (db.kalender||[]).filter(function(k){return k.entityId===eid&&k.datum>=today&&k.datum<=n60s;})
+      .forEach(function(k){
+        evts.push({date:k.datum,title:k.titel,type:'termin',color:isPrimary?'#4f7cff':entColor,
+          id:k.id,uhrzeit:k.uhrzeit||'',entity:entName,linked:!isPrimary,data:k});
+      });
+    db.aufgaben.filter(function(t){return t.entityId===eid&&t.faellig&&t.faellig>=today&&t.faellig<=n60s&&t.status!=='Erledigt';})
+      .forEach(function(t){
+        evts.push({date:t.faellig,title:t.titel,type:'aufgabe',color:'#ef4444',
+          id:t.id,uhrzeit:'',entity:entName,linked:!isPrimary,data:t});
+      });
+  });
+
+  // Abwesenheiten der Mitglieder dieser Entity
+  var members=db.rollen.filter(function(r){return r.entityId===entityId&&r.aktiv;})
+    .map(function(r){return db.mitglieder.find(function(m){return m.id===r.personId;});}).filter(Boolean);
+  members.forEach(function(m){
+    (db.abwesenheiten||[]).filter(function(a){return a.person===m.name;}).forEach(function(ab){
+      var d=new Date(ab.von+'T12:00:00'),end=new Date(ab.bis+'T12:00:00');
+      while(d<=end&&d.toISOString().slice(0,10)<=n60s){
+        var ds=d.toISOString().slice(0,10);
+        if(ds>=today) evts.push({date:ds,title:m.name+' abwesend'+(ab.grund?' ('+ab.grund+')':''),
+          type:'abwesenheit',color:'#22c55e',id:ab.id+'_'+ds,uhrzeit:'',entity:'Team',linked:false,data:ab});
+        d.setDate(d.getDate()+1);
+      }
+    });
+  });
+
+  evts.sort(function(a,b){return a.date<b.date?-1:1;});
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<div><span style="font-size:12px;font-weight:600">&#128197; Nächste 60 Tage</span>'
+    +(entityIds.length>1?'<span style="font-size:10px;color:var(--muted);margin-left:6px">inkl. '+( entityIds.length-1)+' verknüpfte</span>':'')+'</div>'
+    +'<div style="display:flex;gap:5px">'
+    +(isAdmin()?'<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="openAbwesenheitTeam(\''+entityId+'\')">&#128197; Abwesenheit</button>':'')
+    +'<button class="btn btn-primary btn-sm" onclick="openKalEntry(null,null,\''+entityId+'\')">+ Termin</button></div></div>';
+
+  if(!evts.length){h+='<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">Keine Einträge in den nächsten 60 Tagen</div>';}
+  else{
+    var ld='';
+    evts.forEach(function(e){
+      if(e.date!==ld){ld=e.date;var d=new Date(e.date+'T12:00:00');
+        h+='<div style="font-size:10px;font-weight:600;color:var(--muted);margin:8px 0 3px">'+d.toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'})+'</div>';}
+      h+='<div style="display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--bg);border-radius:6px;margin-bottom:3px;cursor:pointer'+(e.linked?';opacity:.8':'')+'\" onclick="kalClick(\''+e.type+'\',\''+e.id+'\')">'
+        +'<div style="width:3px;height:26px;border-radius:2px;background:'+e.color+';flex-shrink:0"></div>'
+        +'<div style="flex:1"><div style="font-size:11px;font-weight:500">'+e.title+'</div>'
+        +(e.entity&&e.linked?'<div style="font-size:9px;color:var(--muted)">'+e.entity+'</div>':'')+'</div>'
+        +'<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:'+e.color+'22;color:'+e.color+'">'
+        +{termin:'Termin',aufgabe:'Aufgabe',abwesenheit:'Abwesend',pending:'Ausstehend'}[e.type]+'</span></div>';
+    });
+  }
+  wrap.innerHTML=h;
+}
+
+// Team-Abwesenheit aus Workspace
+function openAbwesenheitTeam(entityId){
+  var members=db.rollen.filter(function(r){return r.entityId===entityId&&r.aktiv;})
+    .map(function(r){return db.mitglieder.find(function(m){return m.id===r.personId;});}).filter(Boolean);
+  if(!members.length){toast('Keine Mitglieder in dieser Gruppe','error');return;}
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  var inner=document.createElement('div');
+  inner.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;width:400px;max-width:95vw';
+  var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:14px';
+  var ttl=document.createElement('h3');ttl.style.cssText='font-size:14px;margin:0';ttl.textContent='Abwesenheit eintragen';
+  var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted)';cls.onclick=function(){ov.remove();};
+  hdr.appendChild(ttl);hdr.appendChild(cls);inner.appendChild(hdr);
+  var memOpts=members.map(function(m){return '<option value="'+m.name+'">'+m.name+'</option>';}).join('');
+  inner.insertAdjacentHTML('beforeend',
+    '<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Mitglied</label>'
+    +'<select id="abt-person" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px">'+memOpts+'</select></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Von</label>'
+    +'<input type="date" id="abt-v" value="'+new Date().toISOString().slice(0,10)+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Bis</label>'
+    +'<input type="date" id="abt-b" value="'+new Date().toISOString().slice(0,10)+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Grund</label>'
+    +'<input id="abt-g" placeholder="Urlaub, Krank..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+  );
+  var ftr=document.createElement('div');ftr.style.cssText='display:flex;gap:8px;justify-content:flex-end';
+  var bc=document.createElement('button');bc.className='btn btn-ghost';bc.textContent='Abbrechen';bc.onclick=function(){ov.remove();};
+  var bs=document.createElement('button');bs.className='btn btn-primary';bs.textContent='Eintragen';
+  bs.onclick=function(){
+    var person=(document.getElementById('abt-person')||{value:''}).value;
+    if(person) saveAbw(person,ov).then(function(){renderWsKalEx(entityId);});
+  };
+  ftr.appendChild(bc);ftr.appendChild(bs);inner.appendChild(ftr);
+  ov.appendChild(inner);document.body.appendChild(ov);
+}
+
+// ── Kalender-Termin aus anderen AG/UG → ausstehend bis Bestätigung ────────────
+// Wenn ein Nutzer einen Termin für eine Entity erstellt der er NICHT angehört
+// wird der Termin als 'pending' gespeichert
+var _origSaveKalEntry=saveKalEntry;
+saveKalEntry=function(id,ov){
+  // Prüfe ob Entity-Zuordnung und ob User dieser Entity angehört
+  var entitySelect=document.getElementById('ke-e');
+  var entityId=entitySelect?entitySelect.value:'';
+  if(entityId&&curUser){
+    var u=db.nutzer.find(function(x){return x.id===curUser.id;});
+    var canEdit=u&&(u.rolle==='SuperAdmin'||u.rolle==='Admin'||
+      (u.agIds&&(u.agIds.includes('*')||u.agIds.includes(entityId)))||
+      (u.ugIds&&(u.ugIds.includes('*')||u.ugIds.includes(entityId))));
+    if(!canEdit&&!id){
+      // Als pending speichern
+      var pendingEntry={id:'KAL-'+Date.now(),titel:(document.getElementById('ke-t')||{value:''}).value.trim(),
+        datum:(document.getElementById('ke-d')||{value:''}).value,
+        uhrzeit:(document.getElementById('ke-u')||{value:''}).value||'',
+        kat:(document.getElementById('ke-k')||{value:'Sonstiges'}).value,
+        entityId:entityId,
+        beschreibung:(document.getElementById('ke-b')||{value:''}).value.trim(),
+        von:curUser.name,status:'pending'};
+      if(!pendingEntry.titel||!pendingEntry.datum){toast('Titel und Datum benötigt','error');return;}
+      if(!db.kalender)db.kalender=[];
+      db.kalender.push(pendingEntry);
+      sbUp('kalender',pendingEntry).then(function(){
+        if(ov)ov.remove();
+        if(curView==='kalender')kalRender();
+        toast('Termin eingereicht — wartet auf Bestätigung','ok');
+      });
+      return;
+    }
+  }
+  _origSaveKalEntry(id,ov);
+};
 
 window.addEventListener('load', function(){
   G('login-overlay').style.display='flex';
