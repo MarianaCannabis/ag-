@@ -1448,7 +1448,7 @@ function saveMitglied(){
   else{db.mitglieder.push(data);db.ids.m++;}
   cm('m-mitgl');renderView(curView);toast(editId?'Mitglied aktualisiert':'Mitglied erstellt','ok');
 }
-function delMitglied(id){if(!confirm('Mitglied löschen?'))return;db.mitglieder=db.mitglieder.filter(m=>m.id!==id);renderView('mitglieder');toast('Mitglied gelöscht','ok');}
+// delMitglied: see async version below
 
 // ════════════════════════════════════════════════════════
 // AUFGABE FORM
@@ -4388,11 +4388,6 @@ async function delMitglied(id){
   if(u){db.nutzer=db.nutzer.filter(function(x){return x.id!==u.id;});await sbDel('nutzer',u.id);}
   updateBadges();renderView('mitglieder');toast('Mitglied "'+m.name+'" geloescht','ok');
 }
-window.addEventListener('load', function(){
-  G('login-overlay').style.display='flex';
-  L_init();
-});
-
 </script>
 </body>
 </html>
