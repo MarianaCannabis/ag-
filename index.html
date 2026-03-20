@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V34</title>
+<title>Mariana CSC - AG-Verwaltung V35</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V34</div>
+    <div class="login-sub">AG-Verwaltung V35</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V34</p>
+    <p>AG-Verwaltung V35</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -2622,6 +2622,7 @@ function fromSB(t,r){
   if(t==='dokumente') return {id:r.id,entityId:r.entity_id,name:r.name||'',kat:r.kat||'Sonstiges',typ:r.typ||'file',url:r.url||'',dateiname:r.dateiname||'',groesse:r.groesse||0,von:r.von||'',erstellt:r.erstellt||'',text:r.text||'',storagePath:r.storage_path||''};
   if(t==='kalender') return {id:r.id,titel:r.titel||'',datum:r.datum||'',uhrzeit:r.uhrzeit||'',kat:r.kat||'Sonstiges',entityId:r.entity_id||'',beschreibung:r.beschreibung||'',von:r.von||''};
   if(t==='abwesenheiten') return {id:r.id,person:r.person||'',von:r.von||'',bis:r.bis||'',grund:r.grund||''};
+  if(t==='protokolle') return {id:r.id,entityId:r.entity_id||'',titel:r.titel||'',datum:r.datum||'',autor:r.autor||'',teilnehmer:r.teilnehmer||'',inhalt:r.inhalt||'',dateiname:r.dateiname||'',url:r.url||''};
   return r;
 }
 function toSB(t,o){
@@ -2639,6 +2640,7 @@ function toSB(t,o){
   if(t==='dokumente') return {id:o.id,entity_id:o.entityId,name:o.name,kat:o.kat||'Sonstiges',typ:o.typ||'file',url:o.url||'',dateiname:o.dateiname||'',groesse:o.groesse||0,von:o.von||'',erstellt:o.erstellt||'',text:o.text||'',storage_path:o.storagePath||''};
   if(t==='kalender')return{id:o.id,titel:o.titel,datum:o.datum,uhrzeit:o.uhrzeit||'',kat:o.kat||'Sonstiges',entity_id:o.entityId||'',beschreibung:o.beschreibung||'',von:o.von||''};
   if(t==='abwesenheiten')return{id:o.id,person:o.person,von:o.von,bis:o.bis,grund:o.grund||''};
+  if(t==='protokolle')return{id:o.id,entity_id:o.entityId,titel:o.titel,datum:o.datum,autor:o.autor||'',teilnehmer:o.teilnehmer||'',inhalt:o.inhalt||'',dateiname:o.dateiname||'',url:o.url||''};
   return o;
 }
 async function sbUp(t,o){ if(!o||!o.id) return; var mapped=toSB(t,o); var {error}=await getSB().from(t).upsert(mapped,{onConflict:'id'}); if(error){console.error('sbUp error:',t,error.message,mapped);}else syncDot(1); }
@@ -2679,6 +2681,7 @@ async function sbLoadAll(){
     try{var dr=await getSB().from('dokumente').select('*');if(!dr.error)db.dokumente=(dr.data||[]).map(function(r){return fromSB('dokumente',r);});}catch(e){}
     try{var kr=await getSB().from('kalender').select('*');if(!kr.error)db.kalender=(kr.data||[]).map(function(r){return fromSB('kalender',r);});}catch(e){}
     try{var abr=await getSB().from('abwesenheiten').select('*');if(!abr.error)db.abwesenheiten=(abr.data||[]).map(function(r){return fromSB('abwesenheiten',r);});}catch(e){}
+    try{var pr=await getSB().from('protokolle').select('*');if(!pr.error)db.protokolle=(pr.data||[]).map(function(r){return fromSB('protokolle',r);});}catch(e){}
     if(!db.plaene) db.plaene=[];
     try { var pr=await sb.from('plaene').select('*'); if(!pr.error) db.plaene=(pr.data||[]).map(function(r){return fromSB('plaene',r);}); } catch(e){}
     try { var sr=await sb.from('einstellungen').select('*'); if(sr.data) sr.data.forEach(function(r){ if(r.key==='gemini_key'&&r.value) geminiKey=r.value; if(r.key==='claude_key'&&r.value) apiKey=r.value; if(r.key==='ai_provider'&&r.value) aiProvider=r.value; }); } catch(e){}
@@ -2834,6 +2837,7 @@ async function L_submit(){
   nav(document.querySelector('[data-view="dashboard"]'));
   setTimeout(function(){sbRealtime();startPolling();initLive();},400);
   setTimeout(function(){toast('Willkommen, '+curUser.name+'! &#128075;','ok');},600);
+  setTimeout(function(){applyRoleRestrictions();},300);
 }
 function L_logout(){
   if(sbRT){try{getSB().removeChannel(sbRT);}catch(e){} sbRT=null;}
@@ -3008,7 +3012,7 @@ async function openWorkspace(entityId, navEl2){
     +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
     +'<div><h2 style="font-size:16px;font-weight:700;margin-bottom:4px">'+(ag?'&#127963;':'&#11053;')+' '+ent.name+'</h2>'
     +'<div style="font-size:11px;color:var(--muted2)">'+(ag?('Koordination: '+(ag.koo||'-')+' | Status: '+ag.status):('Lead: '+(ug.lead||'-')+' | '+ug.typ))+'</div></div>'
-    +'<div style="display:flex;gap:6px">'+sbadge(ent.status)+pbadge(ent.prio||'Mittel')+'</div></div>'
+    +'<div style="display:flex;gap:6px;align-items:center">'+sbadge(ent.status)+pbadge(ent.prio||'Mittel')+'<button class="btn btn-ghost btn-sm" style="font-size:11px" data-eid="'+entityId+'" onclick="openWsDM(this.dataset.eid)">&#9993; Nachricht</button></div></div>'
     +'<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--muted)">'+done+'/'+tasks.length+' Aufgaben</span><span style="font-size:11px;color:var(--accent)">'+pct+'%</span></div>'
     +'<div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%"></div></div></div>'
 
@@ -3016,6 +3020,7 @@ async function openWorkspace(entityId, navEl2){
     +'<div class="tabs" id="ws-tabs">'
     +[
       ['ws-aufg','&#128203; Aufgaben ('+openT.length+')'],
+      ['ws-aufg-ov','&#128202; Übersicht'],
       ['ws-plan','&#128200; Planung'],
       ['ws-team','&#128100; Team ('+members.length+')'],
       (ag?['ws-ugs','&#9681; UGs ('+ugs.length+')']:null),
@@ -3030,6 +3035,8 @@ async function openWorkspace(entityId, navEl2){
     }).join('')
     +'</div>'
 
+    // Tab: Aufgaben-Übersicht
+    +'<div class="tab-content" id="ws-aufg-ov"><div id="ws-aufg-overview"></div></div>'
     // Tab: Aufgaben
     +'<div class="tab-content active" id="ws-aufg">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
@@ -3107,6 +3114,7 @@ async function openWorkspace(entityId, navEl2){
 
   // Populate
   var tl=G('ws-task-list'); if(tl) tl.innerHTML=renderTaskCards(tasks, entityId);
+  setTimeout(function(){renderWsAufgaben(entityId);},50);
   renderWsNotizen(entityId);
   renderWsDocs(entityId); renderWsProtos(entityId);
   setTimeout(function(){renderWsKalEx(entityId);},80);
@@ -4320,6 +4328,7 @@ async function saveFirstLoginPw(userId){
   nav(document.querySelector('[data-view="dashboard"]'));
   setTimeout(function(){sbRealtime();startPolling();initLive();},400);
   setTimeout(function(){toast('Passwort gesetzt! Willkommen, '+curUser.name+' ✨','ok');},600);
+  setTimeout(function(){applyRoleRestrictions();},300);
 }
 
 function showPwResetDialog(){
@@ -4406,7 +4415,7 @@ async function sendSupportMsg(ov){
 }
 
 
-// ── V34 NEUE FUNKTIONEN ──────────────────────────────────────────────────────
+// ── V35 NEUE FUNKTIONEN ──────────────────────────────────────────────────────
 
 // ═══════════════ KALENDER ════════════════════════════════════════════════════
 
@@ -4448,8 +4457,8 @@ function renderKalender(){
 
   // Bind nav
   var bind=function(id,fn){var b=document.getElementById(id);if(b)b.onclick=fn;};
-  bind('kp',function(){kalState.month--;if(kalState.month<0){kalState.month=11;kalState.year--;}kalRender();});
-  bind('kn',function(){kalState.month++;if(kalState.month>11){kalState.month=0;kalState.year++;}kalRender();});
+  bind('kp',function(){if(kalState.view==='week'){kalWeekNav(-1);}else{kalState.month--;if(kalState.month<0){kalState.month=11;kalState.year--;}kalRender();}});
+  bind('kn',function(){if(kalState.view==='week'){kalWeekNav(1);}else{kalState.month++;if(kalState.month>11){kalState.month=0;kalState.year++;}kalRender();}});
   bind('ktd',function(){var n=new Date();kalState.year=n.getFullYear();kalState.month=n.getMonth();kalRender();});
   bind('knew',function(){openKalEntry(null,null,null);});
   document.querySelectorAll('.kv-btn').forEach(function(b){
@@ -4473,7 +4482,13 @@ function kalGetEvts(){
 function kalRender(){
   var body=document.getElementById('kb');if(!body)return;
   var months=['Januar','Februar','M\u00e4rz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  var t=document.getElementById('kt');if(t)t.textContent=months[kalState.month]+' '+kalState.year;
+  var t=document.getElementById('kt');if(t){
+    if(kalState.view==='week'){
+      var ws2=new Date(kalState.year,kalState.month,kalState.weekDay||1);
+      var we2=new Date(ws2);we2.setDate(ws2.getDate()+6);
+      t.textContent='KW: '+ws2.toLocaleDateString('de-DE',{day:'numeric',month:'short'})+' – '+we2.toLocaleDateString('de-DE',{day:'numeric',month:'short',year:'numeric'});
+    } else {t.textContent=months[kalState.month]+' '+kalState.year;}
+  }
   var evts=kalGetEvts();
   var byDate={};evts.forEach(function(e){if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
   var today=new Date().toISOString().slice(0,10);
@@ -4512,7 +4527,7 @@ function kalRender(){
     body.innerHTML=h+'</div>';
 
   } else if(kalState.view==='week'){
-    var wStart=new Date(kalState.year,kalState.month,1);
+    var wStart=new Date(kalState.year,kalState.month,kalState.weekDay||1);
     var wDow=(wStart.getDay()+6)%7;wStart.setDate(wStart.getDate()-wDow);
     var dN=['Mo','Di','Mi','Do','Fr','Sa','So'];
     var wDates=[];for(var wi=0;wi<7;wi++){var wd=new Date(wStart);wd.setDate(wStart.getDate()+wi);wDates.push(wd.toISOString().slice(0,10));}
@@ -4529,8 +4544,8 @@ function kalRender(){
       for(var di=0;di<7;di++){
         var ds4=wDates[di];
         var de2=(byDate[ds4]||[]).filter(function(e){
-          if(!e.data||!e.data.uhrzeit)return hr===9;
-          return parseInt(e.data.uhrzeit.split(':')[0])===hr;
+          if(!e.data||!e.data.uhrzeit)return hr===8;
+          var eh=parseInt(e.data.uhrzeit.split(':')[0]);return eh===hr;
         });
         hw+='<td style="padding:1px;border-right:1px solid var(--border);border-bottom:1px solid rgba(255,255,255,.03);min-height:28px;cursor:pointer" data-ds="'+ds4+'">';
         de2.forEach(function(e){hw+='<div class="ke" style="background:'+e.color+'22;color:'+e.color+';border-left:2px solid '+e.color+'" data-tp="'+e.type+'" data-id="'+e.data.id+'">'+e.title+'</div>';});
@@ -4770,7 +4785,7 @@ function renderWsKal(entityId){
 
 
 // ══════════════════════════════════════════════════════════════
-// V34 FEATURES: Persönlicher Kalender, Verknüpfte Kalender,
+// V35 FEATURES: Persönlicher Kalender, Verknüpfte Kalender,
 //               Abwesenheit für Mitglieder/Admins
 // ══════════════════════════════════════════════════════════════
 
@@ -4919,7 +4934,7 @@ async function kalBestätigen(kalId){
 }
 
 // ── Abwesenheit für Admins in Einstellungen ────────────────────
-// editNutzer bekommt einen Abwesenheit-Button — schon in V34 vorhanden
+// editNutzer bekommt einen Abwesenheit-Button — schon in V35 vorhanden
 // Aber auch in AG/UG-Workspace direkt eintragbar
 function openAbwesenheitForMember(mName){
   openAbwesenheit(mName);
@@ -5076,6 +5091,348 @@ saveKalEntry=function(id,ov){
   }
   _origSaveKalEntry(id,ov);
 };
+
+
+// ══════════════════════════════════════════════════════════════
+// V35 FIXES & FEATURES
+// ══════════════════════════════════════════════════════════════
+
+// ═══════════ 1. PROTOKOLLE: Assistent + Upload ════════════════
+
+function wsAddProto(entityId){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  var inner=document.createElement('div');
+  inner.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto';
+  var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
+  var ttl=document.createElement('h3');ttl.style.cssText='font-size:14px;margin:0';ttl.textContent='📝 Protokoll erstellen';
+  var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted)';cls.onclick=function(){ov.remove();};
+  hdr.appendChild(ttl);hdr.appendChild(cls);inner.appendChild(hdr);
+
+  // Mode selector
+  inner.insertAdjacentHTML('beforeend',
+    '<div style="display:flex;gap:6px;margin-bottom:14px">'
+    +'<button class="btn btn-ghost btn-sm proto-mode active" data-m="manual" style="border-color:var(--accent);color:var(--text)">✏️ Manuell</button>'
+    +'<button class="btn btn-ghost btn-sm proto-mode" data-m="ai">✨ KI-Assistent</button>'
+    +'<button class="btn btn-ghost btn-sm proto-mode" data-m="upload">📎 Hochladen</button>'
+    +'</div>'
+    // Manual
+    +'<div id="pm-manual">'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Titel *</label>'
+    +'<input id="pt-titel" placeholder="Protokoll-Titel..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Datum</label>'
+    +'<input type="date" id="pt-datum" value="'+new Date().toISOString().slice(0,10)+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Teilnehmer</label>'
+    +'<input id="pt-teiln" placeholder="Namen kommagetrennt..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Inhalt / Ergebnisse</label>'
+    +'<textarea id="pt-inhalt" rows="6" placeholder="TOP 1: ...\nErgebnis: ...\nNächste Schritte: ..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box;resize:vertical"></textarea></div>'
+    +'</div>'
+    // AI Mode
+    +'<div id="pm-ai" style="display:none">'
+    +'<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;font-size:11px;color:var(--muted)">'
+    +'&#10024; Der KI-Assistent erstellt ein strukturiertes Protokoll aus deinen Stichpunkten.</div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Titel</label>'
+    +'<input id="pt-ai-titel" placeholder="Meeting-Titel..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:12px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Stichpunkte / Notizen</label>'
+    +'<textarea id="pt-ai-notes" rows="5" placeholder="Was wurde besprochen? Welche Entscheidungen wurden getroffen? Nächste Schritte?" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box;resize:vertical"></textarea></div>'
+    +'<div id="pt-ai-result" style="display:none;margin-bottom:12px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Generiertes Protokoll</label>'
+    +'<textarea id="pt-ai-out" rows="8" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box;resize:vertical"></textarea></div>'
+    +'<button id="pt-ai-gen" class="btn btn-ghost btn-sm" style="margin-bottom:12px">&#10024; KI-Protokoll generieren</button>'
+    +'</div>'
+    // Upload
+    +'<div id="pm-upload" style="display:none">'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Titel *</label>'
+    +'<input id="pt-up-titel" placeholder="Protokoll-Titel..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div id="pt-dropzone" style="border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;margin-bottom:12px">'
+    +'<div style="font-size:28px">📄</div><div style="font-size:12px;margin-top:4px">Datei klicken oder ablegen</div>'
+    +'<div style="font-size:10px;color:var(--muted);margin-top:2px">PDF, DOCX, TXT</div></div>'
+    +'<input type="file" id="pt-file" style="display:none" accept=".pdf,.docx,.doc,.txt,.md">'
+    +'<div id="pt-file-info" style="display:none;padding:8px;background:var(--bg);border-radius:6px;font-size:12px;margin-bottom:12px"></div>'
+    +'</div>'
+  );
+
+  var ftr=document.createElement('div');ftr.style.cssText='display:flex;gap:8px;justify-content:flex-end';
+  var bc=document.createElement('button');bc.className='btn btn-ghost';bc.textContent='Abbrechen';bc.onclick=function(){ov.remove();};
+  var bs=document.createElement('button');bs.className='btn btn-primary';bs.textContent='Speichern';bs.onclick=function(){saveProto(entityId,ov);};
+  ftr.appendChild(bc);ftr.appendChild(bs);inner.appendChild(ftr);
+  ov.appendChild(inner);document.body.appendChild(ov);
+
+  // Mode switching
+  inner.querySelectorAll('.proto-mode').forEach(function(b){
+    b.onclick=function(){
+      inner.querySelectorAll('.proto-mode').forEach(function(x){x.classList.remove('active');x.style.borderColor='';x.style.color='';});
+      this.classList.add('active');this.style.borderColor='var(--accent)';this.style.color='var(--text)';
+      var m=this.getAttribute('data-m');
+      ['manual','ai','upload'].forEach(function(k){var d=document.getElementById('pm-'+k);if(d)d.style.display=k===m?'':'none';});
+    };
+  });
+
+  // File upload
+  var dz=document.getElementById('pt-dropzone');
+  var fi=document.getElementById('pt-file');
+  if(dz&&fi){
+    dz.onclick=function(){fi.click();};
+    dz.ondragover=function(e){e.preventDefault();dz.style.borderColor='var(--accent)';};
+    dz.ondragleave=function(){dz.style.borderColor='var(--border)';};
+    dz.ondrop=function(e){e.preventDefault();dz.style.borderColor='var(--border)';if(e.dataTransfer.files[0])protoFileSel(e.dataTransfer.files[0]);};
+    fi.onchange=function(){if(fi.files[0])protoFileSel(fi.files[0]);};
+  }
+
+  // AI generator
+  var aiBtn=document.getElementById('pt-ai-gen');
+  if(aiBtn) aiBtn.onclick=function(){genProto(entityId);};
+
+  setTimeout(function(){var t=document.getElementById('pt-titel');if(t)t.focus();},60);
+  window._protoFile=null;window._protoEid=entityId;
+}
+
+function protoFileSel(file){
+  window._protoFile=file;
+  var info=document.getElementById('pt-file-info');
+  var dz=document.getElementById('pt-dropzone');
+  if(info){info.style.display='';info.innerHTML='📄 <strong>'+file.name+'</strong> ('+Math.round(file.size/1024)+' KB)';}
+  if(dz)dz.style.display='none';
+  var t=document.getElementById('pt-up-titel');
+  if(t&&!t.value)t.value=file.name.replace(/\.[^.]+$/,'');
+}
+
+async function genProto(entityId){
+  var notes=(document.getElementById('pt-ai-notes')||{value:''}).value.trim();
+  var titel=(document.getElementById('pt-ai-titel')||{value:''}).value.trim();
+  if(!notes){toast('Stichpunkte eingeben','error');return;}
+  var btn=document.getElementById('pt-ai-gen');
+  if(btn){btn.textContent='⏳ Generiere...';btn.disabled=true;}
+  var ent=db.ags.find(function(a){return a.id===entityId;})||db.ugs.find(function(u){return u.id===entityId;});
+  var prompt='Erstelle ein strukturiertes Meeting-Protokoll auf Deutsch für '+
+    (ent?ent.name:'die Gruppe')+' vom '+new Date().toLocaleDateString('de-DE')+
+    '.\n\nStichpunkte/Notizen:\n'+notes+
+    '\n\nFormat:\n## Protokoll: [Titel]\n**Datum:** ...\n**Teilnehmer:** ...\n\n### Tagesordnung\n...\n\n### Ergebnisse & Beschlüsse\n...\n\n### Aufgaben\n...\n\n### Nächster Termin\n...';
+  try{
+    var key=apiKey||geminiKey;
+    var resp,text='';
+    if(key&&key.startsWith('sk-ant')){
+      var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
+      var d=await r.json();text=d.content&&d.content[0]?d.content[0].text:'';
+    } else if(geminiKey){
+      var r2=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key='+geminiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+      var d2=await r2.json();text=d2.candidates&&d2.candidates[0]?d2.candidates[0].content.parts[0].text:'';
+    } else {
+      text='## Protokoll: '+(titel||'Meeting')+'\n**Datum:** '+new Date().toLocaleDateString('de-DE')+'\n\n### Ergebnisse\n'+notes;
+    }
+    var out=document.getElementById('pt-ai-out');var res=document.getElementById('pt-ai-result');
+    if(out)out.value=text;if(res)res.style.display='';
+  } catch(e){toast('KI-Fehler: '+e.message,'error');}
+  if(btn){btn.textContent='✨ KI-Protokoll generieren';btn.disabled=false;}
+}
+
+async function saveProto(entityId,ov){
+  // Determine active mode
+  var mode='manual';
+  document.querySelectorAll('.proto-mode').forEach(function(b){if(b.classList.contains('active'))mode=b.getAttribute('data-m');});
+  var proto={id:'PROTO-'+Date.now(),entityId:entityId,datum:new Date().toISOString().slice(0,10),
+    autor:curUser?curUser.name:'',titel:'',inhalt:'',teilnehmer:'',dateiname:'',url:''};
+  if(mode==='manual'){
+    proto.titel=(document.getElementById('pt-titel')||{value:''}).value.trim();
+    proto.datum=(document.getElementById('pt-datum')||{value:proto.datum}).value;
+    proto.teilnehmer=(document.getElementById('pt-teiln')||{value:''}).value.trim();
+    proto.inhalt=(document.getElementById('pt-inhalt')||{value:''}).value.trim();
+    if(!proto.titel){toast('Titel eingeben','error');return;}
+  } else if(mode==='ai'){
+    proto.titel=(document.getElementById('pt-ai-titel')||{value:'KI-Protokoll'}).value.trim()||'KI-Protokoll';
+    proto.inhalt=(document.getElementById('pt-ai-out')||{value:''}).value.trim();
+    if(!proto.inhalt){toast('Zuerst KI-Protokoll generieren','error');return;}
+  } else {
+    proto.titel=(document.getElementById('pt-up-titel')||{value:''}).value.trim();
+    if(!proto.titel){toast('Titel eingeben','error');return;}
+    var f=window._protoFile;
+    if(f){
+      proto.dateiname=f.name;
+      // Try storage upload
+      try{
+        var ab=await new Promise(function(res,rej){var rd=new FileReader();rd.onload=function(e){res(e.target.result);};rd.onerror=rej;rd.readAsArrayBuffer(f);});
+        var path='protos/'+entityId+'/'+Date.now()+'_'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+        var up=await getSB().storage.from('mariana-docs').upload(path,new Uint8Array(ab),{contentType:f.type||'application/octet-stream',upsert:true});
+        if(!up.error){var pu=getSB().storage.from('mariana-docs').getPublicUrl(path);proto.url=pu.data.publicUrl;}
+        else if(f.size<500*1024){proto.url=await new Promise(function(res){var rd2=new FileReader();rd2.onload=function(e){res(e.target.result);};rd2.readAsDataURL(f);});}
+      }catch(e){console.warn('Proto upload:',e);}
+    }
+  }
+  if(!db.protokolle)db.protokolle=[];
+  db.protokolle.push(proto);
+  await sbUp('protokolle',proto);
+  if(ov)ov.remove();
+  renderWsProtos(entityId);
+  toast('Protokoll gespeichert ✓','ok');
+}
+
+function renderWsProtos(entityId){
+  var wrap=document.getElementById('ws-proto-list');if(!wrap)return;
+  var protos=(db.protokolle||[]).filter(function(p){return p.entityId===entityId;});
+  protos.sort(function(a,b){return a.datum<b.datum?1:-1;});
+  if(!protos.length){
+    wrap.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px">📝 Noch keine Protokolle</div>';return;
+  }
+  wrap.innerHTML=protos.map(function(p){
+    return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+      +'<div style="flex:1;cursor:pointer" onclick="openProto(\''+p.id+'\')"><div style="font-size:12px;font-weight:600">'+p.titel+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+p.datum+(p.autor?' · '+p.autor:'')+(p.teilnehmer?' · '+p.teilnehmer:'')+'</div></div>'
+      +(p.url?'<a href="'+p.url+'" target="_blank" class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 8px;text-decoration:none">&#128065; Öffnen</a>':'')
+      +(isAdmin()?'<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 8px;color:#ef4444" data-pid="'+p.id+'" data-eid="'+entityId+'" onclick="delProto(this.dataset.pid,this.dataset.eid)">&#128465;</button>':'')
+      +'</div></div>';
+  }).join('');
+}
+
+function openProto(id){
+  var p=(db.protokolle||[]).find(function(x){return x.id===id;});if(!p)return;
+  if(p.url&&!p.inhalt){window.open(p.url,'_blank');return;}
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center';
+  var inner=document.createElement('div');
+  inner.style.cssText='background:var(--card);border-radius:12px;padding:20px;width:640px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column';
+  var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;margin-bottom:12px;flex-shrink:0';
+  var ttl=document.createElement('div');
+  ttl.innerHTML='<div style="font-size:14px;font-weight:600">'+p.titel+'</div><div style="font-size:11px;color:var(--muted)">'+p.datum+(p.autor?' · '+p.autor:'')+'</div>';
+  var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted)';cls.onclick=function(){ov.remove();};
+  hdr.appendChild(ttl);hdr.appendChild(cls);
+  var body=document.createElement('div');body.style.cssText='flex:1;overflow-y:auto;background:var(--bg);border-radius:6px;padding:14px;font-size:12px;white-space:pre-wrap;line-height:1.7';
+  body.textContent=p.inhalt||'Kein Inhalt';
+  inner.appendChild(hdr);inner.appendChild(body);
+  ov.appendChild(inner);document.body.appendChild(ov);
+}
+
+async function delProto(id,entityId){
+  if(!confirm('Protokoll löschen?'))return;
+  db.protokolle=(db.protokolle||[]).filter(function(x){return x.id!==id;});
+  await sbDel('protokolle',id);
+  renderWsProtos(entityId);
+  toast('Gelöscht','ok');
+}
+
+// ═══════════ 2. WORKSPACE DIREKTNACHRICHTEN ═══════════════════
+
+function openWsDM(entityId){
+  // Öffne Direktnachrichten-Panel für diese Entity
+  // Alle Mitglieder dieser Entity als Empfänger auswählen
+  var members=db.rollen.filter(function(r){return r.entityId===entityId&&r.aktiv;})
+    .map(function(r){return db.mitglieder.find(function(m){return m.id===r.personId;});})
+    .filter(function(m){return m&&m.name!==curUser.name;});
+  if(!members.length){toast('Keine anderen Mitglieder in dieser Gruppe','error');return;}
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  var inner=document.createElement('div');
+  inner.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;width:460px;max-width:95vw';
+  var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:14px';
+  var ttl=document.createElement('h3');ttl.style.cssText='font-size:14px;margin:0';ttl.textContent='✉️ Nachricht senden';
+  var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted)';cls.onclick=function(){ov.remove();};
+  hdr.appendChild(ttl);hdr.appendChild(cls);inner.appendChild(hdr);
+  var memOpts=members.map(function(m){return '<option value="'+m.name+'">'+m.name+'</option>';}).join('');
+  inner.insertAdjacentHTML('beforeend',
+    '<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">An</label>'
+    +'<select id="dm-to" multiple style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;min-height:80px">'+memOpts+'</select>'
+    +'<div style="font-size:10px;color:var(--muted);margin-top:2px">Mehrfachauswahl mit Strg/Cmd</div></div>'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Betreff</label>'
+    +'<input id="dm-betreff" placeholder="Betreff..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div style="margin-bottom:14px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Nachricht</label>'
+    +'<textarea id="dm-text" rows="4" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px;font-size:12px;box-sizing:border-box;resize:vertical"></textarea></div>'
+  );
+  var ftr=document.createElement('div');ftr.style.cssText='display:flex;gap:8px;justify-content:flex-end';
+  var bc=document.createElement('button');bc.className='btn btn-ghost';bc.textContent='Abbrechen';bc.onclick=function(){ov.remove();};
+  var bs=document.createElement('button');bs.className='btn btn-primary';bs.textContent='Senden';bs.onclick=function(){sendWsDM(entityId,ov);};
+  ftr.appendChild(bc);ftr.appendChild(bs);inner.appendChild(ftr);
+  ov.appendChild(inner);document.body.appendChild(ov);
+  // Select all by default
+  setTimeout(function(){var sel=document.getElementById('dm-to');if(sel)Array.from(sel.options).forEach(function(o){o.selected=true;});},50);
+}
+
+async function sendWsDM(entityId,ov){
+  var toSel=document.getElementById('dm-to');
+  var recipients=toSel?Array.from(toSel.selectedOptions).map(function(o){return o.value;}).filter(Boolean):[];
+  var betreff=(document.getElementById('dm-betreff')||{value:''}).value.trim();
+  var text=(document.getElementById('dm-text')||{value:''}).value.trim();
+  if(!recipients.length){toast('Empfänger auswählen','error');return;}
+  if(!text){toast('Nachricht eingeben','error');return;}
+  var ent=db.ags.find(function(a){return a.id===entityId;})||db.ugs.find(function(u){return u.id===entityId;});
+  var ts=new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  for(var i=0;i<recipients.length;i++){
+    var msg={id:'MSG-'+Date.now()+i,von:curUser.name,an:recipients[i],
+      betreff:betreff||'Nachricht von '+(ent?ent.name:'Workspace'),
+      text:text,ts:ts,gelesen:false,antworten:[]};
+    db.nachrichten.push(msg);
+    await sbUp('nachrichten',msg);
+  }
+  if(ov)ov.remove();
+  updateBadges();
+  toast('Nachricht an '+recipients.join(', ')+' gesendet ✓','ok');
+}
+
+// ═══════════ 3. KALENDER: Woche fix + Termin-Bug fix ══════════
+
+function kalWeekNav(dir){
+  // Woche vor/zurück: 7 Tage
+  var d=new Date(kalState.year,kalState.month,kalState.weekDay||1);
+  d.setDate(d.getDate()+dir*7);
+  kalState.year=d.getFullYear();
+  kalState.month=d.getMonth();
+  kalState.weekDay=d.getDate();
+  kalRender();
+}
+
+// ═══════════ 4. ROLLEN-BASIERTE NAV-EINSCHRÄNKUNG ═════════════
+
+function applyRoleRestrictions(){
+  if(!curUser)return;
+  var rolle=curUser.rolle;
+  // Admin-Ansicht nur für Admin+
+  if(rolle==='intern'){
+    // Verstecke Admin-Toggle (AG-Ansicht bleibt)
+    var mt=document.querySelector('.mode-toggle');
+    if(mt){
+      // Zeige nur AG-Ansicht, setze direkt
+      var adminBtn=mt.querySelector('[onclick*="admin"]');
+      var agBtn=mt.querySelector('[onclick*="ag"]');
+      if(adminBtn) adminBtn.style.display='none';
+      if(agBtn&&agBtn.onclick) agBtn.onclick.call(agBtn);
+    }
+    // Verstecke Admin-only Nav-Items
+    var adminOnly=['ags','ugs','mitglieder','aufgaben','einst','freigaben'];
+    adminOnly.forEach(function(view){
+      var item=document.querySelector('[data-view="'+view+'"]');
+      if(item) item.style.display='none';
+    });
+  }
+}
+
+// ═══════════ 5. WORKSPACE AUFGABEN-ÜBERSICHT ══════════════════
+
+function renderWsAufgaben(entityId){
+  var wrap=document.getElementById('ws-aufg-overview');if(!wrap)return;
+  var tasks=db.aufgaben.filter(function(t){return t.entityId===entityId;});
+  var byStatus={};
+  var statOrder=['Offen','In Arbeit','Wartet auf Freigabe','Blockiert','Erledigt'];
+  var statCol={'Offen':'#6b7199','In Arbeit':'#4f7cff','Erledigt':'#22c55e','Blockiert':'#ef4444','Wartet auf Freigabe':'#f59e0b'};
+  statOrder.forEach(function(st){byStatus[st]=tasks.filter(function(t){return t.status===st;});});
+  var today=new Date().toISOString().slice(0,10);
+  var h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:14px">';
+  statOrder.forEach(function(st){
+    var cnt=byStatus[st].length;
+    h+='<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">'
+      +'<div style="font-size:20px;font-weight:700;color:'+(statCol[st]||'var(--muted)')+'">'+cnt+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+st+'</div></div>';
+  });
+  var overdue=tasks.filter(function(t){return t.faellig&&t.faellig<today&&t.status!=='Erledigt';}).length;
+  h+='<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px;text-align:center">'
+    +'<div style="font-size:20px;font-weight:700;color:#ef4444">'+overdue+'</div>'
+    +'<div style="font-size:10px;color:var(--muted);margin-top:2px">Überfällig</div></div>';
+  h+='</div>';
+  // Top offene Aufgaben
+  var open=tasks.filter(function(t){return t.status!=='Erledigt';}).sort(function(a,b){return a.faellig<b.faellig?-1:1;}).slice(0,5);
+  if(open.length){
+    h+='<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">OFFENE AUFGABEN</div>';
+    h+=renderTaskCards(open,entityId);
+  }
+  wrap.innerHTML=h;
+}
 
 window.addEventListener('load', function(){
   G('login-overlay').style.display='flex';
