@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V38</title>
+<title>Mariana CSC - AG-Verwaltung V39</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V38</div>
+    <div class="login-sub">AG-Verwaltung V39</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V38</p>
+    <p>AG-Verwaltung V39</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -1922,62 +1922,94 @@ function netLayoutRadial(W,H,sz,visAGs,agColorMap){
 }
 
 function netLayoutTree(W,H,padTop,sz,visAGs,agColorMap){
-  // Horizontal Baum: AG → UG → Mitglieder von links nach rechts
-  var levels=[]; // level 0=AGs, 1=UGs, 2=Mitglieder
-  var agX=80,ugX=260,mX=460;
+  // Horizontal Baum: AG (links) → UG (mitte) → Mitglieder (rechts)
+  // X-Positionen relativ zur Canvas-Breite
+  var col0=Math.max(90, W*0.10);   // AG Spalte
+  var col1=Math.max(240,W*0.38);   // UG Spalte
+  var col2=Math.max(400,W*0.68);   // Mitglieder Spalte
+  var colUn=W-60;                   // Nicht zugeordnet
 
-  // Sammle alle mit Verbindungen
+  // Baum aufbauen: AG → UGs → Mitglieder
   var agItems=visAGs.map(function(ag){
-    var links=db.agUgLinks.filter(function(l){return l.agId===ag.id;});
-    var ugs=links.map(function(l){return db.ugs.find(function(u){return u.id===l.ugId;});}).filter(Boolean);
-    return{ag:ag,ugs:ugs.map(function(ug){
-      var roles=db.rollen.filter(function(r){return r.entityId===ug.id&&r.aktiv;});
-      var members=roles.map(function(r){return db.mitglieder.find(function(m){return m.id===r.personId;});}).filter(Boolean);
-      return{ug:ug,members:members};
-    })};
+    var ugs=db.agUgLinks.filter(function(l){return l.agId===ag.id;})
+      .map(function(l){return db.ugs.find(function(u){return u.id===l.ugId;});})
+      .filter(Boolean)
+      .map(function(ug){
+        var members=db.rollen.filter(function(r){return r.entityId===ug.id&&r.aktiv;})
+          .map(function(r){return db.mitglieder.find(function(m){return m.id===r.personId;});})
+          .filter(Boolean);
+        return{ug:ug,members:members};
+      });
+    // Direkte AG-Mitglieder (nicht über UG)
+    var directMembers=db.rollen.filter(function(r){return r.entityId===ag.id&&r.aktiv;})
+      .map(function(r){return db.mitglieder.find(function(m){return m.id===r.personId;});})
+      .filter(Boolean);
+    return{ag:ag,ugs:ugs,directMembers:directMembers};
   });
 
-  // Berechne Höhe
-  var totalRows=0;
+  // Zeilen pro AG berechnen
   agItems.forEach(function(a){
-    var agRows=Math.max(1,a.ugs.reduce(function(s,u){return s+Math.max(1,u.members.length);},0));
-    a._rows=agRows; totalRows+=agRows;
+    var ugRows=a.ugs.reduce(function(sum,u){return sum+Math.max(1,u.members.length);},0);
+    var dmRows=a.directMembers.length;
+    a._rows=Math.max(1, ugRows + (dmRows>0&&!ugRows?dmRows:0));
   });
-  var rowH=Math.max(56,Math.min(72,(H-padTop*2)/Math.max(totalRows,1)));
+  var totalRows=agItems.reduce(function(s,a){return s+a._rows;},0);
+  var rowH=Math.max(44,Math.min(70,(H-padTop*2)/Math.max(totalRows,1)));
 
   var curRow=0;
   agItems.forEach(function(a){
-    var agCenterRow=curRow+a._rows/2;
-    var agY=padTop+agCenterRow*rowH;
-    net2.nodes.push({id:a.ag.id,label:a.ag.name,x:agX,y:agY,type:'ag',color:agColorMap[a.ag.id],r:sz.ag,data:a.ag,agColor:agColorMap[a.ag.id]});
+    var agY=padTop+(curRow+a._rows/2)*rowH;
+    net2.nodes.push({id:a.ag.id,label:a.ag.name,x:col0,y:agY,
+      type:'ag',color:agColorMap[a.ag.id],r:sz.ag,data:a.ag,agColor:agColorMap[a.ag.id]});
 
     var ugRow=curRow;
     a.ugs.forEach(function(u){
       var ugRows=Math.max(1,u.members.length);
-      var ugCenterRow=ugRow+ugRows/2;
-      var ugY=padTop+ugCenterRow*rowH;
-      net2.nodes.push({id:u.ug.id,label:u.ug.name,x:ugX,y:ugY,type:'ug',color:agColorMap[a.ag.id],r:sz.ug,data:u.ug,agColor:agColorMap[a.ag.id]});
-      net2.edges.push({from:a.ag.id,to:u.ug.id,color:agColorMap[a.ag.id],w:2,dash:false,alpha:0.7});
+      var ugY=padTop+(ugRow+ugRows/2)*rowH;
+      net2.nodes.push({id:u.ug.id,label:u.ug.name,x:col1,y:ugY,
+        type:'ug',color:agColorMap[a.ag.id],r:sz.ug,data:u.ug,agColor:agColorMap[a.ag.id]});
+      net2.edges.push({from:a.ag.id,to:u.ug.id,color:agColorMap[a.ag.id],w:2.5,dash:false,alpha:0.8});
 
       u.members.forEach(function(m,mi){
         var mY=padTop+(ugRow+mi+0.5)*rowH;
         if(!net2.nodes.find(function(n){return n.id===m.id;})){
-          net2.nodes.push({id:m.id,label:m.name,x:mX,y:mY,type:'m',color:agColorMap[a.ag.id],r:sz.m,data:m,agColor:agColorMap[a.ag.id]});
-          net2.edges.push({from:u.ug.id,to:m.id,color:agColorMap[a.ag.id],w:1.5,dash:true,alpha:0.5,memberEdge:true});
+          net2.nodes.push({id:m.id,label:m.name,x:col2,y:mY,
+            type:'m',color:agColorMap[a.ag.id],r:sz.m,data:m,agColor:agColorMap[a.ag.id]});
+        }
+        net2.edges.push({from:u.ug.id,to:m.id,color:agColorMap[a.ag.id],w:1.5,dash:true,alpha:0.5,memberEdge:true});
+      });
+      ugRow+=ugRows;
+    });
+
+    // Direkte Mitglieder ohne UG-Zwischenstufe
+    if(a.directMembers.length&&!a.ugs.length){
+      a.directMembers.forEach(function(m,mi){
+        var mY=padTop+(curRow+mi+0.5)*rowH;
+        if(!net2.nodes.find(function(n){return n.id===m.id;})){
+          net2.nodes.push({id:m.id,label:m.name,x:col2,y:mY,
+            type:'m',color:agColorMap[a.ag.id],r:sz.m,data:m,agColor:agColorMap[a.ag.id]});
+          net2.edges.push({from:a.ag.id,to:m.id,color:agColorMap[a.ag.id],w:1.5,dash:true,alpha:0.5,memberEdge:true});
         }
       });
-      if(!u.members.length){ugRow+=1;}else{ugRow+=u.members.length;}
-    });
-    if(!a.ugs.length) curRow+=1; else curRow+=a._rows;
+    }
+
+    curRow+=a._rows;
   });
 
-  // Nicht zugeordnete
+  // Spalten-Beschriftungen als Ghost-Nodes (oben)
+  var labels=[{x:col0,t:'Arbeitsgruppen'},{x:col1,t:'Untergruppen'},{x:col2,t:'Mitglieder'}];
+  labels.forEach(function(lb){
+    net2.nodes.push({id:'__lbl_'+lb.t,label:lb.t,x:lb.x,y:padTop-22,
+      type:'label',color:'rgba(0,0,0,0)',r:0,data:null,agColor:'transparent'});
+  });
+
+  // Nicht zugeordnete Mitglieder
   if(netCfg.showUnassigned){
-    var unX=W-80;
     var ui=0;
     db.mitglieder.filter(function(m){return m.aktiv;}).forEach(function(m){
-      if(net2.nodes.find(function(n){return n.id===m.id;}))return;
-      net2.nodes.push({id:m.id,label:m.name,x:unX,y:padTop+ui*30+15,type:'m',color:'#6b7199',r:sz.m,data:m,agColor:'#6b7199',unassigned:true});
+      if(net2.nodes.find(function(n){return n.id===m.id&&n.type!=='label';}))return;
+      net2.nodes.push({id:m.id,label:m.name,x:colUn,y:padTop+ui*36+18,
+        type:'m',color:'#6b7199',r:sz.m,data:m,agColor:'#6b7199',unassigned:true});
       ui++;
     });
   }
