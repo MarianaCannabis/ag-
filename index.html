@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V44</title>
+<title>Mariana CSC - AG-Verwaltung V45</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V44</div>
+    <div class="login-sub">AG-Verwaltung V45</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V44</p>
+    <p>AG-Verwaltung V45</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -856,36 +856,30 @@ function toggleTask(id){
 // ════════════════════════════════════════════════════════
 function renderAGs(filter=''){
   const c=el('content');
-  c.innerHTML='<div class="card"><div class="fbet mb8">'
-    +'<input class="search" placeholder="Suche..." oninput="renderAGs(this.value)" value="'+(filter||'')+'">'
-    +'<div>'+(isAdmin()?'<button class="btn btn-primary btn-sm" onclick="openAGModal()">+ Neue AG</button>':'')+'</div>'
-    +'</div><div id="ag-body"></div></div>';
-  let list=db.ags;
-  if(filter)list=list.filter(a=>JSON.stringify(a).toLowerCase().includes(filter.toLowerCase()));
-  if(!isSA())list=list.filter(a=>canSee(a.id));
-  if(!list.length){el('ag-body').innerHTML='<div class="empty"><div class="empty-ico">&#127963;</div><h3>Keine AGs</h3><p>Erstelle deine erste AG.</p></div>';return;}
+  c.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'    +'<input class="search" placeholder="Suche AGs..." oninput="renderAGs(this.value)" value="'+(filter||'')+'" style="max-width:220px">'    +(isAdmin()?'<button class="btn btn-primary btn-sm" onclick="openAGModal()">+ Neue AG</button>':'')    +'</div><div id="ag-body"></div>';
+  let list=db.ags.slice();
+  if(filter) list=list.filter(a=>JSON.stringify(a).toLowerCase().includes(filter.toLowerCase()));
+  if(!isSA()) list=list.filter(a=>canSee(a.id));
+  if(!list.length){el('ag-body').innerHTML='<div class="empty"><div class="empty-ico">&#127963;</div><h3>Keine AGs</h3></div>';return;}
+
+  // Kompakte Karten, gruppiert nach Kategorie
   const byKat={};
-  list.forEach(ag=>{const k=ag.kat||'Sonstiges';if(!byKat[k])byKat[k]=[];byKat[k].push(ag);});
+  list.forEach(ag=>{const k=ag.kat||'Allgemein';if(!byKat[k])byKat[k]=[];byKat[k].push(ag);});
   let h='';
   Object.keys(byKat).sort().forEach(kat=>{
-    h+='<div style="margin-bottom:18px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:8px">'+kat+' ('+byKat[kat].length+')</div>'
-      +'<div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Prio</th><th>Koordination</th><th>UGs</th><th>Ampel</th>'+(isAdmin()?'<th></th>':'')+'</tr></thead><tbody>';
-    byKat[kat].forEach(ag=>{
+    const ags=byKat[kat];
+    h+='<div style="margin-bottom:16px">'      +'<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">'+kat+' <span style="opacity:.5">('+ags.length+')</span></div>'      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">';
+    ags.forEach(ag=>{
       const ugsCount=db.agUgLinks.filter(l=>l.agId===ag.id).length;
-      const a=ampel(ag);
-      h+='<tr class="clickable-row" data-ag-id="'+ag.id+'">'
-        +'<td><code>'+ag.id+'</code></td><td style="font-weight:500">'+ag.name+'</td>'
-        +'<td>'+sbadge(ag.status)+'</td><td>'+pbadge(ag.prio)+'</td>'
-        +'<td>'+(ag.koo||'&ndash;')+'</td><td>'+ugsCount+'</td><td>'+ampelEl(a)+'</td>'
-        +(isAdmin()?'<td><button class="btn btn-ghost btn-sm" data-edit-ag="'+ag.id+'">&#9999;</button></td>':'')
-        +'</tr>';
+      const members=db.rollen.filter(r=>r.entityId===ag.id&&r.aktiv).length;
+      const sCol=ag.status==='Aktiv'?'#22c55e':ag.status==='In Planung'?'#f59e0b':ag.status==='Inaktiv'?'#ef4444':'#6b7199';
+      h+='<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid '+(ag.farbe||'#4f7cff')+';border-radius:8px;padding:10px 12px;cursor:pointer" data-ag-id="'+ag.id+'">'        +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ag.name+'</div>'        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'        +'<span style="font-size:10px;background:'+sCol+'22;color:'+sCol+';border-radius:4px;padding:1px 6px">'+ag.status+'</span>'        +(ag.prio?'<span style="font-size:9px;color:var(--muted)">'+ag.prio+'</span>':'')+'</div>'        +'<div style="font-size:10px;color:var(--muted);display:flex;justify-content:space-between">'        +'<span>&#128100; '+members+'</span>'        +'<span>&#9681; '+ugsCount+'</span>'        +(ag.koo?'<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px">'+ag.koo+'</span>':'')        +'</div>'        +(isAdmin()?'<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:6px;font-size:10px;padding:2px" data-edit-ag="'+ag.id+'">&#9999; Bearbeiten</button>':'')        +'</div>';
     });
-    h+='</tbody></table></div></div>';
+    h+='</div></div>';
   });
   el('ag-body').innerHTML=h;
-  // Bind row clicks via JS to avoid quote issues
-  document.querySelectorAll('[data-ag-id]').forEach(function(tr){
-    tr.onclick=function(){openDetail('ag',this.getAttribute('data-ag-id'));};
+  document.querySelectorAll('[data-ag-id]').forEach(function(card){
+    card.onclick=function(e){if(e.target.hasAttribute('data-edit-ag'))return;openDetail('ag',this.getAttribute('data-ag-id'));};
   });
   document.querySelectorAll('[data-edit-ag]').forEach(function(btn){
     btn.onclick=function(e){e.stopPropagation();openAGModal(this.getAttribute('data-edit-ag'));};
@@ -894,34 +888,30 @@ function renderAGs(filter=''){
 
 function renderUGs(filter=''){
   const c=el('content');
-  c.innerHTML='<div class="card"><div class="fbet mb8">'
-    +'<input class="search" placeholder="Suche..." oninput="renderUGs(this.value)" value="'+(filter||'')+'">'
-    +'<div>'+(isAdmin()?'<button class="btn btn-primary btn-sm" onclick="openUGModal()">+ Neue UG</button>':'')+'</div>'
-    +'</div><div id="ug-body"></div></div>';
-  let list=db.ugs;
-  if(filter)list=list.filter(u=>JSON.stringify(u).toLowerCase().includes(filter.toLowerCase()));
-  if(!isSA())list=list.filter(u=>canSee(u.id));
+  c.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'    +'<input class="search" placeholder="Suche UGs..." oninput="renderUGs(this.value)" value="'+(filter||'')+'" style="max-width:220px">'    +(isAdmin()?'<button class="btn btn-primary btn-sm" onclick="openUGModal()">+ Neue UG</button>':'')    +'</div><div id="ug-body"></div>';
+  let list=db.ugs.slice();
+  if(filter) list=list.filter(u=>JSON.stringify(u).toLowerCase().includes(filter.toLowerCase()));
+  if(!isSA()) list=list.filter(u=>canSee(u.id));
   if(!list.length){el('ug-body').innerHTML='<div class="empty"><div class="empty-ico">&#128279;</div><h3>Keine UGs</h3></div>';return;}
+
   const byTyp={};
-  list.forEach(ug=>{const k=ug.typ||'Sonstiges';if(!byTyp[k])byTyp[k]=[];byTyp[k].push(ug);});
+  list.forEach(ug=>{const k=ug.typ||'Team';if(!byTyp[k])byTyp[k]=[];byTyp[k].push(ug);});
   let h='';
   Object.keys(byTyp).sort().forEach(typ=>{
-    h+='<div style="margin-bottom:18px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:8px">'+typ+' ('+byTyp[typ].length+')</div>'
-      +'<div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Lead</th><th>Verbundene AGs</th>'+(isAdmin()?'<th></th>':'')+'</tr></thead><tbody>';
-    byTyp[typ].forEach(ug=>{
+    const ugs=byTyp[typ];
+    h+='<div style="margin-bottom:16px">'      +'<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">'+typ+' <span style="opacity:.5">('+ugs.length+')</span></div>'      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">';
+    ugs.forEach(ug=>{
       const agLinks=db.agUgLinks.filter(l=>l.ugId===ug.id).map(l=>db.ags.find(a=>a.id===l.agId)).filter(Boolean);
-      h+='<tr class="clickable-row" data-ug-id="'+ug.id+'">'
-        +'<td><code>'+ug.id+'</code></td><td style="font-weight:500">'+ug.name+'</td>'
-        +'<td>'+sbadge(ug.status)+'</td><td>'+(ug.lead||'&ndash;')+'</td>'
-        +'<td>'+agLinks.map(a=>'<span style="background:'+(a.farbe||'#4f7cff')+'22;color:'+(a.farbe||'#4f7cff')+';border-radius:3px;padding:1px 5px;font-size:10px;margin:1px;display:inline-block">'+a.name+'</span>').join('')+'</td>'
-        +(isAdmin()?'<td><button class="btn btn-ghost btn-sm" data-edit-ug="'+ug.id+'">&#9999;</button></td>':'')
-        +'</tr>';
+      const members=db.rollen.filter(r=>r.entityId===ug.id&&r.aktiv).length;
+      const sCol=ug.status==='Aktiv'?'#22c55e':ug.status==='In Planung'?'#f59e0b':'#6b7199';
+      h+='<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid #a78bfa;border-radius:8px;padding:10px 12px;cursor:pointer" data-ug-id="'+ug.id+'">'        +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ug.name+'</div>'        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'        +'<span style="font-size:10px;background:'+sCol+'22;color:'+sCol+';border-radius:4px;padding:1px 6px">'+ug.status+'</span>'
+        +(ug.lead?'<span style="font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+ug.lead+'</span>':'')+'</div>'        +'<div style="font-size:10px;color:var(--muted);margin-bottom:4px">&#128100; '+members+' Mitglieder</div>'        +(agLinks.length?'<div style="display:flex;flex-wrap:wrap;gap:3px">'+agLinks.map(a=>'<span style="font-size:9px;background:'+(a.farbe||'#4f7cff')+'22;color:'+(a.farbe||'#4f7cff')+';border-radius:3px;padding:1px 5px">'+a.name+'</span>').join('')+'</div>':'')        +(isAdmin()?'<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:6px;font-size:10px;padding:2px" data-edit-ug="'+ug.id+'">&#9999; Bearbeiten</button>':'')        +'</div>';
     });
-    h+='</tbody></table></div></div>';
+    h+='</div></div>';
   });
   el('ug-body').innerHTML=h;
-  document.querySelectorAll('[data-ug-id]').forEach(function(tr){
-    tr.onclick=function(){openDetail('ug',this.getAttribute('data-ug-id'));};
+  document.querySelectorAll('[data-ug-id]').forEach(function(card){
+    card.onclick=function(e){if(e.target.hasAttribute('data-edit-ug'))return;openDetail('ug',this.getAttribute('data-ug-id'));};
   });
   document.querySelectorAll('[data-edit-ug]').forEach(function(btn){
     btn.onclick=function(e){e.stopPropagation();openUGModal(this.getAttribute('data-edit-ug'));};
@@ -3034,8 +3024,64 @@ setMode=function(m,btn){
 
 // Sync hooks for V3 functions
 var _sAG=saveAG,_sUG=saveUG,_sT=saveTask,_sM=saveMitglied,_sK=saveKonzept;
-saveAG=function(){var id=(G('f-ag-id')||{value:''}).value.trim();_sAG();setTimeout(function(){var a=db.ags.find(function(x){return x.id===id;});if(a){sbUp('ags',a);syslog('save','AG','AG gespeichert: '+a.name,id);}else{toast('Fehler: AG '+id+' nicht gefunden','error');}},200);};
-saveUG=function(){var id=(G('f-ug-id')||{value:''}).value.trim();_sUG();setTimeout(function(){var u=db.ugs.find(function(x){return x.id===id;});if(u){sbUp('ugs',u);syslog('save','UG','UG gespeichert: '+u.name,id);}else{toast('Fehler: UG '+id+' nicht gefunden','error');}},200);};
+saveAG=function(){
+  var id=(G('f-ag-id')||{value:''}).value.trim();
+  _sAG(); // V3: syncs agFormTempMitgl→db.rollen and agFormTempUGs→db.agUgLinks
+  setTimeout(async function(){
+    // 1. AG speichern
+    var a=db.ags.find(function(x){return x.id===id;});
+    if(!a){toast('Fehler: AG nicht gefunden','error');return;}
+    await sbUp('ags',a);
+    syslog('save','AG','AG gespeichert: '+a.name,id);
+    // 2. Alle Rollen dieser AG nach Supabase (agFormTempMitgl wurde von V3 in db.rollen geschrieben)
+    var agRoles=db.rollen.filter(function(r){return r.entityId===id&&r.aktiv;});
+    for(var ri=0;ri<agRoles.length;ri++){
+      // Direkt upsert — kein toSB wrapper — FK: person_id muss in mitglieder existieren
+      var r=agRoles[ri];
+      var res=await getSB().from('rollen').upsert({
+        id:r.id,person_id:r.personId,name:r.name||'',entity_typ:'AG',
+        entity_id:id,rolle:r.rolle||'Mitglied',zugriff:r.zugriff||'intern',
+        aktiv:true,start_datum:r.start||new Date().toISOString().slice(0,10)
+      },{onConflict:'id'});
+      if(res.error) console.warn('rolle save:',res.error.message,r);
+    }
+    // 3. UG-Links speichern
+    var ugLinks=db.agUgLinks.filter(function(l){return l.agId===id;});
+    for(var li=0;li<ugLinks.length;li++){
+      await sbUp('ag_ug_links',ugLinks[li]);
+    }
+    // 4. Nutzer agIds aktualisieren für neue Mitglieder
+    agRoles.forEach(function(r){
+      var nu=db.nutzer.find(function(u){return u.name===r.name;});
+      if(nu&&!nu.agIds.includes('*')&&!nu.agIds.includes(id)){
+        nu.agIds.push(id);sbUp('nutzer',nu);
+      }
+    });
+    toast('AG & Mitglieder gespeichert ✓','ok');
+  },200);
+};
+saveUG=function(){
+  var id=(G('f-ug-id')||{value:''}).value.trim();
+  _sUG();
+  setTimeout(async function(){
+    var u=db.ugs.find(function(x){return x.id===id;});
+    if(!u){toast('Fehler: UG nicht gefunden','error');return;}
+    await sbUp('ugs',u);
+    syslog('save','UG','UG gespeichert: '+u.name,id);
+    // Rollen dieser UG speichern
+    var ugRoles=db.rollen.filter(function(r){return r.entityId===id&&r.aktiv;});
+    for(var ri=0;ri<ugRoles.length;ri++){
+      var r=ugRoles[ri];
+      var res=await getSB().from('rollen').upsert({
+        id:r.id,person_id:r.personId,name:r.name||'',entity_typ:'UG',
+        entity_id:id,rolle:r.rolle||'Mitglied',zugriff:r.zugriff||'intern',
+        aktiv:true,start_datum:r.start||new Date().toISOString().slice(0,10)
+      },{onConflict:'id'});
+      if(res.error) console.warn('rolle ug save:',res.error.message);
+    }
+    toast('UG & Mitglieder gespeichert ✓','ok');
+  },200);
+};
 saveTask=function(){var id=(G('f-t-id')||{value:''}).value.trim();_sT();setTimeout(function(){var t=db.aufgaben.find(function(x){return x.id===id;});if(t) sbUp('aufgaben',t);updateBadges();},100);};
 saveKonzept=function(){_sK();setTimeout(function(){var k=db.konzepte[db.konzepte.length-1];if(k) sbUp('konzepte',k);},100);};
 saveMitglied=function(){
