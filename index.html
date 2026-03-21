@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V41</title>
+<title>Mariana CSC - AG-Verwaltung V42</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V41</div>
+    <div class="login-sub">AG-Verwaltung V42</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V41</p>
+    <p>AG-Verwaltung V42</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -1456,7 +1456,6 @@ function addRoleFromMitglForm(){
   var eid=v('f-m-entity');var mid=v('f-m-id');var rolle=v('f-m-rolle')||'Mitglied';
   if(!eid){toast('Bitte Entität auswählen','error');return;}
   if(!mid){toast('Bitte erst ID eingeben','error');return;}
-  // Doppelte Zuordnung verhindern
   if(db.rollen.find(function(r){return r.personId===mid&&r.entityId===eid&&r.aktiv;})){
     toast('Bereits zugeordnet','error');return;
   }
@@ -1466,12 +1465,17 @@ function addRoleFromMitglForm(){
     zugriff:v('f-m-zugriff')||'intern',aktiv:true,
     start:new Date().toISOString().slice(0,10)};
   db.rollen.push(nr);
-  // Sofort speichern wenn Mitglied schon existiert
-  if(db.mitglieder.find(function(m){return m.id===mid;})){
-    sbUp('rollen',nr);
+  // Nur sofort speichern wenn Mitglied BEREITS in Supabase existiert (editMode)
+  // Bei neuem Mitglied: saveMitglied übernimmt das nach dem Mitglied-Insert
+  var existsInDB=editId&&db.mitglieder.find(function(m){return m.id===mid;});
+  if(existsInDB){
+    sbUp('rollen',nr).then(function(){
+      toast('&#128190; Zuordnung gespeichert','ok');
+    });
+  } else {
+    toast('Rolle vorgemerkt — wird beim Speichern übertragen','ok');
   }
   renderMRolesPreview(mid);
-  toast('Rolle hinzugefügt','ok');
 }
 function saveMitglied(){
   const id=v('f-m-id').trim(),name=v('f-m-name').trim();
@@ -3022,6 +3026,8 @@ saveMitglied=function(){
     if(m){
       await sbUp('mitglieder',m);
       syslog('save','Mitglied','Mitglied gespeichert: '+m.name,id);
+      // Kurze Pause damit Supabase FK-Constraint erfüllt ist
+      await new Promise(function(r){setTimeout(r,300);});
     } else {
       toast('Fehler: Mitglied nicht in db gefunden (ID='+id+')','error');
       return;
