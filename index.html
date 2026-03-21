@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V45</title>
+<title>Mariana CSC - AG-Verwaltung V46</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V45</div>
+    <div class="login-sub">AG-Verwaltung V46</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V45</p>
+    <p>AG-Verwaltung V46</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -856,65 +856,77 @@ function toggleTask(id){
 // ════════════════════════════════════════════════════════
 function renderAGs(filter=''){
   const c=el('content');
-  c.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'    +'<input class="search" placeholder="Suche AGs..." oninput="renderAGs(this.value)" value="'+(filter||'')+'" style="max-width:220px">'    +(isAdmin()?'<button class="btn btn-primary btn-sm" onclick="openAGModal()">+ Neue AG</button>':'')    +'</div><div id="ag-body"></div>';
-  let list=db.ags.slice();
+  c.innerHTML=`<div class="card"><div class="fbet mb8">
+    <input class="search" placeholder="🔍 Suche..." oninput="renderAGs(this.value)" value="${filter||''}">
+    ${isAdmin()?'<button class="btn btn-primary btn-sm" onclick="openAGModal()">+ Neue AG</button>':''}
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Name</th><th>Kategorie</th><th>Status</th><th>Priorität</th><th>Koordination</th><th>UGs</th><th>Konzept</th><th>Ampel</th>${isAdmin()?'<th></th>':''}</tr></thead>
+    <tbody id="ag-tbody"></tbody>
+  </table></div></div>`;
+  let list=db.ags;
   if(filter) list=list.filter(a=>JSON.stringify(a).toLowerCase().includes(filter.toLowerCase()));
   if(!isSA()) list=list.filter(a=>canSee(a.id));
-  if(!list.length){el('ag-body').innerHTML='<div class="empty"><div class="empty-ico">&#127963;</div><h3>Keine AGs</h3></div>';return;}
-
-  // Kompakte Karten, gruppiert nach Kategorie
-  const byKat={};
-  list.forEach(ag=>{const k=ag.kat||'Allgemein';if(!byKat[k])byKat[k]=[];byKat[k].push(ag);});
-  let h='';
-  Object.keys(byKat).sort().forEach(kat=>{
-    const ags=byKat[kat];
-    h+='<div style="margin-bottom:16px">'      +'<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">'+kat+' <span style="opacity:.5">('+ags.length+')</span></div>'      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">';
-    ags.forEach(ag=>{
-      const ugsCount=db.agUgLinks.filter(l=>l.agId===ag.id).length;
-      const members=db.rollen.filter(r=>r.entityId===ag.id&&r.aktiv).length;
-      const sCol=ag.status==='Aktiv'?'#22c55e':ag.status==='In Planung'?'#f59e0b':ag.status==='Inaktiv'?'#ef4444':'#6b7199';
-      h+='<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid '+(ag.farbe||'#4f7cff')+';border-radius:8px;padding:10px 12px;cursor:pointer" data-ag-id="'+ag.id+'">'        +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ag.name+'</div>'        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'        +'<span style="font-size:10px;background:'+sCol+'22;color:'+sCol+';border-radius:4px;padding:1px 6px">'+ag.status+'</span>'        +(ag.prio?'<span style="font-size:9px;color:var(--muted)">'+ag.prio+'</span>':'')+'</div>'        +'<div style="font-size:10px;color:var(--muted);display:flex;justify-content:space-between">'        +'<span>&#128100; '+members+'</span>'        +'<span>&#9681; '+ugsCount+'</span>'        +(ag.koo?'<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px">'+ag.koo+'</span>':'')        +'</div>'        +(isAdmin()?'<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:6px;font-size:10px;padding:2px" data-edit-ag="'+ag.id+'">&#9999; Bearbeiten</button>':'')        +'</div>';
-    });
-    h+='</div></div>';
+  const tbody=el('ag-tbody');
+  if(!list.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--muted)">Keine AGs gefunden</td></tr>';return;}
+  tbody.innerHTML=list.map(ag=>{
+    const ugs=db.agUgLinks.filter(l=>l.agId===ag.id).length;
+    const konz=db.konzepte.find(k=>k.entityId===ag.id);
+    const a=ampel(ag);
+    return `<tr class="clickable-row" data-ag-id="${ag.id}">
+      <td><code>${ag.id}</code></td>
+      <td style="font-weight:500">${ag.name}</td>
+      <td>${ag.kat||'–'}</td>
+      <td>${sbadge(ag.status)}</td>
+      <td>${pbadge(ag.prio)}</td>
+      <td>${ag.koo||'–'}</td>
+      <td>${ugs}</td>
+      <td>${konz?'<span style="color:var(--green)">✓</span>':'–'}</td>
+      <td>${ampelEl(a)}</td>
+      ${isAdmin()?`<td><button class="btn btn-ghost btn-sm" data-edit-ag="${ag.id}">✎</button></td>`:''}
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('[data-ag-id]').forEach(tr=>{
+    tr.onclick=function(e){if(e.target.closest('[data-edit-ag]'))return;openDetail('ag',this.dataset.agId);};
   });
-  el('ag-body').innerHTML=h;
-  document.querySelectorAll('[data-ag-id]').forEach(function(card){
-    card.onclick=function(e){if(e.target.hasAttribute('data-edit-ag'))return;openDetail('ag',this.getAttribute('data-ag-id'));};
-  });
-  document.querySelectorAll('[data-edit-ag]').forEach(function(btn){
-    btn.onclick=function(e){e.stopPropagation();openAGModal(this.getAttribute('data-edit-ag'));};
+  tbody.querySelectorAll('[data-edit-ag]').forEach(btn=>{
+    btn.onclick=function(e){e.stopPropagation();openAGModal(this.dataset.editAg);};
   });
 }
 
 function renderUGs(filter=''){
   const c=el('content');
-  c.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'    +'<input class="search" placeholder="Suche UGs..." oninput="renderUGs(this.value)" value="'+(filter||'')+'" style="max-width:220px">'    +(isAdmin()?'<button class="btn btn-primary btn-sm" onclick="openUGModal()">+ Neue UG</button>':'')    +'</div><div id="ug-body"></div>';
-  let list=db.ugs.slice();
+  c.innerHTML=`<div class="card"><div class="fbet mb8">
+    <input class="search" placeholder="🔍 Suche..." oninput="renderUGs(this.value)" value="${filter||''}">
+    ${isAdmin()?'<button class="btn btn-primary btn-sm" onclick="openUGModal()">+ Neue UG</button>':''}
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Name</th><th>Typ</th><th>Status</th><th>Lead</th><th>Kanal</th><th>AGs</th>${isAdmin()?'<th></th>':''}</tr></thead>
+    <tbody id="ug-tbody"></tbody>
+  </table></div></div>`;
+  let list=db.ugs;
   if(filter) list=list.filter(u=>JSON.stringify(u).toLowerCase().includes(filter.toLowerCase()));
   if(!isSA()) list=list.filter(u=>canSee(u.id));
-  if(!list.length){el('ug-body').innerHTML='<div class="empty"><div class="empty-ico">&#128279;</div><h3>Keine UGs</h3></div>';return;}
-
-  const byTyp={};
-  list.forEach(ug=>{const k=ug.typ||'Team';if(!byTyp[k])byTyp[k]=[];byTyp[k].push(ug);});
-  let h='';
-  Object.keys(byTyp).sort().forEach(typ=>{
-    const ugs=byTyp[typ];
-    h+='<div style="margin-bottom:16px">'      +'<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">'+typ+' <span style="opacity:.5">('+ugs.length+')</span></div>'      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">';
-    ugs.forEach(ug=>{
-      const agLinks=db.agUgLinks.filter(l=>l.ugId===ug.id).map(l=>db.ags.find(a=>a.id===l.agId)).filter(Boolean);
-      const members=db.rollen.filter(r=>r.entityId===ug.id&&r.aktiv).length;
-      const sCol=ug.status==='Aktiv'?'#22c55e':ug.status==='In Planung'?'#f59e0b':'#6b7199';
-      h+='<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid #a78bfa;border-radius:8px;padding:10px 12px;cursor:pointer" data-ug-id="'+ug.id+'">'        +'<div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ug.name+'</div>'        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'        +'<span style="font-size:10px;background:'+sCol+'22;color:'+sCol+';border-radius:4px;padding:1px 6px">'+ug.status+'</span>'
-        +(ug.lead?'<span style="font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+ug.lead+'</span>':'')+'</div>'        +'<div style="font-size:10px;color:var(--muted);margin-bottom:4px">&#128100; '+members+' Mitglieder</div>'        +(agLinks.length?'<div style="display:flex;flex-wrap:wrap;gap:3px">'+agLinks.map(a=>'<span style="font-size:9px;background:'+(a.farbe||'#4f7cff')+'22;color:'+(a.farbe||'#4f7cff')+';border-radius:3px;padding:1px 5px">'+a.name+'</span>').join('')+'</div>':'')        +(isAdmin()?'<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:6px;font-size:10px;padding:2px" data-edit-ug="'+ug.id+'">&#9999; Bearbeiten</button>':'')        +'</div>';
-    });
-    h+='</div></div>';
+  const tbody=el('ug-tbody');
+  if(!list.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">Keine UGs gefunden</td></tr>';return;}
+  tbody.innerHTML=list.map(ug=>{
+    const agLinks=db.agUgLinks.filter(l=>l.ugId===ug.id).map(l=>db.ags.find(a=>a.id===l.agId)).filter(Boolean);
+    return `<tr class="clickable-row" data-ug-id="${ug.id}">
+      <td><code>${ug.id}</code></td>
+      <td style="font-weight:500">${ug.name}</td>
+      <td>${ug.typ||'–'}</td>
+      <td>${sbadge(ug.status)}</td>
+      <td>${ug.lead||'–'}</td>
+      <td>${ug.kanal||'–'}</td>
+      <td style="font-size:11px">${agLinks.map(a=>'<span style="background:'+(a.farbe||'#4f7cff')+'22;color:'+(a.farbe||'#4f7cff')+';border-radius:3px;padding:1px 5px;margin:1px;display:inline-block">'+a.name+'</span>').join('')||'–'}</td>
+      ${isAdmin()?`<td><button class="btn btn-ghost btn-sm" data-edit-ug="${ug.id}">✎</button></td>`:''}
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('[data-ug-id]').forEach(tr=>{
+    tr.onclick=function(e){if(e.target.closest('[data-edit-ug]'))return;openDetail('ug',this.dataset.ugId);};
   });
-  el('ug-body').innerHTML=h;
-  document.querySelectorAll('[data-ug-id]').forEach(function(card){
-    card.onclick=function(e){if(e.target.hasAttribute('data-edit-ug'))return;openDetail('ug',this.getAttribute('data-ug-id'));};
-  });
-  document.querySelectorAll('[data-edit-ug]').forEach(function(btn){
-    btn.onclick=function(e){e.stopPropagation();openUGModal(this.getAttribute('data-edit-ug'));};
+  tbody.querySelectorAll('[data-edit-ug]').forEach(btn=>{
+    btn.onclick=function(e){e.stopPropagation();openUGModal(this.dataset.editUg);};
   });
 }
 
@@ -3133,25 +3145,37 @@ saveMitglied=function(){
         }
       }
     }
-    // 4. Login-Account erstellen oder aktualisieren
+    // 4. Login-Account erstellen oder aktualisieren (IMMER)
     var existingNu=db.nutzer.find(function(u){return u.name===name;});
-    if(wasNew&&name&&!existingNu){
+    if(name&&!existingNu){
+      // Kein Nutzer vorhanden → anlegen (egal ob neu oder bestehend)
       var pw=name.toLowerCase().replace(/\s+/g,'')+'2024';
       var agIds2=entityId==='*'?['*']:(entityId&&db.ags.some(function(a){return a.id===entityId;})?[entityId]:[]);
-      var ugIds2=entityId&&db.ugs.some(function(u){return u.id===entityId;})?[entityId]:[];
+      var ugIds2=entityId&&db.ugs.some(function(u2){return u2.id===entityId;})?[entityId]:[];
       var nu={id:'U-'+Date.now(),name:name,pw:pw,rolle:'intern',
         agIds:agIds2,ugIds:ugIds2,aktiv:true,farbe:'#6b7199'};
       db.nutzer.push(nu);
-      await sbUp('nutzer',nu);
-      toast('&#128100; Login: '+name+' | PW: '+pw,'ok');
-      syslog('action','Nutzer','Login erstellt: '+name,pw);
+      // Direkt in Supabase — kein sbUp wrapper damit Fehler klar sichtbar
+      var nuRes=await getSB().from('nutzer').upsert({
+        id:nu.id,name:name,pw:pw,rolle:'intern',
+        ag_ids:agIds2,ug_ids:ugIds2,aktiv:true,farbe:'#6b7199'
+      },{onConflict:'id'});
+      if(nuRes.error){
+        toast('Nutzer-Fehler: '+nuRes.error.message.slice(0,60),'error');
+      } else {
+        toast('&#128100; Login: '+name+' | PW: '+pw,'ok');
+        syslog('action','Nutzer','Login erstellt: '+name,pw);
+      }
     } else if(existingNu&&entityId&&entityId!=='*'){
       // Bestehenden Nutzer: agIds/ugIds ergänzen
       var isAgEntity=db.ags.some(function(a){return a.id===entityId;});
       var idArr=isAgEntity?existingNu.agIds:existingNu.ugIds;
       if(!idArr.includes('*')&&!idArr.includes(entityId)){
         idArr.push(entityId);
-        await sbUp('nutzer',existingNu);
+        var nuUpd=await getSB().from('nutzer').update({
+          ag_ids:existingNu.agIds,ug_ids:existingNu.ugIds
+        }).eq('id',existingNu.id);
+        if(nuUpd.error) console.warn('nutzer update:',nuUpd.error.message);
       }
     }
     updateBadges();
