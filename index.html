@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V42</title>
+<title>Mariana CSC - AG-Verwaltung V43</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V42</div>
+    <div class="login-sub">AG-Verwaltung V43</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V42</p>
+    <p>AG-Verwaltung V43</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -2745,10 +2745,18 @@ async function sbLoadAll(){
     db.nachrichten= (res[7].data||[]).map(function(r){return fromSB('nachrichten',r);});
     db.notizen    = (res[8].data||[]).map(function(r){return fromSB('notizen',r);});
     db.nutzer     = (res[9].data||[]).map(function(r){return fromSB('nutzer',r);});
-    try{var dr=await getSB().from('dokumente').select('*');if(!dr.error)db.dokumente=(dr.data||[]).map(function(r){return fromSB('dokumente',r);});}catch(e){}
-    try{var kr=await getSB().from('kalender').select('*');if(!kr.error)db.kalender=(kr.data||[]).map(function(r){return fromSB('kalender',r);});}catch(e){}
-    try{var abr=await getSB().from('abwesenheiten').select('*');if(!abr.error)db.abwesenheiten=(abr.data||[]).map(function(r){return fromSB('abwesenheiten',r);});}catch(e){}
-    try{var pr=await getSB().from('protokolle').select('*');if(!pr.error)db.protokolle=(pr.data||[]).map(function(r){return fromSB('protokolle',r);});}catch(e){}
+    // Optionale Tabellen parallel laden
+    var optRes=await Promise.allSettled([
+      getSB().from('dokumente').select('*'),
+      getSB().from('kalender').select('*'),
+      getSB().from('abwesenheiten').select('*'),
+      getSB().from('protokolle').select('*'),
+      getSB().from('syslog').select('id').limit(1)
+    ]);
+    if(optRes[0].status==='fulfilled'&&!optRes[0].value.error) db.dokumente=(optRes[0].value.data||[]).map(function(r){return fromSB('dokumente',r);});
+    if(optRes[1].status==='fulfilled'&&!optRes[1].value.error) db.kalender=(optRes[1].value.data||[]).map(function(r){return fromSB('kalender',r);});
+    if(optRes[2].status==='fulfilled'&&!optRes[2].value.error) db.abwesenheiten=(optRes[2].value.data||[]).map(function(r){return fromSB('abwesenheiten',r);});
+    if(optRes[3].status==='fulfilled'&&!optRes[3].value.error) db.protokolle=(optRes[3].value.data||[]).map(function(r){return fromSB('protokolle',r);});
     if(!db.plaene) db.plaene=[];
     try { var pr=await sb.from('plaene').select('*'); if(!pr.error) db.plaene=(pr.data||[]).map(function(r){return fromSB('plaene',r);}); } catch(e){}
     try { var sr=await sb.from('einstellungen').select('*'); if(sr.data) sr.data.forEach(function(r){ if(r.key==='gemini_key'&&r.value) geminiKey=r.value; if(r.key==='claude_key'&&r.value) apiKey=r.value; if(r.key==='ai_provider'&&r.value) aiProvider=r.value; }); } catch(e){}
@@ -3059,16 +3067,26 @@ saveMitglied=function(){
         }
       }
     }
-    // 4. Login-Account erstellen falls neues Mitglied
-    if(wasNew&&name&&!db.nutzer.find(function(u){return u.name===name;})){
+    // 4. Login-Account erstellen oder aktualisieren
+    var existingNu=db.nutzer.find(function(u){return u.name===name;});
+    if(wasNew&&name&&!existingNu){
       var pw=name.toLowerCase().replace(/\s+/g,'')+'2024';
-      var agList=entityId==='*'?['*']:(entityId?[entityId]:[]);
+      var agIds2=entityId==='*'?['*']:(entityId&&db.ags.some(function(a){return a.id===entityId;})?[entityId]:[]);
+      var ugIds2=entityId&&db.ugs.some(function(u){return u.id===entityId;})?[entityId]:[];
       var nu={id:'U-'+Date.now(),name:name,pw:pw,rolle:'intern',
-        agIds:agList,ugIds:[],aktiv:true,farbe:'#6b7199'};
+        agIds:agIds2,ugIds:ugIds2,aktiv:true,farbe:'#6b7199'};
       db.nutzer.push(nu);
       await sbUp('nutzer',nu);
       toast('&#128100; Login: '+name+' | PW: '+pw,'ok');
       syslog('action','Nutzer','Login erstellt: '+name,pw);
+    } else if(existingNu&&entityId&&entityId!=='*'){
+      // Bestehenden Nutzer: agIds/ugIds ergänzen
+      var isAgEntity=db.ags.some(function(a){return a.id===entityId;});
+      var idArr=isAgEntity?existingNu.agIds:existingNu.ugIds;
+      if(!idArr.includes('*')&&!idArr.includes(entityId)){
+        idArr.push(entityId);
+        await sbUp('nutzer',existingNu);
+      }
     }
     updateBadges();
     toast('&#128190; '+name+' gespeichert','ok');
@@ -3157,7 +3175,10 @@ async function openWorkspace(entityId, navEl2){
 
     // Tab: Team
     +'<div class="tab-content" id="ws-team">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:12px;font-weight:600">Team</span></div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<span style="font-size:12px;font-weight:600">Team</span>'
+    +(isAdmin()?'<button class="btn btn-primary btn-sm" data-eid="'+entityId+'" onclick="openAddMemberToEntity(this.dataset.eid)">+ Mitglied</button>':'')
+    +'</div>'
     +(members.length ? members.map(function(m){
       var rol=db.rollen.find(function(r){return r.personId===m.id&&r.entityId===entityId;});
       return '<div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--card2);border-radius:8px;margin-bottom:6px">'
@@ -5585,6 +5606,95 @@ async function loadSyslogFromDB(){
 }
 
 function clearSyslog(){if(!confirm('Lokales Log leeren?'))return;_syslog=[];renderSyslog();}
+
+function openAddMemberToEntity(entityId){
+  var ag=db.ags.find(function(a){return a.id===entityId;});
+  var ug=ag?null:db.ugs.find(function(u){return u.id===entityId;});
+  var ent=ag||ug;if(!ent)return;
+  // Bereits zugeordnete Mitglieder
+  var assignedIds=db.rollen.filter(function(r){return r.entityId===entityId&&r.aktiv;}).map(function(r){return r.personId;});
+  // Alle Mitglieder die noch nicht zugeordnet sind
+  var available=db.mitglieder.filter(function(m){return m.aktiv&&!assignedIds.includes(m.id);});
+
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  var inner=document.createElement('div');
+  inner.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;width:440px;max-width:95vw;max-height:80vh;overflow-y:auto';
+
+  var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
+  var ttl=document.createElement('h3');ttl.style.cssText='font-size:14px;margin:0';
+  ttl.textContent='Mitglied zu '+ent.name+' hinzufügen';
+  var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted)';
+  cls.onclick=function(){ov.remove();};
+  hdr.appendChild(ttl);hdr.appendChild(cls);inner.appendChild(hdr);
+
+  if(!available.length){
+    inner.insertAdjacentHTML('beforeend','<p style="color:var(--muted);font-size:12px">Alle aktiven Mitglieder sind bereits zugeordnet.</p>');
+    var bc=document.createElement('button');bc.className='btn btn-ghost';bc.textContent='Schließen';bc.onclick=function(){ov.remove();};
+    inner.appendChild(bc);ov.appendChild(inner);document.body.appendChild(ov);return;
+  }
+
+  // Such-Filter
+  inner.insertAdjacentHTML('beforeend',
+    '<input id="amt-search" placeholder="Mitglied suchen..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px 9px;font-size:12px;box-sizing:border-box;margin-bottom:10px">'
+    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Rolle</label>'
+    +'<input id="amt-rolle" value="Mitglied" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px 9px;font-size:12px;box-sizing:border-box"></div>'
+    +'<div id="amt-list" style="display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto"></div>'
+  );
+
+  function renderList(filter){
+    var list=document.getElementById('amt-list');if(!list)return;
+    var filtered=filter?available.filter(function(m){return m.name.toLowerCase().includes(filter.toLowerCase());}):available;
+    list.innerHTML=filtered.map(function(m){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:7px;cursor:pointer;border:1px solid var(--border)" data-mid="'+m.id+'" data-mname="'+m.name+'">'
+        +'<div style="width:30px;height:30px;border-radius:50%;background:#4f7cff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+m.name.slice(0,2).toUpperCase()+'</div>'
+        +'<div style="flex:1"><div style="font-size:12px;font-weight:500">'+m.name+'</div>'
+        +'<div style="font-size:10px;color:var(--muted)">'+(m.region||m.kompetenzen||'Kein Bereich')+'</div></div>'
+        +'<span style="font-size:10px;color:var(--accent)">&#10133; Hinzufügen</span></div>';
+    }).join('')||'<p style="color:var(--muted);font-size:12px;text-align:center;padding:10px">Keine Treffer</p>';
+
+    list.querySelectorAll('[data-mid]').forEach(function(item){
+      item.onclick=function(){
+        var mid=this.getAttribute('data-mid');
+        var mname=this.getAttribute('data-mname');
+        addMemberToEntityDirect(mid,mname,entityId,ov);
+      };
+    });
+  }
+
+  var searchInp=document.getElementById('amt-search');
+  if(searchInp) searchInp.oninput=function(){renderList(this.value);};
+  renderList('');
+  ov.appendChild(inner);document.body.appendChild(ov);
+  setTimeout(function(){var si=document.getElementById('amt-search');if(si)si.focus();},60);
+}
+
+async function addMemberToEntityDirect(personId, personName, entityId, ov){
+  var eTyp=db.ags.some(function(a){return a.id===entityId;})?'AG':'UG';
+  var rolleInp=document.getElementById('amt-rolle');
+  var rolle=(rolleInp?rolleInp.value.trim():'')||'Mitglied';
+
+  // Prüfe ob Rolle schon existiert
+  if(db.rollen.find(function(r){return r.personId===personId&&r.entityId===entityId&&r.aktiv;})){
+    toast('Bereits zugeordnet','error');return;
+  }
+
+  var nr={id:'ZU-'+Date.now(),personId:personId,name:personName,
+    entityTyp:eTyp,entityId:entityId,rolle:rolle,
+    zugriff:'intern',aktiv:true,start:new Date().toISOString().slice(0,10)};
+
+  db.rollen.push(nr);
+
+  // Direkt speichern — Mitglied existiert bereits in DB
+  var res=await sbUp('rollen',nr);
+  syslog('save','Rollen',personName+' zu '+entityId+' hinzugefügt ('+rolle+')','');
+  toast('&#128100; '+personName+' hinzugefügt','ok');
+
+  if(ov)ov.remove();
+  // Workspace neu laden
+  openWorkspace(entityId,null);
+}
+
 window.addEventListener('load', function(){
   G('login-overlay').style.display='flex';
   L_init();
