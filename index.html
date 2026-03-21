@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V43</title>
+<title>Mariana CSC - AG-Verwaltung V44</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V43</div>
+    <div class="login-sub">AG-Verwaltung V44</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V43</p>
+    <p>AG-Verwaltung V44</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -856,58 +856,78 @@ function toggleTask(id){
 // ════════════════════════════════════════════════════════
 function renderAGs(filter=''){
   const c=el('content');
-  c.innerHTML=`<div class="card"><div class="table-wrap"><table>
-    <thead><tr><th>ID</th><th>Name</th><th>Kategorie</th><th>Status</th><th>Priorität</th><th>Koordination</th><th>UGs</th><th>Konzept</th><th>Ampel</th><th></th></tr></thead>
-    <tbody id="ag-tbody"></tbody></table></div></div>`;
+  c.innerHTML='<div class="card"><div class="fbet mb8">'
+    +'<input class="search" placeholder="Suche..." oninput="renderAGs(this.value)" value="'+(filter||'')+'">'
+    +'<div>'+(isAdmin()?'<button class="btn btn-primary btn-sm" onclick="openAGModal()">+ Neue AG</button>':'')+'</div>'
+    +'</div><div id="ag-body"></div></div>';
   let list=db.ags;
-  if(filter)list=list.filter(a=>JSON.stringify(a).toLowerCase().includes(filter));
-  el('ag-tbody').innerHTML=list.length?list.map(ag=>{
-    const ugs=db.agUgLinks.filter(l=>l.agId===ag.id).length;
-    const hk=db.konzepte.some(k=>k.entityId===ag.id);
-    const a=ampel(ag);
-    return`<tr class="clickable-row" onclick="openDetail('ag','${ag.id}')">
-      <td><code style="font-size:10px;color:var(--muted)">${ag.id}</code></td>
-      <td><strong>${ag.name}</strong></td>
-      <td>${sbadge(ag.kat||'–')}</td>
-      <td>${sbadge(ag.status)}</td>
-      <td>${pbadge(ag.prio)}</td>
-      <td>${ag.koo||'–'}</td>
-      <td>${ugs}</td>
-      <td>${hk?'<span class="badge b-green">✓</span>':'<span class="badge b-gray">–</span>'}</td>
-      <td>${ampelEl(a)}</td>
-      <td onclick="event.stopPropagation()"><div class="frow"><button class="btn btn-ghost btn-xs" onclick="openAGModal('${ag.id}')">✏️</button><button class="btn btn-danger btn-xs" onclick="delAG('${ag.id}')">🗑</button></div></td>
-    </tr>`}).join(''):`<tr><td colspan="10"><div class="empty"><div class="empty-ico">🏛️</div><h3>Keine AGs</h3><p>Erstelle deine erste AG.</p></div></td></tr>`;
+  if(filter)list=list.filter(a=>JSON.stringify(a).toLowerCase().includes(filter.toLowerCase()));
+  if(!isSA())list=list.filter(a=>canSee(a.id));
+  if(!list.length){el('ag-body').innerHTML='<div class="empty"><div class="empty-ico">&#127963;</div><h3>Keine AGs</h3><p>Erstelle deine erste AG.</p></div>';return;}
+  const byKat={};
+  list.forEach(ag=>{const k=ag.kat||'Sonstiges';if(!byKat[k])byKat[k]=[];byKat[k].push(ag);});
+  let h='';
+  Object.keys(byKat).sort().forEach(kat=>{
+    h+='<div style="margin-bottom:18px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:8px">'+kat+' ('+byKat[kat].length+')</div>'
+      +'<div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Prio</th><th>Koordination</th><th>UGs</th><th>Ampel</th>'+(isAdmin()?'<th></th>':'')+'</tr></thead><tbody>';
+    byKat[kat].forEach(ag=>{
+      const ugsCount=db.agUgLinks.filter(l=>l.agId===ag.id).length;
+      const a=ampel(ag);
+      h+='<tr class="clickable-row" data-ag-id="'+ag.id+'">'
+        +'<td><code>'+ag.id+'</code></td><td style="font-weight:500">'+ag.name+'</td>'
+        +'<td>'+sbadge(ag.status)+'</td><td>'+pbadge(ag.prio)+'</td>'
+        +'<td>'+(ag.koo||'&ndash;')+'</td><td>'+ugsCount+'</td><td>'+ampelEl(a)+'</td>'
+        +(isAdmin()?'<td><button class="btn btn-ghost btn-sm" data-edit-ag="'+ag.id+'">&#9999;</button></td>':'')
+        +'</tr>';
+    });
+    h+='</tbody></table></div></div>';
+  });
+  el('ag-body').innerHTML=h;
+  // Bind row clicks via JS to avoid quote issues
+  document.querySelectorAll('[data-ag-id]').forEach(function(tr){
+    tr.onclick=function(){openDetail('ag',this.getAttribute('data-ag-id'));};
+  });
+  document.querySelectorAll('[data-edit-ag]').forEach(function(btn){
+    btn.onclick=function(e){e.stopPropagation();openAGModal(this.getAttribute('data-edit-ag'));};
+  });
 }
 
-// ════════════════════════════════════════════════════════
-// UNTERGRUPPEN
-// ════════════════════════════════════════════════════════
 function renderUGs(filter=''){
   const c=el('content');
-  c.innerHTML=`<div class="card"><div class="table-wrap"><table>
-    <thead><tr><th>ID</th><th>Name</th><th>Typ</th><th>Lead</th><th>Status</th><th>Zugeordnete AGs</th><th>Konzept</th><th>Kanal</th><th></th></tr></thead>
-    <tbody id="ug-tbody"></tbody></table></div></div>`;
+  c.innerHTML='<div class="card"><div class="fbet mb8">'
+    +'<input class="search" placeholder="Suche..." oninput="renderUGs(this.value)" value="'+(filter||'')+'">'
+    +'<div>'+(isAdmin()?'<button class="btn btn-primary btn-sm" onclick="openUGModal()">+ Neue UG</button>':'')+'</div>'
+    +'</div><div id="ug-body"></div></div>';
   let list=db.ugs;
-  if(filter)list=list.filter(u=>JSON.stringify(u).toLowerCase().includes(filter));
-  el('ug-tbody').innerHTML=list.length?list.map(ug=>{
-    const links=db.agUgLinks.filter(l=>l.ugId===ug.id);
-    const hk=db.konzepte.some(k=>k.entityId===ug.id);
-    return`<tr class="clickable-row" onclick="openDetail('ug','${ug.id}')">
-      <td><code style="font-size:10px;color:var(--muted)">${ug.id}</code></td>
-      <td><strong>${ug.name}</strong></td>
-      <td>${sbadge(ug.typ||'–')}</td>
-      <td>${ug.lead||'–'}</td>
-      <td>${sbadge(ug.status)}</td>
-      <td>${links.map(l=>`<span class="badge b-blue" style="font-size:9px">${l.agId}</span>`).join(' ')||'–'}</td>
-      <td>${hk?'<span class="badge b-green">✓</span>':`<button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();openKonzeptModal('${ug.id}')">+ Konzept</button>`}</td>
-      <td style="font-size:11px;color:var(--muted)">${ug.kanal||'–'}</td>
-      <td onclick="event.stopPropagation()"><div class="frow"><button class="btn btn-ghost btn-xs" onclick="openUGModal('${ug.id}')">✏️</button><button class="btn btn-danger btn-xs" onclick="delUG('${ug.id}')">🗑</button></div></td>
-    </tr>`}).join(''):`<tr><td colspan="9"><div class="empty"><div class="empty-ico">🔗</div><h3>Keine UGs</h3></div></td></tr>`;
+  if(filter)list=list.filter(u=>JSON.stringify(u).toLowerCase().includes(filter.toLowerCase()));
+  if(!isSA())list=list.filter(u=>canSee(u.id));
+  if(!list.length){el('ug-body').innerHTML='<div class="empty"><div class="empty-ico">&#128279;</div><h3>Keine UGs</h3></div>';return;}
+  const byTyp={};
+  list.forEach(ug=>{const k=ug.typ||'Sonstiges';if(!byTyp[k])byTyp[k]=[];byTyp[k].push(ug);});
+  let h='';
+  Object.keys(byTyp).sort().forEach(typ=>{
+    h+='<div style="margin-bottom:18px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:8px">'+typ+' ('+byTyp[typ].length+')</div>'
+      +'<div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Lead</th><th>Verbundene AGs</th>'+(isAdmin()?'<th></th>':'')+'</tr></thead><tbody>';
+    byTyp[typ].forEach(ug=>{
+      const agLinks=db.agUgLinks.filter(l=>l.ugId===ug.id).map(l=>db.ags.find(a=>a.id===l.agId)).filter(Boolean);
+      h+='<tr class="clickable-row" data-ug-id="'+ug.id+'">'
+        +'<td><code>'+ug.id+'</code></td><td style="font-weight:500">'+ug.name+'</td>'
+        +'<td>'+sbadge(ug.status)+'</td><td>'+(ug.lead||'&ndash;')+'</td>'
+        +'<td>'+agLinks.map(a=>'<span style="background:'+(a.farbe||'#4f7cff')+'22;color:'+(a.farbe||'#4f7cff')+';border-radius:3px;padding:1px 5px;font-size:10px;margin:1px;display:inline-block">'+a.name+'</span>').join('')+'</td>'
+        +(isAdmin()?'<td><button class="btn btn-ghost btn-sm" data-edit-ug="'+ug.id+'">&#9999;</button></td>':'')
+        +'</tr>';
+    });
+    h+='</tbody></table></div></div>';
+  });
+  el('ug-body').innerHTML=h;
+  document.querySelectorAll('[data-ug-id]').forEach(function(tr){
+    tr.onclick=function(){openDetail('ug',this.getAttribute('data-ug-id'));};
+  });
+  document.querySelectorAll('[data-edit-ug]').forEach(function(btn){
+    btn.onclick=function(e){e.stopPropagation();openUGModal(this.getAttribute('data-edit-ug'));};
+  });
 }
 
-// ════════════════════════════════════════════════════════
-// MITGLIEDER
-// ════════════════════════════════════════════════════════
 function renderMitglieder(filter=''){
   const c=el('content');
   c.innerHTML=`<div class="card"><div class="table-wrap"><table>
@@ -5607,92 +5627,165 @@ async function loadSyslogFromDB(){
 
 function clearSyslog(){if(!confirm('Lokales Log leeren?'))return;_syslog=[];renderSyslog();}
 
+
 function openAddMemberToEntity(entityId){
   var ag=db.ags.find(function(a){return a.id===entityId;});
   var ug=ag?null:db.ugs.find(function(u){return u.id===entityId;});
-  var ent=ag||ug;if(!ent)return;
-  // Bereits zugeordnete Mitglieder
-  var assignedIds=db.rollen.filter(function(r){return r.entityId===entityId&&r.aktiv;}).map(function(r){return r.personId;});
-  // Alle Mitglieder die noch nicht zugeordnet sind
-  var available=db.mitglieder.filter(function(m){return m.aktiv&&!assignedIds.includes(m.id);});
-
+  var ent=ag||ug; if(!ent)return;
+  var entName=(ag?'AG':'UG')+': '+ent.name;
   var ov=document.createElement('div');
-  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
-  var inner=document.createElement('div');
-  inner.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;width:440px;max-width:95vw;max-height:80vh;overflow-y:auto';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  document.body.appendChild(ov);
 
-  var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:16px';
-  var ttl=document.createElement('h3');ttl.style.cssText='font-size:14px;margin:0';
-  ttl.textContent='Mitglied zu '+ent.name+' hinzufügen';
-  var cls=document.createElement('span');cls.innerHTML='&#10005;';cls.style.cssText='cursor:pointer;font-size:20px;color:var(--muted)';
-  cls.onclick=function(){ov.remove();};
-  hdr.appendChild(ttl);hdr.appendChild(cls);inner.appendChild(hdr);
+  function rebuild(){
+    var assignedIds=db.rollen.filter(function(r){return r.entityId===entityId&&r.aktiv;}).map(function(r){return r.personId;});
+    var si=ov.querySelector('#amt-search');
+    var q=si?si.value.toLowerCase():'';
+    var saEl=ov.querySelector('#amt-show-all');
+    var showAll=saEl?saEl.checked:true;
+    var filtered=db.mitglieder.filter(function(m){return m.aktiv!==false&&(!q||m.name.toLowerCase().includes(q));});
+    if(!showAll) filtered=filtered.filter(function(m){return !assignedIds.includes(m.id);});
 
-  if(!available.length){
-    inner.insertAdjacentHTML('beforeend','<p style="color:var(--muted);font-size:12px">Alle aktiven Mitglieder sind bereits zugeordnet.</p>');
-    var bc=document.createElement('button');bc.className='btn btn-ghost';bc.textContent='Schließen';bc.onclick=function(){ov.remove();};
-    inner.appendChild(bc);ov.appendChild(inner);document.body.appendChild(ov);return;
-  }
+    ov.innerHTML='<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;width:480px;max-width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--border);flex-shrink:0">'
+      +'<div><div style="font-size:14px;font-weight:600">Mitglied hinzufügen</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+entName+'</div></div>'
+      +'<span id="amt-cls" style="cursor:pointer;font-size:22px;color:var(--muted)">&#10005;</span></div>'
+      +'<div style="padding:12px 20px 0;flex-shrink:0">'
+      +'<div style="display:flex;gap:8px;margin-bottom:10px">'
+      +'<div style="flex:1"><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:2px">Rolle</label>'
+      +'<input id="amt-rolle" value="Mitglied" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:6px 8px;font-size:12px;box-sizing:border-box"></div>'
+      +'<div style="flex:1"><label style="font-size:10px;color:var(--muted);display:block;margin-bottom:2px">Zugriff</label>'
+      +'<select id="amt-zugriff" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:6px 8px;font-size:12px">'
+      +'<option>intern</option><option>Editor</option><option>Admin</option></select></div></div>'
+      +'<input id="amt-search" placeholder="Suchen..." value="'+q+'" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px 9px;font-size:12px;box-sizing:border-box;margin-bottom:6px">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+      +'<span style="font-size:10px;color:var(--muted)">'+filtered.length+' Mitglieder | zugeordnet: '+assignedIds.length+'</span>'
+      +'<label style="font-size:10px;color:var(--muted);cursor:pointer"><input type="checkbox" id="amt-show-all"'+(showAll?' checked':'')+' style="margin-right:3px"> Alle zeigen</label>'
+      +'</div></div>'
+      +'<div id="amt-list" style="overflow-y:auto;padding:0 20px 10px;flex:1">'
+      +filtered.map(function(m){
+        var isA=assignedIds.includes(m.id);
+        return '<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border-radius:7px;margin-bottom:4px;cursor:'+(isA?'default':'pointer')+';border:1px solid '+(isA?'var(--accent)':'var(--border)')+';opacity:'+(isA?'.6':'1')+'" data-mid="'+m.id+'" data-mname="'+m.name+'">'
+          +'<div style="width:28px;height:28px;border-radius:50%;background:'+(isA?'#22c55e':'#4f7cff')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">'+m.name.slice(0,2).toUpperCase()+'</div>'
+          +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500">'+m.name+'</div>'
+          +'<div style="font-size:10px;color:var(--muted)">'+(m.kompetenzen||m.region||'')+'</div></div>'
+          +(isA?'<span style="font-size:10px;color:#22c55e;flex-shrink:0">&#10003;</span>'
+            :'<span style="font-size:10px;color:var(--accent);flex-shrink:0">&#10133;</span>')
+          +'</div>';
+      }).join('')
+      +(filtered.length?'':'<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">Keine Mitglieder gefunden</div>')
+      +'</div>'
+      +'<div style="padding:12px 20px;border-top:1px solid var(--border);flex-shrink:0">'
+      +'<div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">Neues Mitglied anlegen &amp; hinzufügen:</div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<input id="amt-new-name" placeholder="Name..." style="flex:1;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:6px 8px;font-size:12px">'
+      +'<button id="amt-new-btn" class="btn btn-primary btn-sm">&#10133; Anlegen</button>'
+      +'</div></div></div>';
 
-  // Such-Filter
-  inner.insertAdjacentHTML('beforeend',
-    '<input id="amt-search" placeholder="Mitglied suchen..." style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px 9px;font-size:12px;box-sizing:border-box;margin-bottom:10px">'
-    +'<div style="margin-bottom:10px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Rolle</label>'
-    +'<input id="amt-rolle" value="Mitglied" style="width:100%;background:var(--card2);border:1px solid var(--border);color:inherit;border-radius:6px;padding:7px 9px;font-size:12px;box-sizing:border-box"></div>'
-    +'<div id="amt-list" style="display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto"></div>'
-  );
+    ov.querySelector('#amt-cls').onclick=function(){ov.remove();};
+    var si2=ov.querySelector('#amt-search');if(si2){si2.oninput=function(){rebuild();};if(!q)si2.focus();}
+    var sa2=ov.querySelector('#amt-show-all');if(sa2)sa2.onchange=function(){rebuild();};
 
-  function renderList(filter){
-    var list=document.getElementById('amt-list');if(!list)return;
-    var filtered=filter?available.filter(function(m){return m.name.toLowerCase().includes(filter.toLowerCase());}):available;
-    list.innerHTML=filtered.map(function(m){
-      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:7px;cursor:pointer;border:1px solid var(--border)" data-mid="'+m.id+'" data-mname="'+m.name+'">'
-        +'<div style="width:30px;height:30px;border-radius:50%;background:#4f7cff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+m.name.slice(0,2).toUpperCase()+'</div>'
-        +'<div style="flex:1"><div style="font-size:12px;font-weight:500">'+m.name+'</div>'
-        +'<div style="font-size:10px;color:var(--muted)">'+(m.region||m.kompetenzen||'Kein Bereich')+'</div></div>'
-        +'<span style="font-size:10px;color:var(--accent)">&#10133; Hinzufügen</span></div>';
-    }).join('')||'<p style="color:var(--muted);font-size:12px;text-align:center;padding:10px">Keine Treffer</p>';
-
-    list.querySelectorAll('[data-mid]').forEach(function(item){
+    ov.querySelectorAll('[data-mid]').forEach(function(item){
+      var mid=item.getAttribute('data-mid');
+      if(assignedIds.includes(mid))return;
       item.onclick=function(){
-        var mid=this.getAttribute('data-mid');
-        var mname=this.getAttribute('data-mname');
-        addMemberToEntityDirect(mid,mname,entityId,ov);
+        var rolleEl=ov.querySelector('#amt-rolle');
+        var zugrEl=ov.querySelector('#amt-zugriff');
+        addMemberToEntityDirect(
+          mid,item.getAttribute('data-mname'),entityId,
+          (rolleEl?rolleEl.value.trim():'')||'Mitglied',
+          (zugrEl?zugrEl.value:'intern')||'intern',
+          ov,rebuild
+        );
       };
     });
+    var nb=ov.querySelector('#amt-new-btn');
+    if(nb) nb.onclick=function(){
+      var ni=ov.querySelector('#amt-new-name');
+      var name=ni?ni.value.trim():'';
+      if(!name){toast('Name eingeben','error');return;}
+      createAndAddMember(name,entityId,ov,rebuild);
+    };
   }
-
-  var searchInp=document.getElementById('amt-search');
-  if(searchInp) searchInp.oninput=function(){renderList(this.value);};
-  renderList('');
-  ov.appendChild(inner);document.body.appendChild(ov);
-  setTimeout(function(){var si=document.getElementById('amt-search');if(si)si.focus();},60);
+  rebuild();
 }
 
-async function addMemberToEntityDirect(personId, personName, entityId, ov){
+async function addMemberToEntityDirect(personId,personName,entityId,rolle,zugriff,ov,rebuild){
+  rolle=rolle||'Mitglied';zugriff=zugriff||'intern';
   var eTyp=db.ags.some(function(a){return a.id===entityId;})?'AG':'UG';
-  var rolleInp=document.getElementById('amt-rolle');
-  var rolle=(rolleInp?rolleInp.value.trim():'')||'Mitglied';
-
-  // Prüfe ob Rolle schon existiert
   if(db.rollen.find(function(r){return r.personId===personId&&r.entityId===entityId&&r.aktiv;})){
     toast('Bereits zugeordnet','error');return;
   }
-
-  var nr={id:'ZU-'+Date.now(),personId:personId,name:personName,
-    entityTyp:eTyp,entityId:entityId,rolle:rolle,
-    zugriff:'intern',aktiv:true,start:new Date().toISOString().slice(0,10)};
-
+  var nr={id:'ZU-'+Date.now(),personId:personId,name:personName,entityTyp:eTyp,
+    entityId:entityId,rolle:rolle,zugriff:zugriff,aktiv:true,
+    start:new Date().toISOString().slice(0,10)};
   db.rollen.push(nr);
 
-  // Direkt speichern — Mitglied existiert bereits in DB
-  var res=await sbUp('rollen',nr);
-  syslog('save','Rollen',personName+' zu '+entityId+' hinzugefügt ('+rolle+')','');
-  toast('&#128100; '+personName+' hinzugefügt','ok');
+  // Direkt per Supabase-Client (kein toSB() Wrapper) um Fehler klar zu sehen
+  var sbRes=await getSB().from('rollen').upsert({
+    id:nr.id,person_id:personId,name:personName,entity_typ:eTyp,
+    entity_id:entityId,rolle:rolle,zugriff:zugriff,aktiv:true,start_datum:nr.start
+  },{onConflict:'id'});
 
-  if(ov)ov.remove();
-  // Workspace neu laden
-  openWorkspace(entityId,null);
+  if(sbRes.error){
+    db.rollen=db.rollen.filter(function(r){return r.id!==nr.id;});
+    toast('Fehler beim Speichern: '+sbRes.error.message.slice(0,70),'error');
+    syslog('error','Rollen',sbRes.error.message,personId);
+    return;
+  }
+
+  // Nutzer agIds/ugIds aktualisieren
+  var nu=db.nutzer.find(function(u){return u.name===personName;});
+  if(nu){
+    if(eTyp==='AG'&&!nu.agIds.includes('*')&&!nu.agIds.includes(entityId)){
+      nu.agIds.push(entityId);await sbUp('nutzer',nu);
+    }
+    if(eTyp==='UG'&&!nu.ugIds.includes('*')&&!nu.ugIds.includes(entityId)){
+      nu.ugIds.push(entityId);await sbUp('nutzer',nu);
+    }
+  }
+  syslog('save','Rollen',personName+' zu '+entityId+' ('+rolle+')','');
+  toast(personName+' hinzugefügt ✓','ok');
+  syncDot(1);
+  if(rebuild)rebuild();
+}
+
+async function createAndAddMember(name,entityId,ov,rebuild){
+  var existing=db.mitglieder.find(function(m){return m.name.toLowerCase()===name.toLowerCase();});
+  if(existing){
+    addMemberToEntityDirect(existing.id,existing.name,entityId,'Mitglied','intern',ov,rebuild);
+    return;
+  }
+  var mid='P-'+Date.now();
+  var mObj={id:mid,name:name,kontakt:'',region:'',kompetenzen:'',verfueg:'mittel',aktiv:true,start:new Date().toISOString().slice(0,10),notizen:''};
+  db.mitglieder.push(mObj);
+
+  var r1=await getSB().from('mitglieder').upsert({
+    id:mid,name:name,kontakt:'',region:'',kompetenzen:'',
+    verfueg:'mittel',aktiv:true,start_datum:mObj.start,notizen:''
+  },{onConflict:'id'});
+  if(r1.error){
+    db.mitglieder=db.mitglieder.filter(function(x){return x.id!==mid;});
+    toast('Fehler: '+r1.error.message,'error');return;
+  }
+  syslog('save','Mitglied','Neu angelegt: '+name,mid);
+
+  var pw=name.toLowerCase().replace(/\s+/g,'')+'2024';
+  var nu={id:'U-'+Date.now(),name:name,pw:pw,rolle:'intern',agIds:[],ugIds:[],aktiv:true,farbe:'#6b7199'};
+  db.nutzer.push(nu);
+  var r2=await getSB().from('nutzer').upsert({
+    id:nu.id,name:name,pw:pw,rolle:'intern',ag_ids:[],ug_ids:[],aktiv:true,farbe:'#6b7199'
+  },{onConflict:'id'});
+  if(!r2.error){
+    toast('Login: '+name+' | PW: '+pw,'ok');
+    syslog('action','Nutzer','Login erstellt: '+name,pw);
+  }
+
+  // 400ms warten damit Supabase FK-Constraint bereit ist
+  await new Promise(function(res){setTimeout(res,400);});
+  await addMemberToEntityDirect(mid,name,entityId,'Mitglied','intern',ov,rebuild);
 }
 
 window.addEventListener('load', function(){
