@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mariana CSC - AG-Verwaltung V40</title>
+<title>Mariana CSC - AG-Verwaltung V41</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -332,7 +332,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
   <div class="login-box">
     <div class="login-logo">&#127807;</div>
     <div class="login-title">Mariana CSC</div>
-    <div class="login-sub">AG-Verwaltung V40</div>
+    <div class="login-sub">AG-Verwaltung V41</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="Lquick"></div>
     <div style="font-size:11px;color:#6b7199;margin-bottom:4px">Name</div>
     <div class="lf-wrap">
@@ -369,7 +369,7 @@ input[type=checkbox]{width:auto;cursor:pointer;accent-color:var(--accent)}
 <nav class="sidebar" id="sidebar">
   <div class="logo">
     <h1>🌿 Mariana CSC</h1>
-    <p>AG-Verwaltung V40</p>
+    <p>AG-Verwaltung V41</p>
   </div>
   <div class="mode-toggle">
     <div class="mode-btn active" onclick="setMode('admin',this)">Admin</div>
@@ -1453,11 +1453,25 @@ function renderMRolesPreview(personId){
   d.innerHTML=roles.length?'<div class="sep">Aktive Zuordnungen</div>'+roles.map(r=>`<span class="tag">${r.entityTyp}:${r.entityId} – ${r.rolle} <span onclick="db.rollen=db.rollen.filter(x=>x.id!=='${r.id}');renderMRolesPreview('${personId}')" style="cursor:pointer;color:var(--red)">×</span></span>`).join(''):'';
 }
 function addRoleFromMitglForm(){
-  const eid=v('f-m-entity');const mid=v('f-m-id');const rolle=v('f-m-rolle')||'Mitglied';
-  if(!eid)return;
-  const isAG=db.ags.some(a=>a.id===eid);
-  db.rollen.push({id:'ZU-'+String(db.ids.r++).padStart(3,'0'),personId:mid,name:v('f-m-name'),entityTyp:isAG?'AG':'UG',entityId:eid,rolle,verantw:'Gelegentlich',lead:false,zugriff:v('f-m-zugriff'),aktiv:true,start:new Date().toISOString().slice(0,10)});
-  renderMRolesPreview(mid);toast('Rolle hinzugefügt','ok');
+  var eid=v('f-m-entity');var mid=v('f-m-id');var rolle=v('f-m-rolle')||'Mitglied';
+  if(!eid){toast('Bitte Entität auswählen','error');return;}
+  if(!mid){toast('Bitte erst ID eingeben','error');return;}
+  // Doppelte Zuordnung verhindern
+  if(db.rollen.find(function(r){return r.personId===mid&&r.entityId===eid&&r.aktiv;})){
+    toast('Bereits zugeordnet','error');return;
+  }
+  var isAG=db.ags.some(function(a){return a.id===eid;});
+  var nr={id:'ZU-'+Date.now(),personId:mid,name:v('f-m-name'),
+    entityTyp:isAG?'AG':'UG',entityId:eid,rolle:rolle,
+    zugriff:v('f-m-zugriff')||'intern',aktiv:true,
+    start:new Date().toISOString().slice(0,10)};
+  db.rollen.push(nr);
+  // Sofort speichern wenn Mitglied schon existiert
+  if(db.mitglieder.find(function(m){return m.id===mid;})){
+    sbUp('rollen',nr);
+  }
+  renderMRolesPreview(mid);
+  toast('Rolle hinzugefügt','ok');
 }
 function saveMitglied(){
   const id=v('f-m-id').trim(),name=v('f-m-name').trim();
@@ -2988,47 +3002,71 @@ setMode=function(m,btn){
 
 // Sync hooks for V3 functions
 var _sAG=saveAG,_sUG=saveUG,_sT=saveTask,_sM=saveMitglied,_sK=saveKonzept;
-saveAG=function(){var id=(G('f-ag-id')||{value:''}).value.trim();_sAG();setTimeout(function(){var a=db.ags.find(function(x){return x.id===id;});if(a) sbUp('ags',a);},100);};
-saveUG=function(){var id=(G('f-ug-id')||{value:''}).value.trim();_sUG();setTimeout(function(){var u=db.ugs.find(function(x){return x.id===id;});if(u) sbUp('ugs',u);},100);};
+saveAG=function(){var id=(G('f-ag-id')||{value:''}).value.trim();_sAG();setTimeout(function(){var a=db.ags.find(function(x){return x.id===id;});if(a){sbUp('ags',a);syslog('save','AG','AG gespeichert: '+a.name,id);}else{toast('Fehler: AG '+id+' nicht gefunden','error');}},200);};
+saveUG=function(){var id=(G('f-ug-id')||{value:''}).value.trim();_sUG();setTimeout(function(){var u=db.ugs.find(function(x){return x.id===id;});if(u){sbUp('ugs',u);syslog('save','UG','UG gespeichert: '+u.name,id);}else{toast('Fehler: UG '+id+' nicht gefunden','error');}},200);};
 saveTask=function(){var id=(G('f-t-id')||{value:''}).value.trim();_sT();setTimeout(function(){var t=db.aufgaben.find(function(x){return x.id===id;});if(t) sbUp('aufgaben',t);updateBadges();},100);};
 saveKonzept=function(){_sK();setTimeout(function(){var k=db.konzepte[db.konzepte.length-1];if(k) sbUp('konzepte',k);},100);};
 saveMitglied=function(){
   var id=(G('f-m-id')||{value:''}).value.trim();
   var name=(G('f-m-name')||{value:''}).value.trim();
   var wasNew=!editId;
-  var rolle=(G('f-m-rolle')||{value:'Mitglied'}).value.trim()||'Mitglied';
   var entityId=(G('f-m-entity')||{value:''}).value.trim();
-  _sM();
+  var rolle=(G('f-m-rolle')||{value:'Mitglied'}).value.trim()||'Mitglied';
+  var zugriff=(G('f-m-zugriff')||{value:'intern'}).value||'intern';
+  // Merke alle Rollen die vor dem Speichern in der Vorschau existieren
+  var rolesSnapshot=db.rollen.filter(function(r){return r.personId===id;}).map(function(r){return r.id;});
+  _sM(); // V3: speichert in db.mitglieder, schließt Modal
   setTimeout(async function(){
+    // 1. Mitglied speichern
     var m=db.mitglieder.find(function(x){return x.id===id;});
-    if(m) await sbUp('mitglieder',m);
-    // Save role assignment
-    if(entityId && entityId!=='*'){
-      var existing=db.rollen.find(function(r){return r.personId===id&&r.entityId===entityId;});
-      if(existing){ existing.rolle=rolle; await sbUp('rollen',existing); }
-      else {
+    if(m){
+      await sbUp('mitglieder',m);
+      syslog('save','Mitglied','Mitglied gespeichert: '+m.name,id);
+    } else {
+      toast('Fehler: Mitglied nicht in db gefunden (ID='+id+')','error');
+      return;
+    }
+    // 2. Alle Rollen aus der Vorschau speichern (addRoleFromMitglForm)
+    var rolesInPreview=db.rollen.filter(function(r){return r.personId===id;});
+    for(var ri=0;ri<rolesInPreview.length;ri++){
+      await sbUp('rollen',rolesInPreview[ri]);
+    }
+    // 3. Falls entityId direkt im Dropdown gewählt und noch keine Rolle dafür:
+    if(entityId&&entityId!=='*'){
+      var already=db.rollen.find(function(r){return r.personId===id&&r.entityId===entityId&&r.aktiv;});
+      if(!already){
         var eTyp=db.ags.some(function(a){return a.id===entityId;})?'AG':'UG';
-        var nr={id:'ZU-'+Date.now(),personId:id,name:name,entityTyp:eTyp,entityId:entityId,rolle:rolle,zugriff:'intern',aktiv:true,start:new Date().toISOString().slice(0,10)};
-        db.rollen.push(nr); await sbUp('rollen',nr);
+        var nr={id:'ZU-'+Date.now(),personId:id,name:name,entityTyp:eTyp,entityId:entityId,
+          rolle:rolle,zugriff:zugriff,aktiv:true,start:new Date().toISOString().slice(0,10)};
+        db.rollen.push(nr);
+        await sbUp('rollen',nr);
       }
     } else if(entityId==='*'){
-      // Alle Gruppen
       for(var ai=0;ai<db.ags.length;ai++){
         var a=db.ags[ai];
         if(!db.rollen.find(function(r){return r.personId===id&&r.entityId===a.id;})){
-          var nr2={id:'ZU-'+Date.now()+ai,personId:id,name:name,entityTyp:'AG',entityId:a.id,rolle:rolle,zugriff:'intern',aktiv:true,start:new Date().toISOString().slice(0,10)};
-          db.rollen.push(nr2); await sbUp('rollen',nr2);
+          var nr2={id:'ZU-'+Date.now()+'-'+ai,personId:id,name:name,entityTyp:'AG',
+            entityId:a.id,rolle:rolle,zugriff:zugriff,aktiv:true,
+            start:new Date().toISOString().slice(0,10)};
+          db.rollen.push(nr2);
+          await sbUp('rollen',nr2);
         }
       }
     }
+    // 4. Login-Account erstellen falls neues Mitglied
     if(wasNew&&name&&!db.nutzer.find(function(u){return u.name===name;})){
       var pw=name.toLowerCase().replace(/\s+/g,'')+'2024';
-      var nu={id:'U-'+Date.now(),name:name,pw:pw,rolle:'intern',agIds:entityId==='*'?['*']:[entityId].filter(Boolean),ugIds:[],aktiv:true,farbe:'#6b7199'};
-      db.nutzer.push(nu); await sbUp('nutzer',nu);
-      toast('Login erstellt: '+name+' PW: '+pw,'ok');
+      var agList=entityId==='*'?['*']:(entityId?[entityId]:[]);
+      var nu={id:'U-'+Date.now(),name:name,pw:pw,rolle:'intern',
+        agIds:agList,ugIds:[],aktiv:true,farbe:'#6b7199'};
+      db.nutzer.push(nu);
+      await sbUp('nutzer',nu);
+      toast('&#128100; Login: '+name+' | PW: '+pw,'ok');
+      syslog('action','Nutzer','Login erstellt: '+name,pw);
     }
     updateBadges();
-  },100);
+    toast('&#128190; '+name+' gespeichert','ok');
+  },150);
 };
 var _tT=toggleTask;
 toggleTask=function(id){_tT(id);setTimeout(function(){var t=db.aufgaben.find(function(x){return x.id===id;});if(t) sbUp('aufgaben',t);updateBadges();},100);};
@@ -3425,8 +3463,15 @@ async function wsSendChat(entityId){
 }
 async function removeFromEntity(personId, entityId){
   if(!isAdmin()) return;
+  if(!confirm('Mitglied aus dieser Gruppe entfernen?'))return;
+  var roles=db.rollen.filter(function(r){return r.personId===personId&&r.entityId===entityId;});
   db.rollen=db.rollen.filter(function(r){return !(r.personId===personId&&r.entityId===entityId);});
-  try { await getSB().from('rollen').delete().eq('person_id',personId).eq('entity_id',entityId); } catch(e){}
+  for(var i=0;i<roles.length;i++){
+    await sbDel('rollen',roles[i].id);
+  }
+  var m=db.mitglieder.find(function(x){return x.id===personId;});
+  syslog('delete','Rollen','Zuordnung entfernt: '+(m?m.name:personId)+' aus '+entityId,'');
+  toast('Zuordnung entfernt','ok');
   openWorkspace(entityId,null);
 }
 
